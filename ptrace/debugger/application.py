@@ -42,7 +42,7 @@ class Application(object):
         parser.add_option_group(log)
 
     def createChild(self, arguments, env=None):
-        return createChild(arguments, self.options.no_stdout, env)
+        return createChild(arguments, False, env)
 
     def setupDebugger(self):
         # Set ptrace options

@@ -1,0 +1,29 @@
+ptrace dependencies
+===================
+
+ * Python 2.5+:
+   http://python.org/
+ * distorm disassembler (optional)
+   http://www.ragestorm.net/distorm/
+
+
+Installation
+============
+
+Type as root: ::
+
+   ./setup.py install
+
+Or using sudo program: ::
+
+   sudo python setup.py install
+
+
+cptrace
+=======
+
+For faster debug, you can also install cptrace: Python binding of the ptrace()
+function written in C: ::
+
+    ./setup_cptrace.py install
+

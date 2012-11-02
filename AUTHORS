@@ -1,0 +1,18 @@
+python-ptrace authors
+=====================
+
+Anthony Gelibert <anthony.gelibert AT me.com> - fix cptrace on Apple
+Dimitris Glynos <dimitris AT census-labs.com> - follow gdb.py commands
+Jakub Wilk <jwilk AT debian.org> - fix for GNU/kFreeBSD
+Mark Seaborn <mrs AT mythic-beasts.com> - Create -i option for strace
+Mickaël Guérin aka KAeL <mickael.guerin AT crocobox.org> - OpenBSD port
+teythoon - convert all classes to new-style classes
+T. Bursztyka aka Tuna <tuna AT lyua.org> - x86_64 port
+Victor Stinner <victor.stinner AT haypocalc.com> - python-ptrace author and maintainer
+
+
+Thanks
+======
+
+ * procps authors (top and uptime programs)
+

@@ -9,6 +9,7 @@ from ptrace.os_tools import RUNNING_LINUX, RUNNING_BSD
 from ptrace.cpu_info import CPU_WORD_SIZE
 from ptrace.binding.cpu import CPU_INSTR_POINTER
 
+MAX_PATH = 256
 PREFORMAT_ARGUMENTS = {
     "select": (2, 3, 4),
     "execve": (0, 1, 2),
@@ -23,9 +24,25 @@ class PtraceSyscall(FunctionCall):
         self.result = None
         self.result_text = None
         self.instr_pointer = None
-        if not regs:
-            regs = self.process.getregs()
+        self.regs = regs
+        if not self.regs:
+            self.regs = self.process.getregs()
         self.readSyscall(regs)
+
+    def is_exit(self):
+        return self.result is not None
+
+    def is_enter(self):
+        return self.result is None
+
+    def getArg(self, n):
+        assert self.regs
+        return self.readArgumentValues(self.regs)[n]
+
+    def getArgString(self, n):
+        ptr = self.getArg(n)
+        (rtn, _) = self.process.readCString(ptr, MAX_PATH)
+        return rtn
 
     def enter(self, regs=None):
         if not regs:

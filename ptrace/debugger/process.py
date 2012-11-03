@@ -171,6 +171,9 @@ class PtraceProcess(object):
             self.read_mem_file = None
         self.syscall_state = SyscallState(self)
 
+    def getSyscall(self, opts):
+        return self.syscall_state.event(opts)
+    
     def isTraced(self):
         if not HAS_PROC:
             self.notImplementedError()

@@ -3,6 +3,8 @@
 import os
 import re
 import dbg
+import spec
+import collections
 
 from sys      import stderr, exit
 from optparse import OptionParser
@@ -16,17 +18,51 @@ from ptrace.error        import writeError
 from ptrace.func_call    import FunctionCallOptions
 from ptrace.ctypes_tools import formatAddress
 
-def is_syscall_exit(syscall):
-    return syscall.result is not None
+class OS:
+    def __init__(self, root):
+        self.root = root
+        self.stat = collections.defaultdict(int)
+        self.fds  = {0: "stdin",
+                     1: "stdout",
+                     2: "stderr"}
+        
+    def run(self, proc, syscall):
+        if syscall.is_enter():
+            self.stat[syscall.name] += 1
 
-def is_syscall_enter(syscall):
-    return not is_syscall_exit(syscall)
+        cond = "enter" if syscall.is_enter() else "exit"
+        func = "%s_%s" % (syscall.name, cond)
+        if hasattr(self, func):
+            getattr(self, func)(proc, syscall)
 
+    def open_enter(self, proc, syscall):
+        path = syscall.getArgString(0)
+        flag = syscall.getArg(1)
+        mode = syscall.getArg(2)
+
+        # if mode 
+
+    def open_exit(self, proc, syscall):
+        fd = syscall.result
+        pn = syscall.getArgString(0)
+        self.fds[fd] = pn
+
+    def close_enter(self, proc, syscall):
+        pass
+
+    def close_exit(self, proc, syscall):
+        fd = syscall.getArg(0)
+        self.fds[fd] = None
+    
+    def done(self):
+        for (n, v) in self.stat.items():
+            print "%15s: %3s" % (n, v)
+        
 class Sandbox:
     def __init__(self, opts, args):
         self.opts = opts
         self.args = args
-
+        
     def run(self):
         self.debugger = PtraceDebugger()
         try:
@@ -36,10 +72,9 @@ class Sandbox:
         except PtraceError, err:
             dbg.fatal("ptrace() error: %s" % err)
         except KeyboardInterrupt:
-            dbg.dbg.error("Interrupted.")
-        except PTRACE_ERRORS, err:
-            dbg.dbg.error("ptrace() error: %s" % err)
+            dbg.error("Interrupted.")
         self.debugger.quit()
+        self.os.done()
         
     def print_syscall(self, syscall):
         name = syscall.name
@@ -50,7 +85,7 @@ class Sandbox:
             
         prefix = []
         prefix.append("[%s]" % syscall.process.pid)
-        prefix.append(">" if is_syscall_enter(syscall) else "<")
+        prefix.append(">" if syscall.is_enter() else "<")
         
         dbg.info(''.join(prefix) + ' ' + text)
 
@@ -81,13 +116,18 @@ class Sandbox:
             # process syscall enter or exit
             self.handle_syscall(process)
 
-    def handle_syscall(self, process):
-        state = process.syscall_state
-        syscall = state.event(self.syscall_options)
-        if syscall:
+    def handle_syscall(self, proc):
+        syscall = proc.getSyscall(self.syscall_options)
+
+        # print out system calls
+        if self.opts.strace and syscall:
             self.print_syscall(syscall)
+
+        # emulate os
+        self.os.run(proc, syscall)
+
         # break at next syscall
-        process.syscall()
+        proc.syscall()
 
     def event_exit(self, event):
         # display syscall which has not exited
@@ -124,14 +164,17 @@ class Sandbox:
         return (pid, proc)
 
     def run_debugger(self):
+        # set ptrace flags
         try:
             self.debugger.traceFork()
             self.debugger.traceExec()
+            self.debugger.enableSysgood()
         except DebuggerError:
             dbg.fatal("OS doesn't support to trace fork(), exec()")
 
         (pid, proc) = self.run_proc(self.args)
-            
+
+        # for strace format
         self.syscall_options = FunctionCallOptions(
             write_types=False,
             write_argname=False,
@@ -141,11 +184,16 @@ class Sandbox:
             max_array_count=300,
         )
         self.syscall_options.instr_pointer = False
-        
+
+        # init os instance
+        self.os = OS(self.parse_root(self.opts.root, pid))
         self.loop(proc)
 
     def fork(self, args, env=None):
         return createChild(args, False, env)
+
+    def parse_root(self, path, pid):
+        return path.replace("%PID", str(pid))
 
 def print_syscalls():
     syscalls = SYSCALL_NAMES.items()
@@ -158,6 +206,12 @@ def parse_args():
     parser.add_option("--list-syscalls",
                       help="Display system calls and exit",
                       action="store_true", default=False)
+    parser.add_option("--strace",
+                      help="Print out system calls",
+                      action="store_true", default=False)
+    parser.add_option("-r", "--root",
+                      help="Root of the sandbox dir (ex /tmp/sandbox-%PID)",
+                      default="/tmp/sandbox-%PID")
     (opts, args) = parser.parse_args()
 
     # checking sanity

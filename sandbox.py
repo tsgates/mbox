@@ -3,7 +3,6 @@
 import os
 import re
 import dbg
-import spec
 import collections
 
 from sys      import stderr, exit
@@ -18,6 +17,8 @@ from ptrace.error        import writeError
 from ptrace.func_call    import FunctionCallOptions
 from ptrace.ctypes_tools import formatAddress
 
+from spec import *
+
 class OS:
     def __init__(self, root):
         self.root = root
@@ -25,7 +26,7 @@ class OS:
         self.fds  = {0: "stdin",
                      1: "stdout",
                      2: "stderr"}
-        
+
     def run(self, proc, syscall):
         if syscall.is_enter():
             self.stat[syscall.name] += 1
@@ -36,11 +37,14 @@ class OS:
             getattr(self, func)(proc, syscall)
 
     def open_enter(self, proc, syscall):
-        path = syscall.getArgString(0)
-        flag = syscall.getArg(1)
-        mode = syscall.getArg(2)
+        path = f_path(syscall.getArgString(0))
+        flag = f_flag(syscall.getArg(1))
+        mode = f_mode(syscall.getArg(2), flag)
 
-        # if mode 
+        print "open(%s,%s,%s)" % (path, flag, mode)
+        print " -> %s" % (path.chroot(self.root, self.root + "/usr/bin"))
+        # if mode
+        
 
     def open_exit(self, proc, syscall):
         fd = syscall.result

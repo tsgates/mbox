@@ -49,7 +49,10 @@ class OS:
         print sc
         
     def openat_enter(self, proc, sc):
-        pass
+        print sc
+
+    def openat_exit(self, proc, sc):
+        print sc
 
     def close_enter(self, proc, sc):
         pass

@@ -12,9 +12,9 @@ from os.path import *
 #  - arg# also aliased
 #  
 SYSCALLS = {
-  "open"   : ("f_fd" , "f_path"     , "f_flag" , "f_mode") ,
-  "openat" : ("f_fd" , "dirfd:f_fd" , "f_path" , "f_flag"  , "f_mode") ,
-  "close"  : ("err"  , "f_fd")      ,
+  "open"   : ("f_fd" , "f_path" , "f_flag" , "f_mode") ,
+  "openat" : ("f_fd" , "at_fd"  , "f_path" , "f_flag"  , "f_mode") ,
+  "close"  : ("err"  , "f_fd")  ,
 }
 
 class Syscall:
@@ -76,7 +76,7 @@ class Syscall:
             rtn += " = %s" % str(self.ret)
         return rtn
 
-class err:
+class err(object):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.err = arg
@@ -85,7 +85,7 @@ class err:
             return "ok"
         return "%s" % errno.errorcode[-self.err]
 
-class f_fd:
+class f_fd(object):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.fd = arg
@@ -119,7 +119,7 @@ O_NOFOLLOW = 00400000   # don't follow links
 O_NOATIME  = 01000000   # no access time
 O_CLOEXEC  = 02000000   # set close_on_exec
 
-class f_path:
+class f_path(object):
     argtype = "str"
     def __init__(self, arg, syscall):
         self.path = arg
@@ -146,7 +146,7 @@ class f_path:
         exist = os.path.exists(self.path)
         return "%s%s" % (self.path, "" if exist else " (N)")
 
-class f_flag:
+class f_flag(object):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.flag = arg
@@ -174,7 +174,7 @@ class f_flag:
 
         return "|".join(rtn)
 
-class f_mode:
+class f_mode(object):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.mode = None
@@ -187,11 +187,10 @@ class f_mode:
     
 AT_FDCWD = (MAX_INT - 100)
 
-class at_flag:
-    argtype = "int"
+class at_fd(f_fd):
     def __init__(self, arg, syscall):
-        self.flag = arg
+        super(at_fd, self).__init__(arg, syscall)
     def __str__(self):
-        if self.flag == AT_FDCWD:
+        if self.fd == AT_FDCWD:
             return "AT_FDCWD"
-        return str(self.flag)
+        return super(at_fd, self).__str__()

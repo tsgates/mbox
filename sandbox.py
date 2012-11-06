@@ -34,29 +34,28 @@ class OS:
         cond = "enter" if syscall.is_enter() else "exit"
         func = "%s_%s" % (syscall.name, cond)
         if hasattr(self, func):
-            getattr(self, func)(proc, syscall)
+            getattr(self, func)(proc, Syscall(syscall))
 
-    def open_enter(self, proc, syscall):
-        path = f_path(syscall.getArgString(0))
-        flag = f_flag(syscall.getArg(1))
-        mode = f_mode(syscall.getArg(2), flag)
-
-        print "open(%s,%s,%s)" % (path, flag, mode)
-        print " -> %s" % (path.chroot(self.root, self.root + "/usr/bin"))
-        # if mode
+    def open_enter(self, proc, sc):
+        print sc
+        print " -> %s" % (sc.path.chroot(self.root, "/usr/bin"))
         
+        # XXX. if mode
 
-    def open_exit(self, proc, syscall):
-        fd = syscall.result
-        pn = syscall.getArgString(0)
+    def open_exit(self, proc, sc):
+        fd = sc.ret
+        pn = sc.path
         self.fds[fd] = pn
-
-    def close_enter(self, proc, syscall):
+        print sc
+        
+    def openat_enter(self, proc, sc):
         pass
 
-    def close_exit(self, proc, syscall):
-        fd = syscall.getArg(0)
-        self.fds[fd] = None
+    def close_enter(self, proc, sc):
+        pass
+
+    def close_exit(self, proc, sc):
+        self.fds[sc.fd] = None
     
     def done(self):
         for (n, v) in self.stat.items():
@@ -210,7 +209,7 @@ def parse_args():
     parser.add_option("--list-syscalls",
                       help="Display system calls and exit",
                       action="store_true", default=False)
-    parser.add_option("--strace",
+    parser.add_option("--strace", "-s",
                       help="Print out system calls",
                       action="store_true", default=False)
     parser.add_option("-r", "--root",

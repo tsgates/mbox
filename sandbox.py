@@ -19,16 +19,22 @@ from ptrace.func_call    import FunctionCallOptions
 from ptrace.ctypes_tools import formatAddress
 
 from spec import *
+from util import *
 
 class OS:
     def __init__(self, root, cwd):
-        self.root = root
+        self.root = root.rstrip("/")
         self.cwd  = cwd
         self.stat = collections.defaultdict(int)
+        
+        # XXX self.fds[pid] = {}
         self.fds  = {0: "stdin",
                      1: "stdout",
                      2: "stderr"}
 
+        # init root
+        mkdir(self.root)
+        
     def run(self, proc, syscall):
         if syscall.is_enter():
             self.stat[syscall.name] += 1
@@ -38,16 +44,55 @@ class OS:
         if hasattr(self, func):
             getattr(self, func)(proc, Syscall(syscall))
 
-    def open_enter(self, proc, sc):
-        dbg.ns(sc)
-        dbg.ns(" -> %s" % (sc.path.chroot(self.root, self.cwd)))
-        
-        # XXX. if mode
+    def sync_parent_dirs(self, path):
+        for crumb in itercrumb(path):
+            spn = join(self.root, crumb[1:])
+            if dir_exists(crumb) and not dir_exists(spn):
+                dbg.test("mkdir: %s" % spn)
+                mkdir(spn)
 
+    def chdir_enter(self):
+        pass
+
+    def chdir_exit(self):
+        pass
+    
+    def open_enter(self, proc, sc):
+        spn = sc.path.chroot(self.root, self.cwd)
+        dbg.ns(sc)
+        dbg.ns(" -> %s" % spn)
+
+        # for dirs
+        if sc.path.is_dir():
+            pass
+            return
+        
+        # for files
+        if sc.flag.is_rdonly():
+            if file_exists(spn):
+                # XXX. rewrite pn -> spn
+                dbg.stop()
+                return
+            # safe to read a host pn
+            return
+
+        if sc.flag.is_trunc():
+            # sync parent dir
+            self.sync_parent_dirs(sc.path.str)
+            # rewrite pn -> spn
+            # self.sc.path.rewrite(spn)
+            return
+
+        if sc.flag.is_wr():
+            # sync parent dir
+            # copy to sandbox
+            # XXX. rewrite pn -> spn
+            return
+        
     def open_exit(self, proc, sc):
         fd = sc.ret
         pn = sc.path
-        self.fds[fd.int()] = pn
+        self.fds[fd.int] = pn
         dbg.ns(sc)
         
     def openat_enter(self, proc, sc):
@@ -61,12 +106,14 @@ class OS:
         pass
 
     def close_exit(self, proc, sc):
-        self.fds[sc.fd.int()] = None
+        self.fds[sc.fd.int] = None
     
     def done(self):
+        # XXX.
         for (n, v) in self.stat.items():
             print "%15s: %3s" % (n, v)
         pprint.pprint(self.fds)
+        os.system("ls -al -R %s" % self.root)
         
 class Sandbox:
     def __init__(self, opts, args):

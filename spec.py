@@ -1,8 +1,9 @@
 
 import os
+import stat
 import errno
 
-from os.path import *
+from util import *
 
 #
 # syscall : (ret, arg0, arg1, arg2, ...)
@@ -63,11 +64,11 @@ class Syscall:
             arg = sc.getArg
         else:
             raise Exception("Not implemented yet")        
-        return kls(arg(seq), self)
+        return newarg(kls, arg(seq), self)
 
     def __parse_ret(self, sc, kls):
         assert kls.argtype == "int"
-        return kls(sc.result, self)
+        return newarg(kls, sc.result, self)
     
     def __str__(self):
         seq = ">" if self.sc.is_enter() else "<"
@@ -75,6 +76,11 @@ class Syscall:
         if self.sc.is_exit():
             rtn += " = %s" % str(self.ret)
         return rtn
+
+def newarg(kls, arg, sc):
+    val = kls(arg, sc)
+    setattr(val, kls.argtype, arg)
+    return val
 
 class err(object):
     argtype = "int"
@@ -89,8 +95,6 @@ class f_fd(object):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.fd = arg
-    def int(self):
-        return int(self.fd)
     def __str__(self):
         if self.fd >= 0:
             return "%d" % self.fd
@@ -125,28 +129,24 @@ class f_path(object):
     argtype = "str"
     def __init__(self, arg, syscall):
         self.path = arg
-        
-    def escaped(self, pn, root):
-        pn = normpath(pn)
-        # escaped by multiple ..
-        if not pn.startswith(root):
-            return root
-        return pn
-    
+
+    def exists(self):
+        return exists(self.path)
+
+    def is_dir(self):
+        return dir_exists(self.path)
+
     def chroot(self, root, cwd):
         pn = normpath(self.path)
         # absolute path
         if pn.startswith("/"):
-            pn = join(root, pn[1:])
-            return self.escaped(pn, root)
+            return chjoin(root, pn[1:])
         # cwd
         assert cwd.startswith("/")
-        pn = join(root, cwd[1:], pn)
-        return self.escaped(pn, root)
+        return chjoin(root, cwd[1:], pn[1:])
     
     def __str__(self):
-        exist = os.path.exists(self.path)
-        return "%s%s" % (self.path, "" if exist else " (N)")
+        return "%s%s" % (self.path, "" if exists(self.path) else " (N)")
 
 class f_flag(object):
     argtype = "int"
@@ -158,6 +158,10 @@ class f_flag(object):
         return (self.flag & O_ACCMODE) == O_WRONLY
     def is_rdwr(self):
         return (self.flag & O_ACCMODE) == O_RDWR
+    def is_wr(self):
+        return self.is_wronly() or self.is_rdwr()
+    def is_trunc(self):
+        return (self.flag & O_TRUNC)
     def chk(self, f):
         return self.flag & f
     def __str__(self):

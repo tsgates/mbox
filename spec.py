@@ -142,6 +142,8 @@ class f_fd(arg):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.fd = arg
+    def err(self):
+        return self.fd < 0
     def __str__(self):
         if self.fd >= 0:
             return "%d" % self.fd

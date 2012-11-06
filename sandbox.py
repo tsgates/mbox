@@ -38,9 +38,9 @@ class OS:
         # init root
         mkdir(self.root)
 
-    def add_hijack(self, arg, new):
-        self.hijack.append((arg, new))
-
+    # 
+    # main driver
+    #
     def run(self, proc, syscall):
         if syscall.is_enter():
             assert len(self.hijack) == 0
@@ -62,6 +62,9 @@ class OS:
             # clean them up
             self.hijack = []
 
+    def add_hijack(self, arg, new):
+        self.hijack.append((arg, new))
+
     def sync_parent_dirs(self, path):
         for crumb in itercrumb(path):
             spn = join(self.root, crumb[1:])
@@ -73,10 +76,14 @@ class OS:
             dbg.ns(" copy %s -> %s", pn, spn)
             safecopy(pn, spn)
 
-    def chdir_enter(self):
+    #
+    # list of system calls to interleave
+    #
+    def chdir_enter(self, proc, sc):
         pass
 
-    def chdir_exit(self):
+    def chdir_exit(self, proc, sc):
+        # XXX. update self.cwd
         pass
     
     def open_enter(self, proc, sc):
@@ -88,14 +95,17 @@ class OS:
             return
         
         # for files
+        if file_exists(spn):
+            # rewrite pn -> spn
+            self.add_hijack(sc.path, spn)
+            return
+
+        # file does not exist in the sandboxfs
         if sc.flag.is_rdonly():
-            if file_exists(spn):
-                # XXX. rewrite pn -> spn
-                dbg.stop()
-                return
             # safe to read a host pn
             return
 
+        # trunc
         if sc.flag.is_trunc():
             dbg.ns(sc)
             # sync parent dir
@@ -104,6 +114,7 @@ class OS:
             self.add_hijack(sc.path, spn)
             return
 
+        # read/write
         if sc.flag.is_wr():
             dbg.ns(sc)
             # sync parent dir
@@ -113,12 +124,11 @@ class OS:
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
-        
+
     def open_exit(self, proc, sc):
-        fd = sc.ret
-        pn = sc.path
-        self.fds[fd.int] = pn
-        dbg.ns(sc)
+        # keep tracks of open files
+        if not sc.ret.err():
+            self.fds[sc.ret.int] = sc.path
         
     def openat_enter(self, proc, sc):
         dbg.ns(sc)

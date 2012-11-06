@@ -10,6 +10,7 @@ from os.path import normpath
 
 def safecopy(src, dst):
     assert file_exists(src) and not file_exists(dst)
+    # check if use slice syscall
     shutil.copyfile(src, dst)
     
 def safestat(pn):

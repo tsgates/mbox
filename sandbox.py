@@ -53,11 +53,11 @@ class OS:
 
         if syscall.is_enter():
             for (arg, new) in self.hijack:
-                dbg.ns("-> %s", new)
+                dbg.ns(" -> %s", new)
                 arg.hijack(proc, new)
         else:
             for (arg, new) in self.hijack:
-                dbg.ns("<- %s", arg)
+                dbg.ns(" <- %s", arg)
                 arg.restore(proc, new)
             # clean them up
             self.hijack = []

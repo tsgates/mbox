@@ -71,8 +71,9 @@ class Syscall:
         return newarg(kls, sc.result, -1, self)
     
     def __str__(self):
+        pid = self.sc.process.pid
         seq = ">" if self.sc.is_enter() else "<"
-        rtn = "%s%s(%s)" % (seq, self.name, ",".join(str(a) for a in self.args))
+        rtn = "[%d]%s%s(%s)" % (pid, seq, self.name, ",".join(str(a) for a in self.args))
         if self.sc.is_exit():
             rtn += " = %s" % str(self.ret)
         return rtn

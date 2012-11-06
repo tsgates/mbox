@@ -14,6 +14,7 @@ settings = {
     "info"      : True,
     "parse"     : True,
     "error"     : True,
+    "ns"        : True,
     }
 
 #

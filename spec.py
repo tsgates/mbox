@@ -89,6 +89,8 @@ class f_fd(object):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.fd = arg
+    def int(self):
+        return int(self.fd)
     def __str__(self):
         if self.fd >= 0:
             return "%d" % self.fd

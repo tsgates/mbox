@@ -3,6 +3,7 @@
 import os
 import re
 import dbg
+import pprint
 import collections
 
 from sys      import stderr, exit
@@ -20,8 +21,9 @@ from ptrace.ctypes_tools import formatAddress
 from spec import *
 
 class OS:
-    def __init__(self, root):
+    def __init__(self, root, cwd):
         self.root = root
+        self.cwd  = cwd
         self.stat = collections.defaultdict(int)
         self.fds  = {0: "stdin",
                      1: "stdout",
@@ -37,19 +39,20 @@ class OS:
             getattr(self, func)(proc, Syscall(syscall))
 
     def open_enter(self, proc, sc):
-        print sc
-        print " -> %s" % (sc.path.chroot(self.root, "/usr/bin"))
+        dbg.ns(sc)
+        dbg.ns(" -> %s" % (sc.path.chroot(self.root, self.cwd)))
         
         # XXX. if mode
 
     def open_exit(self, proc, sc):
         fd = sc.ret
         pn = sc.path
-        self.fds[fd] = pn
-        print sc
+        self.fds[fd.int()] = pn
+        dbg.ns(sc)
         
     def openat_enter(self, proc, sc):
-        print sc
+        dbg.ns(sc)
+        dbg.ns(" -> %s" % (sc.path.chroot(self.root, self.cwd)))
 
     def openat_exit(self, proc, sc):
         print sc
@@ -58,11 +61,12 @@ class OS:
         pass
 
     def close_exit(self, proc, sc):
-        self.fds[sc.fd] = None
+        self.fds[sc.fd.int()] = None
     
     def done(self):
         for (n, v) in self.stat.items():
             print "%15s: %3s" % (n, v)
+        pprint.pprint(self.fds)
         
 class Sandbox:
     def __init__(self, opts, args):
@@ -192,7 +196,7 @@ class Sandbox:
         self.syscall_options.instr_pointer = False
 
         # init os instance
-        self.os = OS(self.parse_root(self.opts.root, pid))
+        self.os = OS(self.parse_root(self.opts.root, pid), os.getcwd())
         self.loop(proc)
 
     def fork(self, args, env=None):

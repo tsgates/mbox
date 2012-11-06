@@ -73,7 +73,7 @@ class Syscall:
     def __str__(self):
         pid = self.sc.process.pid
         seq = ">" if self.sc.is_enter() else "<"
-        rtn = "[%d]%s%s(%s)" % (pid, seq, self.name, ",".join(str(a) for a in self.args))
+        rtn = "[%d]%s %s(%s)" % (pid, seq, self.name, ",".join(str(a) for a in self.args))
         if self.sc.is_exit():
             rtn += " = %s" % str(self.ret)
         return rtn
@@ -108,12 +108,11 @@ class arg(object):
         return (r, getattr(regs, r))
         
     def __hijack_str(self, proc, new):
-        assert type(new) is str
+        assert type(new) is str and len(new) < MAX_PATH - 1
+        
         # memcpy to the lower part of stack
         ptr = proc.getStackPointer() - MAX_PATH
-
-        # XXX. really ends with \0?
-        proc.writeBytes(ptr, new)
+        proc.writeBytes(ptr, new + "\x00")
 
         # write to the proper register
         (reg, self.old) = self.__get_arg(proc, self.seq)

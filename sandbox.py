@@ -66,8 +66,12 @@ class OS:
         for crumb in itercrumb(path):
             spn = join(self.root, crumb[1:])
             if dir_exists(crumb) and not dir_exists(spn):
-                dbg.test("mkdir: %s" % spn)
                 mkdir(spn)
+
+    def copy_to(self, pn, spn):
+        if file_exists(pn):
+            dbg.ns(" copy %s -> %s", pn, spn)
+            safecopy(pn, spn)
 
     def chdir_enter(self):
         pass
@@ -77,8 +81,6 @@ class OS:
     
     def open_enter(self, proc, sc):
         spn = sc.path.chroot(self.root, self.cwd)
-        dbg.ns(sc)
-        dbg.ns(" -> %s" % spn)
 
         # for dirs
         if sc.path.is_dir():
@@ -95,6 +97,7 @@ class OS:
             return
 
         if sc.flag.is_trunc():
+            dbg.ns(sc)
             # sync parent dir
             self.sync_parent_dirs(sc.path.str)
             # rewrite pn -> spn
@@ -102,9 +105,13 @@ class OS:
             return
 
         if sc.flag.is_wr():
+            dbg.ns(sc)
             # sync parent dir
-            # copy to sandbox
-            # XXX. rewrite pn -> spn
+            self.sync_parent_dirs(sc.path.str)
+            # copy the file to sandbox
+            self.copy_to(sc.path.str, spn)
+            # rewrite pn -> spn
+            self.add_hijack(sc.path, spn)
             return
         
     def open_exit(self, proc, sc):

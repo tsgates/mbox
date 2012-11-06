@@ -2,11 +2,16 @@
 
 import os
 import stat
+import shutil
 
 from os.path import exists
 from os.path import join
 from os.path import normpath
 
+def safecopy(src, dst):
+    assert file_exists(src) and not file_exists(dst)
+    shutil.copyfile(src, dst)
+    
 def safestat(pn):
     try:
         return os.stat(pn)

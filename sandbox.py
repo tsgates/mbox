@@ -26,7 +26,10 @@ class OS:
         self.root = root.rstrip("/")
         self.cwd  = cwd
         self.stat = collections.defaultdict(int)
-        
+
+        # rewriting tasks
+        self.hijack = []
+
         # XXX self.fds[pid] = {}
         self.fds  = {0: "stdin",
                      1: "stdout",
@@ -34,15 +37,30 @@ class OS:
 
         # init root
         mkdir(self.root)
-        
+
+    def add_hijack(self, arg, new):
+        self.hijack.append((arg, new))
+
     def run(self, proc, syscall):
         if syscall.is_enter():
+            assert len(self.hijack) == 0
             self.stat[syscall.name] += 1
 
         cond = "enter" if syscall.is_enter() else "exit"
         func = "%s_%s" % (syscall.name, cond)
         if hasattr(self, func):
             getattr(self, func)(proc, Syscall(syscall))
+
+        if syscall.is_enter():
+            for (arg, new) in self.hijack:
+                dbg.ns("-> %s", new)
+                arg.hijack(proc, new)
+        else:
+            for (arg, new) in self.hijack:
+                dbg.ns("<- %s", arg)
+                arg.restore(proc, new)
+            # clean them up
+            self.hijack = []
 
     def sync_parent_dirs(self, path):
         for crumb in itercrumb(path):
@@ -80,7 +98,7 @@ class OS:
             # sync parent dir
             self.sync_parent_dirs(sc.path.str)
             # rewrite pn -> spn
-            # self.sc.path.rewrite(spn)
+            self.add_hijack(sc.path, spn)
             return
 
         if sc.flag.is_wr():
@@ -113,7 +131,8 @@ class OS:
         for (n, v) in self.stat.items():
             print "%15s: %3s" % (n, v)
         pprint.pprint(self.fds)
-        os.system("ls -al -R %s" % self.root)
+        # XXX. check
+        # os.system("cat %s/tmp/x" % self.root)
         
 class Sandbox:
     def __init__(self, opts, args):

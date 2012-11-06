@@ -64,11 +64,11 @@ class Syscall:
             arg = sc.getArg
         else:
             raise Exception("Not implemented yet")        
-        return newarg(kls, arg(seq), self)
+        return newarg(kls, arg(seq), seq, self)
 
     def __parse_ret(self, sc, kls):
         assert kls.argtype == "int"
-        return newarg(kls, sc.result, self)
+        return newarg(kls, sc.result, -1, self)
     
     def __str__(self):
         seq = ">" if self.sc.is_enter() else "<"
@@ -77,12 +77,59 @@ class Syscall:
             rtn += " = %s" % str(self.ret)
         return rtn
 
-def newarg(kls, arg, sc):
+#
+# weave functions for arguments
+#  - don't like super() in python, so weave here
+#
+def newarg(kls, arg, seq, sc):
     val = kls(arg, sc)
     setattr(val, kls.argtype, arg)
+    setattr(val, "seq", seq)
+    setattr(val, "old", None)
     return val
 
-class err(object):
+class arg(object):
+    def hijack(self, proc, new):
+        if self.argtype == "str":
+            self.__hijack_str(proc, new)
+        elif self.argtype == "int":
+            self.__hijack_int(proc, new)
+
+    def restore(self, proc, new):
+        if self.argtype == "str":
+            self.__restore_str(proc, new)
+        elif self.argtype == "int":
+            self.__restore_int(proc, new)
+
+    def __get_arg(self, proc, seq):
+        r  = ("rdi", "rsi", "rdx", "r10", "r8", "r9")[seq]
+        regs = proc.getregs()
+        return (r, getattr(regs, r))
+        
+    def __hijack_str(self, proc, new):
+        assert type(new) is str
+        # memcpy to the lower part of stack
+        ptr = proc.getStackPointer() - MAX_PATH
+
+        # XXX. really ends with \0?
+        proc.writeBytes(ptr, new)
+
+        # write to the proper register
+        (reg, self.old) = self.__get_arg(proc, self.seq)
+        proc.setreg(reg, ptr)
+
+    def __restore_str(self, proc, new):
+        assert type(new) is str
+        (reg, _) = self.__get_arg(proc, self.seq)
+        proc.setreg(reg, self.old)
+
+    def __hijack_int(self, proc, new):
+        pass    
+
+    def __restore_int(self, proc, new):
+        pass    
+
+class err(arg):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.err = arg
@@ -91,7 +138,7 @@ class err(object):
             return "ok"
         return "%s" % errno.errorcode[-self.err]
 
-class f_fd(object):
+class f_fd(arg):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.fd = arg
@@ -125,7 +172,7 @@ O_NOFOLLOW = 00400000   # don't follow links
 O_NOATIME  = 01000000   # no access time
 O_CLOEXEC  = 02000000   # set close_on_exec
 
-class f_path(object):
+class f_path(arg):
     argtype = "str"
     def __init__(self, arg, syscall):
         self.path = arg
@@ -148,7 +195,7 @@ class f_path(object):
     def __str__(self):
         return "%s%s" % (self.path, "" if exists(self.path) else " (N)")
 
-class f_flag(object):
+class f_flag(arg):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.flag = arg
@@ -180,7 +227,7 @@ class f_flag(object):
 
         return "|".join(rtn)
 
-class f_mode(object):
+class f_mode(arg):
     argtype = "int"
     def __init__(self, arg, syscall):
         self.mode = None

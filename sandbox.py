@@ -97,17 +97,19 @@ class OS:
         pass
     
     def getdents_exit(self, proc, sc):
-        # exit on current syscall, let's dump hostfs too
         pid = proc.pid
         fd  = sc.fd.int
+        
+        # exit on current syscall, let's dump hostfs too
         if sc.ret.int == 0:
             state = self.dirents[pid].get(fd, None)
-            path  = self.fds[pid][fd]
-
+            npn   = self.fds[pid][fd]
+            sdir  = os.listdir(chjoin(self.root, npn))
+            
             # fetch previous dirents
             if state is None:
                 # initial to dump hostfs
-                dirents = get_dirents(path)
+                dirents = get_dirents(npn)
             else:
                 dirents = state
 
@@ -115,6 +117,8 @@ class OS:
             blob = ""
             while len(dirents) > 0:
                 d = dirents.pop()
+                if d.d_name in sdir:
+                    continue
                 pack = d.pack()
                 # need another call to complete
                 if len(blob) + len(pack) >= sc.size.int:
@@ -122,13 +126,17 @@ class OS:
                     break
                 blob += pack
 
+            # reset state
+            if state is []:
+                self.dirents[pid].get(fd, None)
+            
             # insert blob
             if len(blob) != 0:
                 self.add_hijack(sc.dirp, blob)
                 self.dirents[pid][fd] = dirents
     
     def open_enter(self, proc, sc):
-        sc.dirfd = at_fd(AT_FDCWD, None)
+        sc.dirfd = at_fd(AT_FDCWD, sc)
         self.openat_enter(proc, sc)
 
     def open_exit(self, proc, sc):
@@ -362,12 +370,19 @@ def parse_args():
     parser.add_option("-r", "--root",
                       help="Root of the sandbox dir (ex /tmp/sandbox-%PID)",
                       default="/tmp/sandbox-%PID")
+    parser.add_option("-q", "--quiet",
+                      help="Quiet",
+                      action="store_true", default=False)
     (opts, args) = parser.parse_args()
 
     # checking sanity
     if len(args) == 0:
         parser.print_help()
         exit(1)
+
+    # control verbosity
+    if opts.quiet:
+        dbg.quiet(dbg, ["error"])
 
     return (opts, args)
 

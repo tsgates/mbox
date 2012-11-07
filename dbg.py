@@ -105,10 +105,10 @@ def dbg(tag, mark, *args):
                                      coloring(msg))))
 
 for k, v in settings.iteritems() :
-    if v :
+    if v:
         exec("def %s(*msg) : dbg('%s',' ',*msg)" % (k, k))
         exec("def %sm(*msg): dbg('%s',*msg)"     % (k, k))
-    else :
+    else:
         exec("def %s(*msg) : pass" % k)
         exec("def %sm(*msg): pass" % k)
 
@@ -119,10 +119,11 @@ def fatal(*msg):
 def stop():
     import pdb
     pdb.Pdb().set_trace(sys._getframe().f_back)
-
-def quiet(enable=[]):
-        def ignore(*key, **kwds):
-                pass
-        for k in set(settings.keys()) - set(enable):
-            exec("%s  = ignore", k)
-            exec("%sm = ignore", k)
+    
+def quiet(dbg, enable=[]):
+    def ignore(*key, **kwds):
+        return
+    for k in set(settings.keys()) - set(enable):
+        setattr(dbg, k, ignore)
+        setattr(dbg, k + "m", ignore)
+    

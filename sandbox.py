@@ -87,16 +87,26 @@ class OS:
         pass
     
     def open_enter(self, proc, sc):
-        npn = sc.path.normpath(self.cwd)
-        spn = sc.path.chroot(self.root, self.cwd)
+        sc.dirfd = AT_FDCWD
+        self.openat_enter(proc, sc)
 
+    def open_exit(self, proc, sc):
+        self.openat_exit(proc, sc)
+        
+    def openat_enter(self, proc, sc):
+        if sc.dirfd == AT_FDCWD:
+            npn = sc.path.normpath(self.cwd)
+            spn = sc.path.chroot(self.root, self.cwd)
+        else:
+            # XXX. fetch from fds
+            return
+        
         #
         # XXX. create a virtual layer to simulate /dev, /sys and /proc
         #
 
         # for dirs
-        if sc.path.is_dir():
-            pass
+        if sc.path.is_dir() and sc.flag.is_dir():
             return
         
         # for files
@@ -129,18 +139,11 @@ class OS:
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
-
-    def open_exit(self, proc, sc):
+        
+    def openat_exit(self, proc, sc):
         # keep tracks of open files
         if not sc.ret.err():
             self.fds[sc.ret.int] = sc.path
-        
-    def openat_enter(self, proc, sc):
-        dbg.ns(sc)
-        dbg.ns(" -> %s" % (sc.path.chroot(self.root, self.cwd)))
-
-    def openat_exit(self, proc, sc):
-        print sc
 
     def close_enter(self, proc, sc):
         pass
@@ -236,7 +239,7 @@ class Sandbox:
             self.print_syscall(state.syscall)
 
         # display exit message
-        # dbg.error("*** %s ***" % event)
+        dbg.trace("*** %s ***" % event)
 
     def event_new_proc(self, event):
         process = event.process

@@ -13,9 +13,9 @@ from util import *
 #  - arg# also aliased
 #  
 SYSCALLS = {
-  "open"   : ("f_fd" , "f_path" , "f_flag" , "f_mode") ,
-  "openat" : ("f_fd" , "at_fd"  , "f_path" , "f_flag"  , "f_mode") ,
-  "close"  : ("err"  , "f_fd")  ,
+  "open"   : ("f_fd" , "f_path"      , "f_flag" , "f_mode") ,
+  "openat" : ("f_fd" , "dirfd:at_fd" , "f_path" , "f_flag"  , "f_mode") ,
+  "close"  : ("err"  , "f_fd")       ,
 }
 
 class Syscall:
@@ -218,6 +218,8 @@ class f_flag(arg):
         return self.is_wronly() or self.is_rdwr()
     def is_trunc(self):
         return (self.flag & O_TRUNC)
+    def is_dir(self):
+        return (self.flag & O_DIRECTORY)
     def chk(self, f):
         return self.flag & f
     def __str__(self):

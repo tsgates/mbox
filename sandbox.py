@@ -93,11 +93,10 @@ class OS:
     def getdents_exit(self, proc, sc):
         if sc.ret.int != 0:
             blob = sc.dirp.read()
-            d1 = dirent(blob, 0)
-            d2 = dirent(blob, d1.d_reclen)
+            ds = parse_dirents(blob)
+            print [str(s) for s in ds]
             print hexdump(blob)
-            print d1
-            print d2
+            print hexdump("".join(s.pack() for s in ds))
             self.add_hijack(sc.dirp, blob+blob)
     
     def open_enter(self, proc, sc):

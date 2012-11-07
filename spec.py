@@ -3,6 +3,7 @@ import os
 import stat
 import errno
 import struct
+import dbg
 
 from util import *
 
@@ -299,7 +300,15 @@ class at_fd(f_fd):
             return "AT_FDCWD"
         return super(at_fd, self).__str__()
 
-
+def parse_dirents(blob):
+    rtn = []
+    off = 0
+    while off < len(blob):
+        d = dirent(blob, off)
+        rtn.append(d)
+        off += d.d_reclen
+    return rtn
+        
 class dirent:
     fields = [("d_ino"   , "<Q"),
               ("d_off"   , "<Q"),
@@ -310,13 +319,27 @@ class dirent:
         for (field, fmt) in dirent.fields:
             val = struct.unpack_from(fmt, buf, offset)
             setattr(self, field, val[0])
-            print field, "%x" % offset, "val=", getattr(self, field)
+            dbg.dirent(field, "%x" % offset, "val=", getattr(self, field))
             offset += struct.calcsize(fmt)
 
         self.d_name = buf[offset:beg + self.d_reclen - 1].rstrip("\x00")
-        print "offset:%x, '%s'(%d)" % (offset, self.d_name, len(self.d_name))
         self.d_type = ord(buf[beg + self.d_reclen - 1])
+        
+        dbg.dirent("offset:%x, '%s'(%d)" % (offset, self.d_name, len(self.d_name)))
 
+    def pack(self):
+        # regular header
+        blob = ""
+        for (field, fmt) in dirent.fields:
+            blob += struct.pack(fmt, getattr(self, field))
+        # name:char[]
+        blob += self.d_name
+        # padding
+        blob += "\x00" * (self.d_reclen - len(blob) - 1)
+        # type
+        blob += chr(self.d_type)
+        return blob
+    
     def __str__(self):
         return "%d(offset:%d, len:%d): %s (type:%s)" \
           % (self.d_ino, self.d_off, self.d_reclen, self.d_name, self.d_type)

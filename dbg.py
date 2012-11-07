@@ -16,6 +16,7 @@ settings = {
     "error"     : True,
     "ns"        : True,
     "trace"     : False,
+    "dirent"    : False,
     }
 
 #

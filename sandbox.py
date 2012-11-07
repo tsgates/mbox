@@ -85,6 +85,14 @@ class OS:
     def chdir_exit(self, proc, sc):
         # XXX. update self.cwd[pid]
         pass
+
+    def getdents_enter(self, proc, sc):
+        dbg.test(sc)
+        pass
+    
+    def getdents_exit(self, proc, sc):
+        dbg.test(sc)
+        pass
     
     def open_enter(self, proc, sc):
         sc.dirfd = AT_FDCWD
@@ -107,6 +115,10 @@ class OS:
 
         # for dirs
         if sc.path.is_dir() and sc.flag.is_dir():
+            # sync parent dir
+            self.sync_parent_dirs(npn)
+            # rewrite pn -> spn
+            self.add_hijack(sc.path, spn)
             return
         
         # for files

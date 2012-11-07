@@ -13,9 +13,10 @@ from util import *
 #  - arg# also aliased
 #  
 SYSCALLS = {
-  "open"   : ("f_fd" , "f_path"      , "f_flag" , "f_mode") ,
-  "openat" : ("f_fd" , "dirfd:at_fd" , "f_path" , "f_flag"  , "f_mode") ,
-  "close"  : ("err"  , "f_fd")       ,
+  "open"     : ("f_fd" , "f_path"      , "f_flag" , "f_mode"             ),
+  "openat"   : ("f_fd" , "dirfd:at_fd" , "f_path" , "f_flag"  , "f_mode" ),
+  "close"    : ("err"  , "f_fd"                                          ),
+  "getdents" : ("f_len", "f_fd"        , "f_dirp" , "f_size"             ),
 }
 
 class Syscall:
@@ -131,16 +132,38 @@ class arg(object):
 
 class err(arg):
     argtype = "int"
-    def __init__(self, arg, syscall):
+    def __init__(self, arg, sc):
         self.err = arg
     def __str__(self):
         if self.err == 0:
             return "ok"
         return "%s" % errno.errorcode[-self.err]
 
+class f_int(arg):
+    argtype = "int"
+    def __init__(self, arg, sc):
+        self.arg = arg
+    def __str__(self):
+        return "%d" % self.arg
+
+f_size = f_int
+f_len  = f_int
+
+class ptr(arg):
+    def __init__(self, arg, sc):
+        self.arg = arg
+    def __str__(self):
+        return "0x%x" % self.arg
+
+class f_dirp(ptr):
+    argtype = "int"
+    def __init__(self, arg, sc):
+        super(f_dirp, self).__init__(arg, sc)
+        self.sc = sc
+
 class f_fd(arg):
     argtype = "int"
-    def __init__(self, arg, syscall):
+    def __init__(self, arg, sc):
         self.fd = arg
     def err(self):
         return self.fd < 0
@@ -176,7 +199,7 @@ O_CLOEXEC  = 02000000   # set close_on_exec
 
 class f_path(arg):
     argtype = "str"
-    def __init__(self, arg, syscall):
+    def __init__(self, arg, sc):
         self.path = arg
 
     def exists(self):
@@ -202,11 +225,11 @@ class f_path(arg):
         return chjoin(root, cwd[1:], pn[1:])
     
     def __str__(self):
-        return "%s%s" % (self.path, "" if exists(self.path) else " (N)")
+        return "%s%s" % (self.path, "" if exists(self.path) else "(N)")
 
 class f_flag(arg):
     argtype = "int"
-    def __init__(self, arg, syscall):
+    def __init__(self, arg, sc):
         self.flag = arg
     def is_rdonly(self):
         return (self.flag & O_ACCMODE) == O_RDONLY
@@ -240,9 +263,9 @@ class f_flag(arg):
 
 class f_mode(arg):
     argtype = "int"
-    def __init__(self, arg, syscall):
+    def __init__(self, arg, sc):
         self.mode = None
-        if syscall.flag.chk(O_CREAT):
+        if sc.flag.chk(O_CREAT):
             self.mode = arg
     def __str__(self):
         if self.mode is None:
@@ -252,8 +275,8 @@ class f_mode(arg):
 AT_FDCWD = (MAX_INT - 100)
 
 class at_fd(f_fd):
-    def __init__(self, arg, syscall):
-        super(at_fd, self).__init__(arg, syscall)
+    def __init__(self, arg, sc):
+        super(at_fd, self).__init__(arg, sc)
     def __str__(self):
         if self.fd == AT_FDCWD:
             return "AT_FDCWD"

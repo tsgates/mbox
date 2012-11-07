@@ -2,6 +2,7 @@
 import os
 import stat
 import errno
+import struct
 
 from util import *
 
@@ -297,3 +298,25 @@ class at_fd(f_fd):
         if self.fd == AT_FDCWD:
             return "AT_FDCWD"
         return super(at_fd, self).__str__()
+
+
+class dirent:
+    fields = [("d_ino"   , "<Q"),
+              ("d_off"   , "<Q"),
+              ("d_reclen", "<H")]
+    
+    def __init__(self, buf, beg):
+        offset = beg
+        for (field, fmt) in dirent.fields:
+            val = struct.unpack_from(fmt, buf, offset)
+            setattr(self, field, val[0])
+            print field, "%x" % offset, "val=", getattr(self, field)
+            offset += struct.calcsize(fmt)
+
+        self.d_name = buf[offset:beg + self.d_reclen - 1].rstrip("\x00")
+        print "offset:%x, '%s'(%d)" % (offset, self.d_name, len(self.d_name))
+        self.d_type = ord(buf[beg + self.d_reclen - 1])
+
+    def __str__(self):
+        return "%d(offset:%d, len:%d): %s (type:%s)" \
+          % (self.d_ino, self.d_off, self.d_reclen, self.d_name, self.d_type)

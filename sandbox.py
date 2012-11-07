@@ -91,8 +91,14 @@ class OS:
         pass
     
     def getdents_exit(self, proc, sc):
-        blob = sc.dirp.read()
-        self.add_hijack(sc.dirp, blob+blob)
+        if sc.ret.int != 0:
+            blob = sc.dirp.read()
+            d1 = dirent(blob, 0)
+            d2 = dirent(blob, d1.d_reclen)
+            print hexdump(blob)
+            print d1
+            print d2
+            self.add_hijack(sc.dirp, blob+blob)
     
     def open_enter(self, proc, sc):
         sc.dirfd = at_fd(AT_FDCWD, None)

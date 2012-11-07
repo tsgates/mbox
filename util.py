@@ -70,5 +70,5 @@ def hexdump(binstr):
           % (s, " ".join(hexstr[s:e]), 
              "".join(map(to_printable, binstr[s:e]))))
         
-    return "\n".join(line)
+    return "".join(line)
             

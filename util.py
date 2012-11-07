@@ -71,4 +71,3 @@ def hexdump(binstr):
              "".join(map(to_printable, binstr[s:e]))))
         
     return "".join(line)
-            

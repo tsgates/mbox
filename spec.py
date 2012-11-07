@@ -304,17 +304,59 @@ def parse_dirents(blob):
     rtn = []
     off = 0
     while off < len(blob):
-        d = dirent(blob, off)
+        d = dirent()
+        d.parse(blob, off)
         rtn.append(d)
         off += d.d_reclen
     return rtn
-        
+
+def get_dirents(path):
+    #
+    # NOTE. slow, call getdirent() syscall intead
+    #
+    rtn = []
+    off = 1
+    for f in os.listdir(path):
+        s = os.stat(join(path, f))
+        d = dirent()
+        d.d_name   = f
+        d.d_type   = __st_to_dt(s)
+        d.d_ino    = s.st_ino
+        d.d_off    = off
+        d.d_reclen = ((len(f)+19+24)/24)*24
+        rtn.append(d)
+        off += 1
+    return rtn
+
+DT_UNKNOWN = 0  # The file type is unknown
+DT_FIFO    = 1  # This is a named pipe (FIFO)
+DT_CHR     = 2  # This is a character device
+DT_DIR     = 4  # This is a directory
+DT_BLK     = 6  # This is a block device
+DT_REG     = 8  # This is a regular file
+DT_LNK     =10  # This is a symbolic link
+DT_SOCK    =14  # This is a UNIX domain socket
+
+def __st_to_dt(s):
+    mod = s.st_mode
+    for m in ["BLK", "CHR", "DIR", "FIFO", "LNK", "REG", "SOCK"]:
+        if getattr(stat, "S_IS" + m)(mod):
+            rtn = eval("DT_" + m)
+            break
+    return rtn
+
 class dirent:
     fields = [("d_ino"   , "<Q"),
               ("d_off"   , "<Q"),
               ("d_reclen", "<H")]
     
-    def __init__(self, buf, beg):
+    def __init__(self):
+        for (field, fmt) in dirent.fields:    
+            setattr(self, field, None)
+        self.d_name = ""
+        self.d_type = DT_UNKNOWN
+            
+    def parse(self, buf, beg):
         offset = beg
         for (field, fmt) in dirent.fields:
             val = struct.unpack_from(fmt, buf, offset)

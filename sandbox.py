@@ -22,6 +22,11 @@ from util import *
 
 class OS:
     def __init__(self, root, cwd):
+        #
+        # cwd    in hostfs
+        # dirfd  in sandboxfs
+        # filefd in hostfs|sandboxfs
+        # 
         self.root = root.rstrip("/")
         self.fds  = defaultdict(dict)
         self.cwd  = cwd

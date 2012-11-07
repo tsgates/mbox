@@ -19,6 +19,9 @@ SYSCALLS = {
   "openat"   : ("f_fd" , "dirfd:at_fd" , "f_path" , "f_flag"  , "f_mode" ),
   "close"    : ("err"  , "f_fd"                                          ),
   "getdents" : ("f_len", "f_fd"        , "f_dirp" , "f_size"             ),
+  "stat"     : ("err"  , "f_path"      , "f_statp"                       ),
+  "fstat"    : ("err"  , "f_fd"        , "f_statp"                       ),
+  "lstat"    : ("err"  , "f_path"      , "f_statp"                       ),
 }
 
 class Syscall:
@@ -299,6 +302,12 @@ class at_fd(f_fd):
         if self.fd == AT_FDCWD:
             return "AT_FDCWD"
         return super(at_fd, self).__str__()
+
+class f_statp(ptr):
+    argtype = "int"
+    def __init__(self, arg, sc):
+        super(f_statp, self).__init__(arg, sc)
+        self.sc = sc
 
 #
 # dirents related

@@ -26,7 +26,7 @@ class OS:
         # cwd    in hostfs
         # dirfd  in sandboxfs
         # filefd in hostfs|sandboxfs
-        # 
+        #
         self.root    = root.rstrip("/")   # root dir of sandboxfs
         self.fds     = defaultdict(dict)  # fd->path (normalized, original)
         self.cwd     = cwd                # initial cwd
@@ -40,7 +40,7 @@ class OS:
         # init root
         mkdir(self.root)
 
-    # 
+    #
     # main driver
     #
     def run(self, proc, syscall):
@@ -82,7 +82,12 @@ class OS:
 
     def getcwd(self, proc):
         return self.cwds.get(proc.pid, self.cwd)
-    
+
+    def parse_path(self, path, proc):
+        npn = path.normpath(self.getcwd(proc))
+        spn = path.chroot(self.root, self.getcwd(proc))
+        return (npn, spn)
+
     #
     # list of system calls to interleave
     #
@@ -95,17 +100,17 @@ class OS:
 
     def getdents_enter(self, proc, sc):
         pass
-    
+
     def getdents_exit(self, proc, sc):
         pid = proc.pid
         fd  = sc.fd.int
-        
+
         # exit on current syscall, let's dump hostfs too
         if sc.ret.int == 0:
             state = self.dirents[pid].get(fd, None)
             npn   = self.fds[pid][fd]
             sdir  = os.listdir(chjoin(self.root, npn))
-            
+
             # fetch previous dirents
             if state is None:
                 # initial to dump hostfs
@@ -129,27 +134,26 @@ class OS:
             # reset state
             if state is []:
                 self.dirents[pid].get(fd, None)
-            
+
             # insert blob
             if len(blob) != 0:
                 self.add_hijack(sc.dirp, blob)
                 self.dirents[pid][fd] = dirents
-    
+
     def open_enter(self, proc, sc):
         sc.dirfd = at_fd(AT_FDCWD, sc)
         self.openat_enter(proc, sc)
 
     def open_exit(self, proc, sc):
         self.openat_exit(proc, sc)
-        
+
     def openat_enter(self, proc, sc):
         if sc.dirfd.fd == AT_FDCWD:
-            npn = sc.path.normpath(self.getcwd(proc))
-            spn = sc.path.chroot(self.root, self.getcwd(proc))
+            (npn, spn) = self.parse_path(sc.path, proc)
         else:
             # XXX. fetch from fds
             return
-        
+
         #
         # XXX. create a virtual layer to simulate /dev, /sys and /proc
         #
@@ -161,7 +165,7 @@ class OS:
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
-        
+
         # for files
         if file_exists(spn):
             # rewrite pn -> spn
@@ -190,7 +194,7 @@ class OS:
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
-        
+
     def openat_exit(self, proc, sc):
         # keep tracks of open files
         if not sc.ret.err():
@@ -204,7 +208,24 @@ class OS:
 
     def close_exit(self, proc, sc):
         self.fds[proc.pid][sc.fd.int] = None
-    
+
+    def stat_enter(self, proc, sc):
+        (npn, spn) = self.parse_path(sc.path, proc)
+
+        # sync & overwrite if exists in sandboxfs
+        if exists(spn):
+            self.sync_parent_dirs(npn)
+            self.add_hijack(sc.path, spn)
+
+    def fstat_enter(self, proc, sc):
+        pass
+
+    def fstat_exit(self, proc, sc):
+        pass
+
+    def lstat_enter(self, proc, sc):
+        self.stat_enter(proc, sc)
+
     def done(self):
         # XXX.
         for (n, v) in self.stat.items():
@@ -212,12 +233,12 @@ class OS:
         pprint.pprint(self.fds)
         # XXX. check
         os.system("tree %s" % self.root)
-        
+
 class Sandbox:
     def __init__(self, opts, args):
         self.opts = opts
         self.args = args
-        
+
     def run(self):
         self.debugger = PtraceDebugger()
         try:
@@ -230,18 +251,18 @@ class Sandbox:
             dbg.error("Interrupted.")
         self.debugger.quit()
         self.os.done()
-        
+
     def print_syscall(self, syscall):
         name = syscall.name
         text = syscall.format()
-        
+
         if syscall.result is not None:
             text = "%-40s = %s" % (text, syscall.result_text)
-            
+
         prefix = []
         prefix.append("[%s]" % syscall.process.pid)
         prefix.append(">" if syscall.is_enter() else "<")
-        
+
         dbg.info(''.join(prefix) + ' ' + text)
 
     def loop(self, proc):
@@ -355,7 +376,7 @@ def print_syscalls():
     syscalls.sort(key=lambda data: data[0])
     for num, name in syscalls:
         print "% 3s: %s" % (num, name)
-    
+
 def parse_args():
     parser = OptionParser(usage="%prog [options] -- program [arg1 arg2 ...]")
     parser.add_option("--list-syscalls",
@@ -392,5 +413,5 @@ if __name__ == "__main__":
     if opts.list_syscalls:
         print_syscalls()
         exit(1)
-    
+
     Sandbox(opts, args).run()

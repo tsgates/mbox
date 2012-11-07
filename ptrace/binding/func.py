@@ -1,3 +1,4 @@
+import sys
 from os import strerror
 from ctypes import addressof, c_int
 from ptrace import PtraceError

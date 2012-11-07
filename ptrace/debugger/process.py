@@ -542,7 +542,10 @@ class PtraceProcess(object):
                 piod_len=size)
             ptrace_io(self.pid, io_desc)
             return buffer.raw
-    elif HAS_PROC:
+    #
+    # XXX. /proc/child/mem doesn't seem to return proper value when nested
+    #
+    elif False:
         def readBytes(self, address, size):
             if not self.read_mem_file:
                 filename = '/proc/%u/mem' % self.pid
@@ -564,6 +567,9 @@ class PtraceProcess(object):
             except (IOError, ValueError), err:
                 raise ProcessError(self, "readBytes(%s, %s) error: %s" % (
                     formatAddress(address), size, err))
+    #
+    # using peek/pook
+    # 
     else:
         readBytes = _readBytes
 

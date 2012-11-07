@@ -152,12 +152,16 @@ class PtraceDebugger(object):
                 #
                 # if child's clone() executes first, find parent to keep track of
                 #
+                process = None
                 for ppid, proc in self.dict.iteritems():
                     sc = proc.syscall_state.syscall
                     if sc.name == "clone" and sc.result is None:
                         process = self.addProcess(pid, False, ppid)
                         self.dict[pid] = process
                         break
+                if process is None:
+                    warning("waitpid() warning: Unknown PID %r" % pid)
+
         return process.processStatus(status)
 
     def waitProcessEvent(self, pid=None, blocking=True):

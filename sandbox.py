@@ -187,22 +187,22 @@ class Sandbox:
         
         dbg.info(''.join(prefix) + ' ' + text)
 
-    def loop(self, process):
+    def loop(self, proc):
         # first query to break at next syscall
-        process.syscall()
+        proc.syscall()
 
         # loop until no process
         while self.debugger:
             # wait until next syscall enter
             try:
                 event = self.debugger.waitSyscall()
-                process = event.process
+                proc = event.process
             except ProcessExit, event:
                 self.event_exit(event)
                 continue
             except ProcessSignal, event:
                 event.display()
-                process.syscall(event.signum)
+                proc.syscall(event.signum)
                 continue
             except NewProcessEvent, event:
                 self.event_new_proc(event)
@@ -212,7 +212,7 @@ class Sandbox:
                 continue
 
             # process syscall enter or exit
-            self.handle_syscall(process)
+            self.handle_syscall(proc)
 
     def handle_syscall(self, proc):
         syscall = proc.getSyscall(self.syscall_options)

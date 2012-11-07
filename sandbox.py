@@ -83,11 +83,16 @@ class OS:
         pass
 
     def chdir_exit(self, proc, sc):
-        # XXX. update self.cwd
+        # XXX. update self.cwd[pid]
         pass
     
     def open_enter(self, proc, sc):
+        npn = sc.path.normpath(self.cwd)
         spn = sc.path.chroot(self.root, self.cwd)
+
+        #
+        # XXX. create a virtual layer to simulate /dev, /sys and /proc
+        #
 
         # for dirs
         if sc.path.is_dir():
@@ -109,7 +114,7 @@ class OS:
         if sc.flag.is_trunc():
             dbg.ns(sc)
             # sync parent dir
-            self.sync_parent_dirs(sc.path.str)
+            self.sync_parent_dirs(npn)
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
@@ -118,9 +123,9 @@ class OS:
         if sc.flag.is_wr():
             dbg.ns(sc)
             # sync parent dir
-            self.sync_parent_dirs(sc.path.str)
+            self.sync_parent_dirs(npn)
             # copy the file to sandbox
-            self.copy_to(sc.path.str, spn)
+            self.copy_to(npn, spn)
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
@@ -149,7 +154,7 @@ class OS:
             print "%15s: %3s" % (n, v)
         pprint.pprint(self.fds)
         # XXX. check
-        # os.system("cat %s/tmp/x" % self.root)
+        os.system("tree %s" % self.root)
         
 class Sandbox:
     def __init__(self, opts, args):
@@ -217,7 +222,8 @@ class Sandbox:
             self.print_syscall(syscall)
 
         # emulate os
-        self.os.run(proc, syscall)
+        if not self.opts.no_sandbox:
+            self.os.run(proc, syscall)
 
         # break at next syscall
         proc.syscall()
@@ -301,6 +307,9 @@ def parse_args():
                       action="store_true", default=False)
     parser.add_option("--strace", "-s",
                       help="Print out system calls",
+                      action="store_true", default=False)
+    parser.add_option("--no-sandbox", "-n",
+                      help="No sandboxing",
                       action="store_true", default=False)
     parser.add_option("-r", "--root",
                       help="Root of the sandbox dir (ex /tmp/sandbox-%PID)",

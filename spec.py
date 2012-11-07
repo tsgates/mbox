@@ -185,6 +185,13 @@ class f_path(arg):
     def is_dir(self):
         return dir_exists(self.path)
 
+    def normpath(self, cwd):
+        pn = normpath(self.path)
+        if pn.startswith("/"):
+            return pn
+        else:
+            return join(cwd, pn)
+
     def chroot(self, root, cwd):
         pn = normpath(self.path)
         # absolute path

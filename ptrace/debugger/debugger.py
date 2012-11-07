@@ -8,7 +8,7 @@ from ptrace.binding import HAS_PTRACE_EVENTS
 if HAS_PTRACE_EVENTS:
     from ptrace.binding.func import (
         PTRACE_O_TRACEFORK, PTRACE_O_TRACEVFORK,
-        PTRACE_O_TRACEEXEC, PTRACE_O_TRACESYSGOOD)
+        PTRACE_O_TRACECLONE, PTRACE_O_TRACEEXEC, PTRACE_O_TRACESYSGOOD)
 
 class DebuggerError(PtraceError):
     pass
@@ -115,6 +115,7 @@ class PtraceDebugger(object):
         flags = 0
         if not blocking:
             flags |= WNOHANG
+
         if wanted_pid:
             if wanted_pid not in self.dict:
                 raise DebuggerError("Unknown PID: %r" % wanted_pid, pid=wanted_pid)
@@ -148,7 +149,15 @@ class PtraceDebugger(object):
             try:
                 process = self.dict[pid]
             except KeyError:
-                warning("waitpid() warning: Unknown PID %r" % pid)
+                #
+                # if child's clone() executes first, find parent to keep track of
+                #
+                for ppid, proc in self.dict.iteritems():
+                    sc = proc.syscall_state.syscall
+                    if sc.name == "clone" and sc.result is None:
+                        process = self.addProcess(pid, False, ppid)
+                        self.dict[pid] = process
+                        break
         return process.processStatus(status)
 
     def waitProcessEvent(self, pid=None, blocking=True):
@@ -213,7 +222,7 @@ class PtraceDebugger(object):
         """
         if not HAS_PTRACE_EVENTS:
             raise DebuggerError("Tracing fork events is not supported on this architecture or operating system")
-        self.options |= PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK
+        self.options |= PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACECLONE
         self.trace_fork = True
         info("Debugger trace forks (options=%s)" % self.options)
 

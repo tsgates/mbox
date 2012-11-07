@@ -17,7 +17,7 @@ from sys import platform, version, version_info
 RUNNING_PYTHON3 = version_info[0] == 3
 RUNNING_PYPY = ("pypy" in version.lower())
 RUNNING_WINDOWS = (platform == 'win32')
-RUNNING_LINUX = (platform == 'linux2')
+RUNNING_LINUX = (platform == 'linux2' or platform == 'linux')
 RUNNING_FREEBSD = (platform.startswith('freebsd')
                    or platform.startswith('gnukfreebsd'))
 RUNNING_OPENBSD = platform.startswith('openbsd')

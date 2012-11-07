@@ -27,11 +27,12 @@ class OS:
         # dirfd  in sandboxfs
         # filefd in hostfs|sandboxfs
         # 
-        self.root = root.rstrip("/")
-        self.fds  = defaultdict(dict)
-        self.cwd  = cwd
-        self.cwds = {}
-        self.stat = defaultdict(int)
+        self.root    = root.rstrip("/")   # root dir of sandboxfs
+        self.fds     = defaultdict(dict)  # fd->path (normalized, original)
+        self.cwd     = cwd                # initial cwd
+        self.cwds    = {}                 # cwd of each process
+        self.stat    = defaultdict(int)   # statistics of syscalls
+        self.dirents = defaultdict(dict)  # state (seek equivalent)
 
         # rewriting tasks
         self.hijack = []
@@ -96,13 +97,35 @@ class OS:
         pass
     
     def getdents_exit(self, proc, sc):
-        if sc.ret.int != 0:
-            blob = sc.dirp.read()
-            ds = parse_dirents(blob)
-            print [str(s) for s in ds]
-            print hexdump(blob)
-            print hexdump("".join(s.pack() for s in ds))
-            self.add_hijack(sc.dirp, blob+blob)
+        # exit on current syscall, let's dump hostfs too
+        pid = proc.pid
+        fd  = sc.fd.int
+        if sc.ret.int == 0:
+            state = self.dirents[pid].get(fd, None)
+            path  = self.fds[pid][fd]
+
+            # fetch previous dirents
+            if state is None:
+                # initial to dump hostfs
+                dirents = get_dirents(path)
+            else:
+                dirents = state
+
+            # dump dirents
+            blob = ""
+            while len(dirents) > 0:
+                d = dirents.pop()
+                pack = d.pack()
+                # need another call to complete
+                if len(blob) + len(pack) >= sc.size.int:
+                    dirents.append(d)
+                    break
+                blob += pack
+
+            # insert blob
+            if len(blob) != 0:
+                self.add_hijack(sc.dirp, blob)
+                self.dirents[pid][fd] = dirents
     
     def open_enter(self, proc, sc):
         sc.dirfd = at_fd(AT_FDCWD, None)
@@ -163,7 +186,10 @@ class OS:
     def openat_exit(self, proc, sc):
         # keep tracks of open files
         if not sc.ret.err():
-            self.fds[proc.pid][sc.ret.int] = sc.path
+            pid = proc.pid
+            fd  = sc.ret.int
+            cwd = self.getcwd(proc)
+            self.fds[pid][fd] = sc.path.normpath(cwd)
 
     def close_enter(self, proc, sc):
         pass

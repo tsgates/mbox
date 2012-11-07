@@ -300,6 +300,9 @@ class at_fd(f_fd):
             return "AT_FDCWD"
         return super(at_fd, self).__str__()
 
+#
+# dirents related
+#
 def parse_dirents(blob):
     rtn = []
     off = 0
@@ -345,6 +348,12 @@ def __st_to_dt(s):
             break
     return rtn
 
+#
+# NOTE.
+#  - d_off seems to be ignored in everywhere
+#    tmpfs sets the order of dirent to d_off
+#  - d_reclen seems to be aligned 24, so I abide by too
+#  
 class dirent:
     fields = [("d_ino"   , "<Q"),
               ("d_off"   , "<Q"),

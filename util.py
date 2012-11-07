@@ -8,6 +8,8 @@ from os.path import exists
 from os.path import join
 from os.path import normpath
 
+from collections import defaultdict
+
 def safecopy(src, dst):
     assert file_exists(src) and not file_exists(dst)
     # check if use slice syscall

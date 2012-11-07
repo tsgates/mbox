@@ -4,7 +4,6 @@ import os
 import re
 import dbg
 import pprint
-import collections
 
 from sys      import stderr, exit
 from optparse import OptionParser
@@ -24,16 +23,13 @@ from util import *
 class OS:
     def __init__(self, root, cwd):
         self.root = root.rstrip("/")
+        self.fds  = defaultdict(dict)
         self.cwd  = cwd
-        self.stat = collections.defaultdict(int)
+        self.cwds = {}
+        self.stat = defaultdict(int)
 
         # rewriting tasks
         self.hijack = []
-
-        # XXX self.fds[pid] = {}
-        self.fds  = {0: "stdin",
-                     1: "stdout",
-                     2: "stderr"}
 
         # init root
         mkdir(self.root)
@@ -49,7 +45,9 @@ class OS:
         cond = "enter" if syscall.is_enter() else "exit"
         func = "%s_%s" % (syscall.name, cond)
         if hasattr(self, func):
-            getattr(self, func)(proc, Syscall(syscall))
+            sc = Syscall(syscall)
+            dbg.ns(sc)
+            getattr(self, func)(proc, sc)
 
         if syscall.is_enter():
             for (arg, new) in self.hijack:
@@ -76,6 +74,9 @@ class OS:
             dbg.ns(" copy %s -> %s", pn, spn)
             safecopy(pn, spn)
 
+    def getcwd(self, proc):
+        return self.cwds.get(proc.pid, self.cwd)
+    
     #
     # list of system calls to interleave
     #
@@ -87,24 +88,22 @@ class OS:
         pass
 
     def getdents_enter(self, proc, sc):
-        dbg.test(sc)
         pass
     
     def getdents_exit(self, proc, sc):
-        dbg.test(sc)
         pass
     
     def open_enter(self, proc, sc):
-        sc.dirfd = AT_FDCWD
+        sc.dirfd = at_fd(AT_FDCWD, None)
         self.openat_enter(proc, sc)
 
     def open_exit(self, proc, sc):
         self.openat_exit(proc, sc)
         
     def openat_enter(self, proc, sc):
-        if sc.dirfd == AT_FDCWD:
-            npn = sc.path.normpath(self.cwd)
-            spn = sc.path.chroot(self.root, self.cwd)
+        if sc.dirfd.fd == AT_FDCWD:
+            npn = sc.path.normpath(self.getcwd(proc))
+            spn = sc.path.chroot(self.root, self.getcwd(proc))
         else:
             # XXX. fetch from fds
             return
@@ -114,7 +113,7 @@ class OS:
         #
 
         # for dirs
-        if sc.path.is_dir() and sc.flag.is_dir():
+        if (dir_exists(npn) and sc.flag.is_dir()) or dir_exists(spn):
             # sync parent dir
             self.sync_parent_dirs(npn)
             # rewrite pn -> spn
@@ -134,7 +133,6 @@ class OS:
 
         # trunc
         if sc.flag.is_trunc():
-            dbg.ns(sc)
             # sync parent dir
             self.sync_parent_dirs(npn)
             # rewrite pn -> spn
@@ -143,7 +141,6 @@ class OS:
 
         # read/write
         if sc.flag.is_wr():
-            dbg.ns(sc)
             # sync parent dir
             self.sync_parent_dirs(npn)
             # copy the file to sandbox
@@ -155,13 +152,13 @@ class OS:
     def openat_exit(self, proc, sc):
         # keep tracks of open files
         if not sc.ret.err():
-            self.fds[sc.ret.int] = sc.path
+            self.fds[proc.pid][sc.ret.int] = sc.path
 
     def close_enter(self, proc, sc):
         pass
 
     def close_exit(self, proc, sc):
-        self.fds[sc.fd.int] = None
+        self.fds[proc.pid][sc.fd.int] = None
     
     def done(self):
         # XXX.

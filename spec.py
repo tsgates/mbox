@@ -222,7 +222,7 @@ class f_path(arg):
             return chjoin(root, pn[1:])
         # cwd
         assert cwd.startswith("/")
-        return chjoin(root, cwd[1:], pn[1:])
+        return chjoin(root, cwd[1:], pn)
     
     def __str__(self):
         return "%s%s" % (self.path, "" if exists(self.path) else "(N)")

@@ -3,6 +3,7 @@
 import os
 import stat
 import shutil
+import string
 
 from os.path import exists
 from os.path import join
@@ -53,3 +54,21 @@ def itercrumb(path, strip=False):
             yield head[1:]
         else:
             yield head
+
+def to_printable(c):
+    return c if c in string.printable else "."
+
+def hexdump(binstr):
+    hexstr = map(lambda c : "%02X" % ord(c), binstr)
+    hexstr.extend(["  "] * 0x10)
+
+    line = []
+    for offset in range(0, len(hexstr)/0x10):
+        s = offset * 0x10
+        e = s + 0x10
+        line.append("%08X: %s %s\n" \
+          % (s, " ".join(hexstr[s:e]), 
+             "".join(map(to_printable, binstr[s:e]))))
+        
+    return "\n".join(line)
+            

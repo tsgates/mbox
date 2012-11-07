@@ -22,6 +22,7 @@ SYSCALLS = {
 class Syscall:
     def __init__(self, sc):
         self.sc   = sc
+        self.proc = sc.process
         self.name = sc.name
         self.args = []
         self.ret  = None
@@ -151,15 +152,30 @@ f_len  = f_int
 
 class ptr(arg):
     def __init__(self, arg, sc):
-        self.arg = arg
+        self.ptr = arg
     def __str__(self):
-        return "0x%x" % self.arg
+        return "0x%x" % self.ptr
 
 class f_dirp(ptr):
     argtype = "int"
     def __init__(self, arg, sc):
         super(f_dirp, self).__init__(arg, sc)
         self.sc = sc
+
+    def hijack(self, proc, blob):
+        raise NotImplemented()
+
+    def restore(self, proc, blob):
+        # < alloced memory
+        assert len(blob) < self.sc.size.int
+        # overwrite buf
+        proc.writeBytes(self.ptr, blob)
+        # overwrite ret (size of blob)
+        proc.setreg("rax", len(blob))
+    
+    def read(self):
+        assert self.sc.ret
+        return self.sc.proc.readBytes(self.ptr, self.sc.ret.int)
 
 class f_fd(arg):
     argtype = "int"

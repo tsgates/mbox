@@ -201,7 +201,6 @@ class Sandbox:
                 self.event_exit(event)
                 continue
             except ProcessSignal, event:
-                event.display()
                 proc.syscall(event.signum)
                 continue
             except NewProcessEvent, event:
@@ -237,17 +236,17 @@ class Sandbox:
             self.print_syscall(state.syscall)
 
         # display exit message
-        dbg.error("*** %s ***" % event)
+        # dbg.error("*** %s ***" % event)
 
     def event_new_proc(self, event):
         process = event.process
-        dbg.error("*** New process %s ***" % process.pid)
+        dbg.trace("*** New process %s ***" % process.pid)
         process.syscall()
         process.parent.syscall()
 
     def event_proc_exec(self, event):
         process = event.process
-        dbg.error("*** Process %s execution ***" % process.pid)
+        dbg.trace("*** Process %s execution ***" % process.pid)
         process.syscall()
 
     def run_proc(self, args):

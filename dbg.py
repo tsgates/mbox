@@ -15,6 +15,7 @@ settings = {
     "parse"     : True,
     "error"     : True,
     "ns"        : True,
+    "trace"     : False,
     }
 
 #

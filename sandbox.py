@@ -33,6 +33,7 @@ class OS:
         self.cwds    = {}                 # cwd of each process
         self.stat    = defaultdict(int)   # statistics of syscalls
         self.dirents = defaultdict(dict)  # state (seek equivalent)
+        self.deleted = defaultdict(set)   # path -> set of filenames
 
         # rewriting tasks
         self.hijack = []
@@ -84,7 +85,14 @@ class OS:
         return self.cwds.get(proc.pid, self.cwd)
 
     def parse_path(self, path, proc):
-        npn = path.normpath(self.getcwd(proc))
+        return self.parse_path_dirfd(AT_FDCWD, path, proc)
+
+    def parse_path_dirfd(self, dirfd, path, proc):
+        if dirfd == AT_FDCWD:
+            cwd = self.getcwd(proc)
+        else:
+            cwd = self.fds[proc.pid][dirfd]
+        npn = path.normpath(cwd)
         spn = path.chroot(self.root, self.getcwd(proc))
         return (npn, spn)
 
@@ -148,11 +156,7 @@ class OS:
         self.openat_exit(proc, sc)
 
     def openat_enter(self, proc, sc):
-        if sc.dirfd.fd == AT_FDCWD:
-            (npn, spn) = self.parse_path(sc.path, proc)
-        else:
-            # XXX. fetch from fds
-            return
+        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
 
         #
         # XXX. create a virtual layer to simulate /dev, /sys and /proc
@@ -211,7 +215,6 @@ class OS:
 
     def stat_enter(self, proc, sc):
         (npn, spn) = self.parse_path(sc.path, proc)
-
         # sync & overwrite if exists in sandboxfs
         if exists(spn):
             self.sync_parent_dirs(npn)
@@ -226,11 +229,36 @@ class OS:
     def lstat_enter(self, proc, sc):
         self.stat_enter(proc, sc)
 
+    def lstat_exit(self, proc, sc):
+        pass
+
+    def unlink_enter(self, proc, sc):
+        sc.dirfd = at_fd(AT_FDCWD, sc)
+        self.unlinkat_enter(self, proc, sc)
+
+    def unlink_exit(self, proc, sc):
+        sc.dirfd = at_fd(AT_FDCWD, sc)
+        self.unlinkat_exit(self, proc, sc)
+
+    def unlinkat_enter(self, proc, sc):
+        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+        self.sync_parent_dirs(npn)
+        self.add_hijack(sc.path, spn)
+
+    def unlinkat_exit(self, proc, sc):
+        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+        # emulate successfully deleted (or deleted in sandboxfs)
+        if (sc.ret.err() and exists(npn)) or sc.ret.ok():
+            (d, f) = os.path.split(spn)
+            self.deleted[d].add(f)
+            self.add_hijack(sc.ret, 0)
+
     def done(self):
         # XXX.
         for (n, v) in self.stat.items():
             print "%15s: %3s" % (n, v)
         pprint.pprint(self.fds)
+        pprint.pprint(self.deleted)
         # XXX. check
         os.system("tree %s" % self.root)
 

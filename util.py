@@ -15,7 +15,7 @@ def safecopy(src, dst):
     assert file_exists(src) and not file_exists(dst)
     # check if use slice syscall
     shutil.copyfile(src, dst)
-    
+
 def safestat(pn):
     try:
         return os.stat(pn)
@@ -31,12 +31,15 @@ def file_exists(pn):
     return s and stat.S_ISREG(s.st_mode)
 
 def mkdir(pn):
-    return os.mkdir(pn)
+    try:
+        return os.mkdir(pn)
+    except OSError:
+        pass
 
 def chjoin(root, *paths):
     pn = [p.lstrip("/") for p in paths]
     np = normpath(join(root, *pn))
-    
+
     # escaped by multiple ..
     if not np.startswith(root):
         return root
@@ -46,7 +49,7 @@ def itercrumb(path, strip=False):
     assert path.startswith("/")
     pn = path.rstrip("/")
     pn = normpath(pn)
-    
+
     head = "/"
     for crumb in pn[1:].split("/"):
         head += crumb + "/"
@@ -67,7 +70,7 @@ def hexdump(binstr):
         s = offset * 0x10
         e = s + 0x10
         line.append("%08X: %s %s\n" \
-          % (s, " ".join(hexstr[s:e]), 
+          % (s, " ".join(hexstr[s:e]),
              "".join(map(to_printable, binstr[s:e]))))
-        
+
     return "".join(line)

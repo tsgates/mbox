@@ -25,7 +25,21 @@ SYSCALLS = {
   "lstat"    : ("err"  , "f_path"      , "f_statp"                       ),
   "unlink"   : ("err"  , "f_path"                                        ),
   "unlinkat" : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
+  "getxattr" : ("serr" , "f_path"      , "f_cstr" , "f_ptr"   , "f_int"  ),
 }
+
+# 188     common  setxattr                sys_setxattr
+# 189     common  lsetxattr               sys_lsetxattr
+# 190     common  fsetxattr               sys_fsetxattr
+# 191     common  getxattr                sys_getxattr
+# 192     common  lgetxattr               sys_lgetxattr
+# 193     common  fgetxattr               sys_fgetxattr
+# 194     common  listxattr               sys_listxattr
+# 195     common  llistxattr              sys_llistxattr
+# 196     common  flistxattr              sys_flistxattr
+# 197     common  removexattr             sys_removexattr
+# 198     common  lremovexattr            sys_lremovexattr
+# 199     common  fremovexattr            sys_fremovexattr
 
 # newstat
 for sc in ["stat", "fstat", "lstat", "fstatat"]:
@@ -164,6 +178,21 @@ class err(arg):
             return "ok"
         return "%s" % errno.errorcode[-self.err]
 
+class serr(err):
+    argtype = "int"
+    def __init__(self, arg, sc):
+        super(serr, self).__init__(arg, sc)
+    def ok(self):
+        return self.err >= 0
+    def err(self):
+        return self.err < 0
+
+class ptr(arg):
+    def __init__(self, arg, sc):
+        self.ptr = arg
+    def __str__(self):
+        return "0x%x" % self.ptr
+
 class f_int(arg):
     argtype = "int"
     def __init__(self, arg, sc):
@@ -174,11 +203,17 @@ class f_int(arg):
 f_size = f_int
 f_len  = f_int
 
-class ptr(arg):
+class f_ptr(ptr):
+    argtype = "int"
     def __init__(self, arg, sc):
-        self.ptr = arg
+        super(f_ptr, self).__init__(arg, sc)
+
+class f_cstr(arg):
+    argtype = "str"
+    def __init__(self, arg, sc):
+        self.arg = arg
     def __str__(self):
-        return "0x%x" % self.ptr
+        return "%s" % self.arg
 
 class f_dirp(ptr):
     argtype = "int"

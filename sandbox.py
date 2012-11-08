@@ -155,6 +155,11 @@ class OS:
                 self.add_hijack(sc.dirp, blob)
                 self.dirents[pid][fd] = dirents
 
+    def getxattr_enter(self, proc, sc):
+        (npn, spn) = self.parse_path(sc.path, proc)
+        if exists(spn):
+            self.add_hijack(sc.path, spn)
+
     @redirect_at
     def open_enter(self, proc, sc):
         pass

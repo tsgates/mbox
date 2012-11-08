@@ -1,9 +1,11 @@
 #!/usr/bin/env python2
 
 import os
+import sys
 import stat
 import shutil
 import string
+import termios
 
 from os.path import exists
 from os.path import join
@@ -82,3 +84,13 @@ def which(prog):
         if exists(pn):
             return pn
     raise Exception("Can't find %s" % prog)
+
+def kbhit():
+    fd = sys.stdin.fileno()
+    oldterm = termios.tcgetattr(fd)
+    newterm = oldterm
+    newterm[3] = (newterm[3] & ~termios.ICANON)
+    termios.tcsetattr(fd, termios.TCSANOW, newterm)
+    c = sys.stdin.read(1)
+    termios.tcsetattr(fd, termios.TCSANOW, oldterm)
+    return c

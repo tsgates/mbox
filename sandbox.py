@@ -4,6 +4,7 @@ import os
 import re
 import dbg
 import pprint
+import chore
 
 from sys      import stderr, exit
 from optparse import OptionParser
@@ -295,6 +296,49 @@ class OS:
         # XXX. check
         os.system("tree %s" % self.root)
 
+# interactively committing modified files to the host
+def interactive(box):
+    class ask_diff:
+        desc = "d:diff"
+        def __call__(self, spn, hpn):
+            os.system("diff -urN '%s' '%s'" % (hpn, spn))
+
+    class ask_view:
+        desc = "v:view"
+        def __call__(self, spn, hpn):
+            os.system("cat '%s'" % (spn))
+
+    class ask_ignore:
+        desc = "i:ignore"
+        def __call__(self, spn, hpn):
+            return True
+
+    class ask_commit:
+        desc = "c:commit"
+        def __call__(self, spn, hpn):
+            return True
+
+    class ask_quit:
+        desc = "q:quit"
+        def __call__(self, spn, hpn):
+            exit(0)
+
+    menu = [ask_diff(), ask_view(), ask_ignore(), ask_commit(), ask_quit()]
+    for root, dirs, files in os.walk(box.root):
+        for name in files:
+            spn = join(root, name)
+            hpn = spn.lstrip(box.root.rstrip("/"))
+
+            stop = False
+            while not stop:
+                print "> %s" % spn
+                print "  [?]" + ", ".join(m.desc for m in menu) + "> ",
+                c = kbhit()
+                print ""
+                for m in menu:
+                    if m.desc.startswith(c+":"):
+                        stop = m(spn, hpn)
+
 class Sandbox:
     def __init__(self, opts, args):
         self.opts = opts
@@ -312,6 +356,9 @@ class Sandbox:
             dbg.error("Interrupted.")
         self.debugger.quit()
         self.os.done()
+
+        # add a flag not to be interactive
+        chore.interactive(self.os)
 
     def print_syscall(self, syscall):
         name = syscall.name
@@ -468,6 +515,9 @@ def parse_args():
                       default="/tmp/sandbox-%PID")
     parser.add_option("-q", "--quiet",
                       help="Quiet",
+                      action="store_true", default=False)
+    parser.add_option("-i", "--interact",
+                      help="Interactivly checking modified files",
                       action="store_true", default=False)
     (opts, args) = parser.parse_args()
 

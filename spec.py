@@ -30,19 +30,28 @@ SYSCALLS = {
   "faccessat": ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
 }
 
-# XXX.
-# 188     common  setxattr                sys_setxattr
-# 189     common  lsetxattr               sys_lsetxattr
-# 190     common  fsetxattr               sys_fsetxattr
-# 191     common  getxattr                sys_getxattr
-# 192     common  lgetxattr               sys_lgetxattr
-# 193     common  fgetxattr               sys_fgetxattr
-# 194     common  listxattr               sys_listxattr
-# 195     common  llistxattr              sys_llistxattr
-# 196     common  flistxattr              sys_flistxattr
-# 197     common  removexattr             sys_removexattr
-# 198     common  lremovexattr            sys_lremovexattr
-# 199     common  fremovexattr            sys_fremovexattr
+# XXX. syscall priorities that we should check
+#
+#  unlink/at
+#  dup2
+#  connect
+#  mmap
+#  ioctl
+#  readlink
+#  socket
+#
+#  setxattr
+#  lsetxattr
+#  fsetxattr
+#  getxattr
+#  lgetxattr
+#  fgetxattr
+#  listxattr
+#  llistxattr
+#  flistxattr
+#  removexattr
+#  lremovexattr
+#  fremovexattr
 
 # newstat
 for sc in ["stat", "fstat", "lstat", "fstatat"]:
@@ -123,22 +132,22 @@ def newarg(kls, arg, seq, sc):
 class arg(object):
     def hijack(self, proc, new):
         if self.argtype == "str":
-            self.__hijack_str(proc, new)
+            self._hijack_str(proc, new)
         elif self.argtype == "int":
-            self.__hijack_int(proc, new)
+            self._hijack_int(proc, new)
 
     def restore(self, proc, new):
         if self.argtype == "str":
-            self.__restore_str(proc, new)
+            self._restore_str(proc, new)
         elif self.argtype == "int":
-            self.__restore_int(proc, new)
+            self._restore_int(proc, new)
 
-    def __get_arg(self, proc, seq):
+    def _get_arg(self, proc, seq):
         r  = ("rdi", "rsi", "rdx", "r10", "r8", "r9", "rax")[seq]
         regs = proc.getregs()
         return (r, getattr(regs, r))
 
-    def __hijack_str(self, proc, new):
+    def _hijack_str(self, proc, new):
         assert type(new) is str and len(new) < MAX_PATH - 1
 
         # memcpy to the lower part of stack
@@ -146,22 +155,22 @@ class arg(object):
         proc.writeBytes(ptr, new + "\x00")
 
         # write to the proper register
-        (reg, self.old) = self.__get_arg(proc, self.seq)
+        (reg, self.old) = self._get_arg(proc, self.seq)
         proc.setreg(reg, ptr)
 
-    def __restore_str(self, proc, new):
+    def _restore_str(self, proc, new):
         assert type(new) is str
-        (reg, _) = self.__get_arg(proc, self.seq)
+        (reg, _) = self._get_arg(proc, self.seq)
         proc.setreg(reg, self.old)
 
-    def __hijack_int(self, proc, new):
+    def _hijack_int(self, proc, new):
         assert type(new) is int
-        (reg, self.old) = self.__get_arg(proc, self.seq)
+        (reg, self.old) = self._get_arg(proc, self.seq)
         proc.setreg(reg, new)
 
-    def __restore_int(self, proc, new):
+    def _restore_int(self, proc, new):
         assert type(new) is int
-        (reg, _) = self.__get_arg(proc, self.seq)
+        (reg, _) = self._get_arg(proc, self.seq)
         proc.setreg(reg, self.old)
 
 class err(arg):
@@ -175,7 +184,7 @@ class err(arg):
     def restore(self, proc, new):
         if self.int != new:
             self.old = new
-            self.__restore_int(proc, new)
+            self._restore_int(proc, new)
     def __str__(self):
         if self.ok():
             return "ok"

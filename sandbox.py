@@ -405,17 +405,30 @@ class Sandbox:
     def parse_root(self, path, pid):
         return path.replace("%PID", str(pid))
 
-def print_syscalls():
-    syscalls = SYSCALL_NAMES.items()
-    syscalls.sort(key=lambda data: data[0])
-    for num, name in syscalls:
-        print "% 3s: %s" % (num, name)
+def print_syscalls(opts):
+    pn = "syscall64.tbl"
+    if not exists(pn):
+        dbg.fatal("Failed to find %s" % pn)
+
+    for l in open(pn):
+        l = l.strip()
+        if l.startswith("#") or len(l) == 0:
+            continue
+
+        # parsing syscall table
+        toks = l.split()
+        (num, abi, name) = toks[:3]
+        entry = "N/A" if len(toks) < 4 else toks[3]
+
+        # what we are keeping track of
+        mark = "*" if name in SYSCALLS else " "
+        print "%s% 3s: %s" % (mark, num, name)
 
 def parse_args():
     parser = OptionParser(usage="%prog [options] -- program [arg1 arg2 ...]")
-    parser.add_option("--list-syscalls",
+    parser.add_option("--list-syscalls", "-l",
                       help="Display system calls and exit",
-                      action="store_true", default=False)
+                      action="store_true", default=None)
     parser.add_option("--strace", "-s",
                       help="Print out system calls",
                       action="store_true", default=False)
@@ -431,7 +444,7 @@ def parse_args():
     (opts, args) = parser.parse_args()
 
     # checking sanity
-    if len(args) == 0:
+    if len(args) == 0 and not opts.list_syscalls:
         parser.print_help()
         exit(1)
 
@@ -445,7 +458,7 @@ if __name__ == "__main__":
     (opts, args) = parse_args()
 
     if opts.list_syscalls:
-        print_syscalls()
+        print_syscalls(opts)
         exit(1)
 
     Sandbox(opts, args).run()

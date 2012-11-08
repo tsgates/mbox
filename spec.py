@@ -21,10 +21,15 @@ SYSCALLS = {
   "getdents" : ("f_len", "f_fd"        , "f_dirp" , "f_size"             ),
   "stat"     : ("err"  , "f_path"      , "f_statp"                       ),
   "fstat"    : ("err"  , "f_fd"        , "f_statp"                       ),
+  "fstatat"  : ("err"  , "dirfd:at_fd" , "f_path" , "f_statp" , "f_int"  ),
   "lstat"    : ("err"  , "f_path"      , "f_statp"                       ),
   "unlink"   : ("err"  , "f_path"                                        ),
   "unlinkat" : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
 }
+
+# newstat
+for sc in ["stat", "fstat", "lstat", "fstatat"]:
+    SYSCALLS["new" + sc] = SYSCALLS.get(sc, [])
 
 class Syscall:
     def __init__(self, sc):

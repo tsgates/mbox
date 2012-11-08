@@ -214,17 +214,15 @@ class OS:
         self.fds[proc.pid][sc.fd.int] = None
 
     def stat_enter(self, proc, sc):
-        (npn, spn) = self.parse_path(sc.path, proc)
+        sc.dirfd = at_fd(AT_FDCWD, sc)
+        self.fstatat_enter(proc, sc)
+
+    def fstatat_enter(self, proc, sc):
+        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
         # sync & overwrite if exists in sandboxfs
         if exists(spn):
             self.sync_parent_dirs(npn)
             self.add_hijack(sc.path, spn)
-
-    def fstat_enter(self, proc, sc):
-        pass
-
-    def fstat_exit(self, proc, sc):
-        pass
 
     def lstat_enter(self, proc, sc):
         self.stat_enter(proc, sc)

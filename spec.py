@@ -26,8 +26,11 @@ SYSCALLS = {
   "unlink"   : ("err"  , "f_path"                                        ),
   "unlinkat" : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
   "getxattr" : ("serr" , "f_path"      , "f_cstr" , "f_ptr"   , "f_int"  ),
+  "access"   : ("err"  , "f_path"      , "f_int"                         ),
+  "faccessat": ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
 }
 
+# XXX.
 # 188     common  setxattr                sys_setxattr
 # 189     common  lsetxattr               sys_lsetxattr
 # 190     common  fsetxattr               sys_fsetxattr
@@ -164,11 +167,11 @@ class arg(object):
 class err(arg):
     argtype = "int"
     def __init__(self, arg, sc):
-        self.err = arg
+        self.arg = arg
     def ok(self):
-        return self.err == 0
+        return self.arg == 0
     def err(self):
-        return self.err != 0
+        return self.arg != 0
     def restore(self, proc, new):
         if self.int != new:
             self.old = new
@@ -176,16 +179,16 @@ class err(arg):
     def __str__(self):
         if self.ok():
             return "ok"
-        return "%s" % errno.errorcode[-self.err]
+        return "%s" % errno.errorcode[-self.arg]
 
 class serr(err):
     argtype = "int"
     def __init__(self, arg, sc):
         super(serr, self).__init__(arg, sc)
     def ok(self):
-        return self.err >= 0
+        return self.arg >= 0
     def err(self):
-        return self.err < 0
+        return self.arg < 0
 
 class ptr(arg):
     def __init__(self, arg, sc):

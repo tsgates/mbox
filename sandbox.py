@@ -20,10 +20,17 @@ from ptrace.ctypes_tools import formatAddress
 from spec import *
 from util import *
 
+#
+# redirect to f[func]at-like function (dirfd-relative syscall)
+#
 def redirect_at(func):
     def new(self, proc, sc):
         sc.dirfd = at_fd(AT_FDCWD, sc)
-        funcat = getattr(self, func.__name__.replace("_", "at_"))
+        at = func.__name__.replace("_", "at_")
+        for f in [at, "f"+at]:
+            if hasattr(self, f):
+                funcat = getattr(self, f)
+                break
         return funcat(proc, sc)
     return new
 
@@ -106,6 +113,15 @@ class OS:
     #
     # list of system calls to interleave
     #
+    @redirect_at
+    def access_enter(self, proc, sc):
+        pass
+
+    def faccessat_enter(self, proc, sc):
+        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+        if exists(spn):
+            self.add_hijack(sc.path, spn)
+
     def chdir_enter(self, proc, sc):
         pass
 
@@ -225,9 +241,9 @@ class OS:
     def close_exit(self, proc, sc):
         self.fds[proc.pid][sc.fd.int] = None
 
+    @redirect_at
     def stat_enter(self, proc, sc):
-        sc.dirfd = at_fd(AT_FDCWD, sc)
-        return self.fstatat_enter(proc, sc)
+        pass
 
     def fstatat_enter(self, proc, sc):
         (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
@@ -235,6 +251,9 @@ class OS:
         if exists(spn):
             self.sync_parent_dirs(npn)
             self.add_hijack(sc.path, spn)
+
+    def newfstatat_enter(self, proc, sc):
+        self.fstatat_enter(proc, sc)
 
     def lstat_enter(self, proc, sc):
         self.stat_enter(proc, sc)
@@ -265,8 +284,12 @@ class OS:
 
     def done(self):
         # XXX.
-        for (n, v) in self.stat.items():
-            print "%15s: %3s" % (n, v)
+        print "=" * 60
+        for (name, cnt) in self.stat.items():
+            mark = "*" if name in SYSCALLS else " "
+            print "%s%15s: %3s" % (mark, name, cnt)
+
+        print "-" * 60
         pprint.pprint(self.fds)
         pprint.pprint(self.deleted)
         # XXX. check

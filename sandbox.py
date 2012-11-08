@@ -20,6 +20,13 @@ from ptrace.ctypes_tools import formatAddress
 from spec import *
 from util import *
 
+def redirect_at(func):
+    def new(self, proc, sc):
+        sc.dirfd = at_fd(AT_FDCWD, sc)
+        funcat = getattr(self, func.__name__.replace("_", "at_"))
+        return funcat(proc, sc)
+    return new
+
 class OS:
     def __init__(self, root, cwd):
         #
@@ -148,9 +155,9 @@ class OS:
                 self.add_hijack(sc.dirp, blob)
                 self.dirents[pid][fd] = dirents
 
+    @redirect_at
     def open_enter(self, proc, sc):
-        sc.dirfd = at_fd(AT_FDCWD, sc)
-        self.openat_enter(proc, sc)
+        pass
 
     def open_exit(self, proc, sc):
         self.openat_exit(proc, sc)
@@ -215,7 +222,7 @@ class OS:
 
     def stat_enter(self, proc, sc):
         sc.dirfd = at_fd(AT_FDCWD, sc)
-        self.fstatat_enter(proc, sc)
+        return self.fstatat_enter(proc, sc)
 
     def fstatat_enter(self, proc, sc):
         (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
@@ -230,13 +237,13 @@ class OS:
     def lstat_exit(self, proc, sc):
         pass
 
+    @redirect_at
     def unlink_enter(self, proc, sc):
-        sc.dirfd = at_fd(AT_FDCWD, sc)
-        self.unlinkat_enter(self, proc, sc)
+        pass
 
+    @redirect_at
     def unlink_exit(self, proc, sc):
-        sc.dirfd = at_fd(AT_FDCWD, sc)
-        self.unlinkat_exit(self, proc, sc)
+        pass
 
     def unlinkat_enter(self, proc, sc):
         (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
@@ -392,7 +399,8 @@ class Sandbox:
         self.loop(proc)
 
     def fork(self, args, env=None):
-        return createChild(args, False, env)
+        argv = [which(args[0])] + args[1:]
+        return createChild(argv, False, env)
 
     def parse_root(self, path, pid):
         return path.replace("%PID", str(pid))

@@ -74,3 +74,11 @@ def hexdump(binstr):
              "".join(map(to_printable, binstr[s:e]))))
 
     return "".join(line)
+
+def which(prog):
+    path = os.environ.get("PATH", "")
+    for d in path.split(":"):
+        pn = join(d, prog)
+        if exists(pn):
+            return pn
+    raise Exception("Can't find %s" % prog)

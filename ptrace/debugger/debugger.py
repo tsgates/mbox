@@ -155,7 +155,7 @@ class PtraceDebugger(object):
                 process = None
                 for ppid, proc in self.dict.iteritems():
                     sc = proc.syscall_state.syscall
-                    if sc.name == "clone" and sc.result is None:
+                    if sc and sc.name == "clone" and sc.result is None:
                         process = self.addProcess(pid, False, ppid)
                         self.dict[pid] = process
                         break
@@ -260,4 +260,3 @@ class PtraceDebugger(object):
 
     def __len__(self):
         return len(self.list)
-

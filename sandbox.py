@@ -102,7 +102,12 @@ class OS:
             safecopy(pn, spn)
 
     def getcwd(self, proc):
-        return self.cwds.get(proc.pid, self.cwd)
+        pid = proc.pid
+        if pid in self.cwds:
+            return self.cwds[proc.pid]
+        else:
+            # read /proc
+            return os.readlink("/proc/%s/cwd" % pid)
 
     def setcwd(self, proc, path):
         old = self.getcwd(proc)
@@ -202,7 +207,11 @@ class OS:
             blob = ""
             while len(dirents) > 0:
                 d = dirents.pop()
+                # files exist in the sandbox
                 if d.d_name in sdir:
+                    continue
+                # deleted files
+                if self.is_deleted(join(hpn, d.d_name)):
                     continue
                 pack = d.pack()
                 # need another call to complete

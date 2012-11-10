@@ -35,6 +35,11 @@ def redirect_at(func):
         return funcat(proc, sc)
     return new
 
+# flag to control path rewriting
+RW_WRITING = 1
+RW_FORCE   = 2
+RW_NONE    = 3
+
 class OS:
     def __init__(self, root, cwd):
         #
@@ -48,7 +53,7 @@ class OS:
         self.cwds    = {}                 # cwd of each process
         self.stat    = defaultdict(int)   # statistics of syscalls
         self.dirents = defaultdict(dict)  # state (seek equivalent)
-        self.deleted = defaultdict(set)   # path -> set of filenames
+        self.deleted = defaultdict(set)   # fullpath -> set of filenames
 
         # rewriting tasks
         self.hijack = []
@@ -112,9 +117,48 @@ class OS:
             cwd = self.getcwd(proc)
         else:
             cwd = self.fds[proc.pid][dirfd]
-        npn = path.normpath(cwd)
+        hpn = path.normpath(cwd)
         spn = path.chroot(self.root, self.getcwd(proc))
-        return (npn, spn)
+        return (hpn, spn)
+
+    def is_deleted(self, hpn):
+        (d, f) = os.path.split(hpn)
+        return f in self.deleted.get(d, [])
+
+    def put_deleted_file(self, hpn):
+        (d, f) = os.path.split(hpn)
+        self.deleted[d].add(f)
+
+    # a common way to rewrite host -> sandbox path
+    def rewrite_path(self, proc, sc, flag = RW_NONE):
+        assert hasattr(sc, "path")
+        if hasattr(sc, "dirfd"):
+            dirfd = sc.dirfd.fd
+        else:
+            dirfd = AT_FDCWD
+
+        # fetch host/sandbox path name
+        (hpn, spn) = self.parse_path_dirfd(dirfd, sc.path, proc)
+
+        # sync up host/sandbox dir hierarchy
+        if not exists(spn) and exists(hpn):
+            self.sync_parent_dirs(hpn)
+
+        # hijack pathname:
+        #  exist in sandbox  : need to use the file in the sandbox
+        #  deleted in sandbox: do not look for the path in the host
+        #  will be written   : copy the file and use that file path
+        if exists(spn) or self.is_deleted(hpn) or flag != RW_NONE:
+            # it has writing intent
+            if flag == RW_WRITING:
+                self.copy_to(hpn, spn)
+
+            # deletion: we know it will fail in syscall(), but it's correct
+            # semantic in terms of correctness
+            self.add_hijack(sc.path, spn)
+        else:
+            # use a file in the host: it could be dangerous
+            dbg.info(" use: %s" % sc.path)
 
     #
     # list of system calls to interleave
@@ -124,9 +168,7 @@ class OS:
         pass
 
     def faccessat_enter(self, proc, sc):
-        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
-        if exists(spn):
-            self.add_hijack(sc.path, spn)
+        self.rewrite_path(proc, sc)
 
     def chdir_exit(self, proc, sc):
         if sc.ret.ok():
@@ -146,13 +188,13 @@ class OS:
         # exit on current syscall, let's dump hostfs too
         if sc.ret.int == 0:
             state = self.dirents[pid].get(fd, None)
-            npn   = self.fds[pid][fd]
-            sdir  = os.listdir(chjoin(self.root, npn))
+            hpn   = self.fds[pid][fd]
+            sdir  = os.listdir(chjoin(self.root, hpn))
 
             # fetch previous dirents
             if state is None:
                 # initial to dump hostfs
-                dirents = get_dirents(npn)
+                dirents = get_dirents(hpn)
             else:
                 dirents = state
 
@@ -179,9 +221,7 @@ class OS:
                 self.dirents[pid][fd] = dirents
 
     def getxattr_enter(self, proc, sc):
-        (npn, spn) = self.parse_path(sc.path, proc)
-        if exists(spn):
-            self.add_hijack(sc.path, spn)
+        self.rewrite_path(proc, sc)
 
     @redirect_at
     def open_enter(self, proc, sc):
@@ -191,16 +231,16 @@ class OS:
         self.openat_exit(proc, sc)
 
     def openat_enter(self, proc, sc):
-        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+        (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
 
         #
         # XXX. create a virtual layer to simulate /dev, /sys and /proc
         #
 
         # for dirs
-        if (dir_exists(npn) and sc.flag.is_dir()) or dir_exists(spn):
+        if (dir_exists(hpn) and sc.flag.is_dir()) or dir_exists(spn):
             # sync parent dir
-            self.sync_parent_dirs(npn)
+            self.sync_parent_dirs(hpn)
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
@@ -219,7 +259,7 @@ class OS:
         # trunc
         if sc.flag.is_trunc():
             # sync parent dir
-            self.sync_parent_dirs(npn)
+            self.sync_parent_dirs(hpn)
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
@@ -227,9 +267,9 @@ class OS:
         # read/write
         if sc.flag.is_wr():
             # sync parent dir
-            self.sync_parent_dirs(npn)
+            self.sync_parent_dirs(hpn)
             # copy the file to sandbox
-            self.copy_to(npn, spn)
+            self.copy_to(hpn, spn)
             # rewrite pn -> spn
             self.add_hijack(sc.path, spn)
             return
@@ -256,11 +296,7 @@ class OS:
         pass
 
     def fstatat_enter(self, proc, sc):
-        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
-        # sync & overwrite if exists in sandboxfs
-        if exists(spn):
-            self.sync_parent_dirs(npn)
-            self.add_hijack(sc.path, spn)
+        self.rewrite_path(proc, sc)
 
     def newfstatat_enter(self, proc, sc):
         self.fstatat_enter(proc, sc)
@@ -280,16 +316,13 @@ class OS:
         pass
 
     def unlinkat_enter(self, proc, sc):
-        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
-        self.sync_parent_dirs(npn)
-        self.add_hijack(sc.path, spn)
+        self.rewrite_path(proc, sc, RW_FORCE)
 
     def unlinkat_exit(self, proc, sc):
-        (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+        (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
         # emulate successfully deleted (or deleted in sandboxfs)
-        if (sc.ret.err() and exists(npn)) or sc.ret.ok():
-            (d, f) = os.path.split(spn)
-            self.deleted[d].add(f)
+        if (sc.ret.err() and exists(hpn)) or sc.ret.ok():
+            self.put_deleted_file(hpn)
             self.add_hijack(sc.ret, 0)
 
     def done(self):
@@ -368,7 +401,7 @@ class Sandbox:
         self.os.done()
 
         # add a flag not to be interactive
-        if self.opts.interactive:
+        if self.opts.interact:
             chore.interactive(self.os)
 
     def print_syscall(self, syscall):

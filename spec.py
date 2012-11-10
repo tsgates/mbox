@@ -29,6 +29,7 @@ SYSCALLS = {
   "access"   : ("err"  , "f_path"      , "f_int"                         ),
   "faccessat": ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
   "chdir"    : ("err"  , "f_path"                                        ),
+  "fchdir"   : ("err"  , "dirfd:f_df"                                    ),
 }
 
 # XXX. syscall priorities that we should check
@@ -44,11 +45,13 @@ SYSCALLS = {
 #  f/truncate
 #  mkdir/at
 #  creat
-#  chdir
+#  f/chdir
 #  f/chmod/at
 #  f/l/chown/at
 #  f/utime/s/at
 #  mknod
+#
+#
 #
 #  setxattr
 #  lsetxattr

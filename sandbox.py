@@ -99,6 +99,11 @@ class OS:
     def getcwd(self, proc):
         return self.cwds.get(proc.pid, self.cwd)
 
+    def setcwd(self, proc, path):
+        old = self.getcwd(proc)
+        self.cwds[proc.pid] = path
+        dbg.info(" cwd: %s -> %s" % (old, path))
+
     def parse_path(self, path, proc):
         return self.parse_path_dirfd(AT_FDCWD, path, proc)
 
@@ -125,7 +130,11 @@ class OS:
 
     def chdir_exit(self, proc, sc):
         if sc.ret.ok():
-            self.cwds[proc.pid] = sc.path.str
+            self.setcwd(proc, sc.path.str)
+
+    def fchdir_exit(self, proc, sc):
+        if sc.ret.ok():
+            self.setcwd(proc, self.fds[proc.pid][sc.dirfd.fd])
 
     def getdents_enter(self, proc, sc):
         pass
@@ -243,6 +252,9 @@ class OS:
     def stat_enter(self, proc, sc):
         pass
 
+    def stat_exit(self, proc, sc):
+        pass
+
     def fstatat_enter(self, proc, sc):
         (npn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
         # sync & overwrite if exists in sandboxfs
@@ -356,7 +368,8 @@ class Sandbox:
         self.os.done()
 
         # add a flag not to be interactive
-        chore.interactive(self.os)
+        if self.opts.interactive:
+            chore.interactive(self.os)
 
     def print_syscall(self, syscall):
         name = syscall.name

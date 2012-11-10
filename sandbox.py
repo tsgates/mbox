@@ -123,12 +123,9 @@ class OS:
         if exists(spn):
             self.add_hijack(sc.path, spn)
 
-    def chdir_enter(self, proc, sc):
-        pass
-
     def chdir_exit(self, proc, sc):
-        # XXX. update self.cwd[pid]
-        pass
+        if sc.ret.ok():
+            self.cwds[proc.pid] = sc.path.str
 
     def getdents_enter(self, proc, sc):
         pass
@@ -293,6 +290,7 @@ class OS:
         print "-" * 60
         pprint.pprint(self.fds)
         pprint.pprint(self.deleted)
+        pprint.pprint(self.cwds)
         # XXX. check
         os.system("tree %s" % self.root)
 

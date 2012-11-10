@@ -28,10 +28,12 @@ SYSCALLS = {
   "getxattr" : ("serr" , "f_path"      , "f_cstr" , "f_ptr"   , "f_int"  ),
   "access"   : ("err"  , "f_path"      , "f_int"                         ),
   "faccessat": ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
+  "chdir"    : ("err"  , "f_path"                                        ),
 }
 
 # XXX. syscall priorities that we should check
 #
+#  rename/at
 #  unlink/at
 #  dup/dup2
 #  connect
@@ -86,7 +88,10 @@ class Syscall:
 
         # for ret
         if self.sc.is_exit():
-            (name, kls) = self.__parse_syscall(args[0])
+            ret = "err"
+            if len(args) > 0:
+                ret = args[0]
+            (name, kls) = self.__parse_syscall(ret)
             val = self.__parse_ret(self.sc, kls)
 
             setattr(self, "ret", val)

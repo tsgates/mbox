@@ -51,8 +51,6 @@ SYSCALLS = {
 #  f/utime/s/at
 #  mknod
 #
-#
-#
 #  setxattr
 #  lsetxattr
 #  fsetxattr

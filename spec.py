@@ -32,21 +32,22 @@ SYSCALLS = {
   "fchdir"   : ("err"  , "dirfd:f_fd"                                    ),
   "rename"   : ("err"  , "old:f_path"  , "new:f_path"                    ),
   "renameat" : ("err"  , "oldfd:f_fd"  , "old:f_path"  , "newfd:f_fd",  "new:f_path" ),
+  "fcntl"    : ("err"  , "f_fd"        , "f_fcntlcmd"                    ),
 }
 
 # XXX. syscall priorities that we should check
 #
-#  fcntl: F_GETFD, F_SETFD, F_GETFL
+#  fcntl: we don't have to interpose?
+#  dup/dup2: ditto?
+#
 #  ioctl
 #  unlink/at -> open()
 #  readlink
-#  dup/dup2
 #  f/chmod/at
 #  f/l/chown/at
 #  f/truncate
 #  mkdir/at
 #  creat
-#  f/chdir
 #  mmap
 #  readlink/at
 #  socket
@@ -487,3 +488,36 @@ class dirent:
     def __str__(self):
         return "%d(offset:%d, len:%d): %s (type:%s)" \
           % (self.d_ino, self.d_off, self.d_reclen, self.d_name, self.d_type)
+
+F_DUPFD         = 0  # dup
+F_GETFD         = 1  # get close_on_exec
+F_SETFD         = 2  # set/clear close_on_exec
+F_GETFL         = 3  # get file->f_flags
+F_SETFL         = 4  # set file->f_flags
+F_GETLK         = 5  #
+F_SETLK         = 6  #
+F_SETLKW        = 7  #
+F_SETOWN        = 8  # for sockets.
+F_GETOWN        = 9  # for sockets.
+F_SETSIG        = 10 # for sockets.
+F_GETSIG        = 11 # for sockets.
+F_GETLK64       = 12 # using 'struct flock64'
+F_SETLK64       = 13 #
+F_SETLKW64      = 14 #
+F_SETOWN_EX     = 15 #
+F_GETOWN_EX     = 16 #
+F_GETOWNER_UIDS = 17 #
+
+class f_fcntlcmd(arg):
+    argtype = "int"
+    def __init__(self, arg, sc):
+        self.cmd = arg
+    def __str__(self):
+        for f in ["F_DUPFD"     , "F_GETFD"   , "F_SETFD"    , "F_GETFL"     ,
+                  "F_SETFL"     , "F_GETLK"   , "F_SETLK"    , "F_SETLKW"    ,
+                  "F_SETOWN"    , "F_GETOWN"  , "F_SETSIG"   , "F_GETSIG"    ,
+                  "F_GETLK64"   , "F_SETLK64" , "F_SETLKW64" , "F_SETOWN_EX" ,
+                  "F_GETOWN_EX" , "F_GETOWNER_UIDS"]:
+            if eval(f) == self.cmd:
+                return f
+        return "N/A"

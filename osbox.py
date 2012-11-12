@@ -129,9 +129,14 @@ class OS:
         (d, f) = os.path.split(hpn)
         return f in self.deleted.get(d, [])
 
-    def put_deleted_file(self, hpn):
+    def mark_deleted_file(self, hpn):
         (d, f) = os.path.split(hpn)
         self.deleted[d].add(f)
+
+    def unmark_deleted_file(self, hpn):
+        (d, f) = os.path.split(hpn)
+        if d in self.deleted and f in self.deleted[d]:
+            self.deleted[d].remove(f)
 
     # a common way to rewrite host -> sandbox path
     def rewrite_path(self, proc, sc, flag = RW_NONE):
@@ -238,16 +243,21 @@ class OS:
     def open_enter(self, proc, sc):
         pass
 
+    @redirect_at
     def open_exit(self, proc, sc):
-        self.openat_exit(proc, sc)
+        pass
 
     def openat_enter(self, proc, sc):
         (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
 
         #
         # XXX. create a virtual layer to simulate /dev, /sys and /proc
-        # XXX. remove deleted file if newly created
         #
+
+        # deleted file/dir
+        if self.is_deleted(hpn):
+            self.add_hijack(sc.path, spn)
+            return
 
         # for dirs
         if (dir_exists(hpn) and sc.flag.is_dir()) or dir_exists(spn):
@@ -289,13 +299,9 @@ class OS:
     def openat_exit(self, proc, sc):
         # keep tracks of open files
         if not sc.ret.err():
-            pid = proc.pid
-            fd  = sc.ret.int
-            cwd = self.getcwd(proc)
-            self.setfd(proc, fd, sc.path.normpath(cwd))
-
-    def close_enter(self, proc, sc):
-        pass
+            (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+            self.setfd(proc, sc.ret.int, hpn)
+            self.unmark_deleted_file(hpn)
 
     def close_exit(self, proc, sc):
         self.setfd(proc, sc.fd.int, None)
@@ -317,7 +323,7 @@ class OS:
     def renameat_exit(self, proc, sc):
         if sc.err.ok():
             (hpn, _) = self.parse_path_dirfd(sc.oldfd, sc.old, proc)
-            self.put_deleted_file(hpn)
+            self.mark_deleted_file(hpn)
 
     @redirect_at
     def stat_enter(self, proc, sc):
@@ -353,7 +359,7 @@ class OS:
         (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
         # emulate successfully deleted (or deleted in sandboxfs)
         if (sc.ret.err() and exists(hpn)) or sc.ret.ok():
-            self.put_deleted_file(hpn)
+            self.mark_deleted_file(hpn)
             self.add_hijack(sc.ret, 0)
 
     def done(self):

@@ -29,7 +29,9 @@ SYSCALLS = {
   "access"   : ("err"  , "f_path"      , "f_int"                         ),
   "faccessat": ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
   "chdir"    : ("err"  , "f_path"                                        ),
-  "fchdir"   : ("err"  , "dirfd:f_df"                                    ),
+  "fchdir"   : ("err"  , "dirfd:f_fd"                                    ),
+  "rename"   : ("err"  , "old:f_path"  , "new:f_path"                    ),
+  "renameat" : ("err"  , "oldfd:f_fd"  , "old:f_path"  , "newfd:f_fd",  "new:f_path" ),
 }
 
 # XXX. syscall priorities that we should check
@@ -314,7 +316,7 @@ class f_path(arg):
         if pn.startswith("/"):
             return pn
         else:
-            return join(cwd, pn)
+            return normpath(join(cwd, pn))
 
     def chroot(self, root, cwd):
         pn = normpath(self.path)

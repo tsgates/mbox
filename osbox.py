@@ -95,7 +95,7 @@ class OS:
 
     def setcwd(self, proc, path):
         old = self.getcwd(proc)
-        self.cwds[proc.pid] = path
+        self.cwds[proc.pid] = normpath(path)
         dbg.info(" cwd: %s -> %s" % (old, path))
 
     def parse_path(self, path, proc):
@@ -126,8 +126,11 @@ class OS:
         else:
             dirfd = AT_FDCWD
 
+        self.__rewrite_path(proc, dirfd, sc.path, flag)
+
+    def __rewrite_path(self, proc, dirfd, path, flag):
         # fetch host/sandbox path name
-        (hpn, spn) = self.parse_path_dirfd(dirfd, sc.path, proc)
+        (hpn, spn) = self.parse_path_dirfd(dirfd, path, proc)
 
         # sync up host/sandbox dir hierarchy
         if not exists(spn) and exists(hpn):
@@ -144,10 +147,10 @@ class OS:
 
             # deletion: we know it will fail in syscall(), but it's correct
             # semantic in terms of correctness
-            self.add_hijack(sc.path, spn)
+            self.add_hijack(path, spn)
         else:
             # use a file in the host: it could be dangerous
-            dbg.info(" use: %s" % sc.path)
+            dbg.info(" use: %s" % path)
 
     #
     # list of system calls to interleave
@@ -228,6 +231,7 @@ class OS:
 
         #
         # XXX. create a virtual layer to simulate /dev, /sys and /proc
+        # XXX. remove deleted file if newly created
         #
 
         # for dirs
@@ -280,6 +284,25 @@ class OS:
 
     def close_exit(self, proc, sc):
         self.fds[proc.pid][sc.fd.int] = None
+
+    def rename_enter(self, proc, sc):
+        sc.oldfd = at_fd(AT_FDCWD, sc)
+        sc.newfd = at_fd(AT_FDCWD, sc)
+        self.renameat_enter(proc, sc)
+
+    def rename_exit(self, proc, sc):
+        sc.oldfd = at_fd(AT_FDCWD, sc)
+        sc.newfd = at_fd(AT_FDCWD, sc)
+        self.renameat_exit(proc, sc)
+
+    def renameat_enter(self, proc, sc):
+        self.__rewrite_path(proc, sc.oldfd.fd, sc.old, flag=RW_WRITING)
+        self.__rewrite_path(proc, sc.newfd.fd, sc.new, flag=RW_FORCE)
+
+    def renameat_exit(self, proc, sc):
+        if sc.err.ok():
+            (hpn, _) = self.parse_path_dirfd(sc.oldfd, sc.old, proc)
+            self.put_deleted_file(hpn)
 
     @redirect_at
     def stat_enter(self, proc, sc):

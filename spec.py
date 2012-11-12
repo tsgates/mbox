@@ -36,22 +36,24 @@ SYSCALLS = {
 
 # XXX. syscall priorities that we should check
 #
-#  rename/at
-#  unlink/at
-#  dup/dup2
-#  connect
-#  mmap
+#  fcntl: F_GETFD, F_SETFD, F_GETFL
 #  ioctl
-#  readlink/at
-#  socket
+#  unlink/at -> open()
+#  readlink
+#  dup/dup2
+#  f/chmod/at
+#  f/l/chown/at
 #  f/truncate
 #  mkdir/at
 #  creat
 #  f/chdir
-#  f/chmod/at
-#  f/l/chown/at
+#  mmap
+#  readlink/at
+#  socket
+#  connect
 #  f/utime/s/at
 #  mknod
+#  futex
 #
 #  setxattr
 #  lsetxattr

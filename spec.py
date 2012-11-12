@@ -35,6 +35,8 @@ SYSCALLS = {
   "fcntl"      : ("err"  , "f_fd"        , "f_fcntlcmd"                    ),
   "readlink"   : ("f_len", "f_path"      , "f_ptr"  , "f_int"              ),
   "readlinkat" : ("f_len", "dirfd:f_fd"  , "f_path" , "f_ptr"   , "f_int"  ),
+  "mkdir"      : ("f_err", "f_path"      , "f_mode"                        ),
+  "mkdirat"    : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
 }
 
 # XXX. syscall priorities that we should check
@@ -46,7 +48,6 @@ SYSCALLS = {
 #  f/chmod/at
 #  f/l/chown/at
 #  f/truncate
-#  mkdir/at
 #  creat
 #  mmap
 #  socket
@@ -370,7 +371,7 @@ class f_mode(arg):
     argtype = "int"
     def __init__(self, arg, sc):
         self.mode = None
-        if sc.flag.chk(O_CREAT):
+        if not hasattr(sc, "flag") or sc.flag.chk(O_CREAT):
             self.mode = arg
     def __str__(self):
         if self.mode is None:
@@ -410,6 +411,8 @@ def get_dirents(path):
     #
     # NOTE. slow, call getdirent() syscall intead
     #
+    if not dir_exists(path):
+        return []
     rtn = []
     off = 1
     for f in os.listdir(path):

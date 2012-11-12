@@ -333,6 +333,32 @@ class OS:
         self.rewrite_path(proc, sc)
 
     @redirect_at
+    def mkdir_enter(self, proc, sc):
+        pass
+
+    def mkdirat_enter(self, proc, sc):
+        self.rewrite_path(proc, sc, RW_FORCE)
+
+    @redirect_at
+    def rmdir_enter(self, proc, sc):
+        pass
+
+    @redirect_at
+    def rmdir_exit(self, proc, sc):
+        pass
+
+    def rmdirat_enter(self, proc, sc):
+        self.rewrite_path(proc, sc, RW_FORCE)
+
+    # XXX. duplicated with unlinkat_exit()
+    def rmdirat_exit(self, proc, sc):
+        (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+        # emulate successfully deleted (or deleted in sandboxfs)
+        if (sc.ret.err() and exists(hpn)) or sc.ret.ok():
+            self.mark_deleted_file(hpn)
+            self.add_hijack(sc.ret, 0)
+
+    @redirect_at
     def stat_enter(self, proc, sc):
         pass
 
@@ -344,9 +370,6 @@ class OS:
 
     def lstat_enter(self, proc, sc):
         self.stat_enter(proc, sc)
-
-    def lstat_exit(self, proc, sc):
-        pass
 
     @redirect_at
     def unlink_enter(self, proc, sc):

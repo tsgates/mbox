@@ -32,6 +32,12 @@ class ask_commitall:
         # XXX. ignore signals
         return True
 
+class ask_store:
+    desc = "s:store"
+    def __call__(self, spn, hpn):
+        # XXX. store as log
+        return True
+
 # interactively committing modified files to the host
 def interactive(box):
 

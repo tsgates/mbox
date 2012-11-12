@@ -85,6 +85,21 @@ class OS:
             dbg.ns(" copy %s -> %s", pn, spn)
             safecopy(pn, spn)
 
+    def getfd(self, proc, fd):
+        pid = proc.pid
+        if fd in self.fds[pid]:
+            return self.fds[pid][fd]
+        else:
+            return os.readlink("/proc/%s/%d" % (pid, fd))
+
+    def setfd(self, proc, fd, path):
+        pid = proc.pid
+        if path is None:
+            if fd in self.fds[pid]:
+                del self.fds[pid][fd]
+        else:
+            self.fds[pid][fd] = path
+
     def getcwd(self, proc):
         pid = proc.pid
         if pid in self.cwds:
@@ -105,7 +120,7 @@ class OS:
         if dirfd == AT_FDCWD:
             cwd = self.getcwd(proc)
         else:
-            cwd = self.fds[proc.pid][dirfd]
+            cwd = self.getfd(proc, dirfd)
         hpn = path.normpath(cwd)
         spn = path.chroot(self.root, self.getcwd(proc))
         return (hpn, spn)
@@ -168,7 +183,7 @@ class OS:
 
     def fchdir_exit(self, proc, sc):
         if sc.ret.ok():
-            self.setcwd(proc, self.fds[proc.pid][sc.dirfd.fd])
+            self.setcwd(proc, self.getfd(proc, sc.dirfd.fd))
 
     def getdents_enter(self, proc, sc):
         pass
@@ -180,7 +195,7 @@ class OS:
         # exit on current syscall, let's dump hostfs too
         if sc.ret.int == 0:
             state = self.dirents[pid].get(fd, None)
-            hpn   = self.fds[pid][fd]
+            hpn   = self.getfd(proc, fd)
             sdir  = os.listdir(chjoin(self.root, hpn))
 
             # fetch previous dirents
@@ -277,13 +292,13 @@ class OS:
             pid = proc.pid
             fd  = sc.ret.int
             cwd = self.getcwd(proc)
-            self.fds[pid][fd] = sc.path.normpath(cwd)
+            self.setfd(proc, fd, sc.path.normpath(cwd))
 
     def close_enter(self, proc, sc):
         pass
 
     def close_exit(self, proc, sc):
-        self.fds[proc.pid][sc.fd.int] = None
+        self.setfd(proc, sc.fd.int, None)
 
     def rename_enter(self, proc, sc):
         sc.oldfd = at_fd(AT_FDCWD, sc)

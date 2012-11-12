@@ -15,24 +15,26 @@ from util import *
 #  - arg# also aliased
 #
 SYSCALLS = {
-  "open"     : ("f_fd" , "f_path"      , "f_flag" , "f_mode"             ),
-  "openat"   : ("f_fd" , "dirfd:at_fd" , "f_path" , "f_flag"  , "f_mode" ),
-  "close"    : ("err"  , "f_fd"                                          ),
-  "getdents" : ("f_len", "f_fd"        , "f_dirp" , "f_size"             ),
-  "stat"     : ("err"  , "f_path"      , "f_statp"                       ),
-  "fstat"    : ("err"  , "f_fd"        , "f_statp"                       ),
-  "fstatat"  : ("err"  , "dirfd:at_fd" , "f_path" , "f_statp" , "f_int"  ),
-  "lstat"    : ("err"  , "f_path"      , "f_statp"                       ),
-  "unlink"   : ("err"  , "f_path"                                        ),
-  "unlinkat" : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
-  "getxattr" : ("serr" , "f_path"      , "f_cstr" , "f_ptr"   , "f_int"  ),
-  "access"   : ("err"  , "f_path"      , "f_int"                         ),
-  "faccessat": ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
-  "chdir"    : ("err"  , "f_path"                                        ),
-  "fchdir"   : ("err"  , "dirfd:f_fd"                                    ),
-  "rename"   : ("err"  , "old:f_path"  , "new:f_path"                    ),
-  "renameat" : ("err"  , "oldfd:f_fd"  , "old:f_path"  , "newfd:f_fd",  "new:f_path" ),
-  "fcntl"    : ("err"  , "f_fd"        , "f_fcntlcmd"                    ),
+  "open"       : ("f_fd" , "f_path"      , "f_flag" , "f_mode"             ),
+  "openat"     : ("f_fd" , "dirfd:at_fd" , "f_path" , "f_flag"  , "f_mode" ),
+  "close"      : ("err"  , "f_fd"                                          ),
+  "getdents"   : ("f_len", "f_fd"        , "f_dirp" , "f_size"             ),
+  "stat"       : ("err"  , "f_path"      , "f_statp"                       ),
+  "fstat"      : ("err"  , "f_fd"        , "f_statp"                       ),
+  "fstatat"    : ("err"  , "dirfd:at_fd" , "f_path" , "f_statp" , "f_int"  ),
+  "lstat"      : ("err"  , "f_path"      , "f_statp"                       ),
+  "unlink"     : ("err"  , "f_path"                                        ),
+  "unlinkat"   : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
+  "getxattr"   : ("serr" , "f_path"      , "f_cstr" , "f_ptr"   , "f_int"  ),
+  "access"     : ("err"  , "f_path"      , "f_int"                         ),
+  "faccessat"  : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
+  "chdir"      : ("err"  , "f_path"                                        ),
+  "fchdir"     : ("err"  , "dirfd:f_fd"                                    ),
+  "rename"     : ("err"  , "old:f_path"  , "new:f_path"                    ),
+  "renameat"   : ("err"  , "oldfd:f_fd"  , "old:f_path"  , "newfd:f_fd",  "new:f_path" ),
+  "fcntl"      : ("err"  , "f_fd"        , "f_fcntlcmd"                    ),
+  "readlink"   : ("f_len", "f_path"      , "f_ptr"  , "f_int"              ),
+  "readlinkat" : ("f_len", "dirfd:f_fd"  , "f_path" , "f_ptr"   , "f_int"  ),
 }
 
 # XXX. syscall priorities that we should check
@@ -41,15 +43,12 @@ SYSCALLS = {
 #  dup/dup2: ditto?
 #
 #  ioctl
-#  unlink/at -> open()
-#  readlink
 #  f/chmod/at
 #  f/l/chown/at
 #  f/truncate
 #  mkdir/at
 #  creat
 #  mmap
-#  readlink/at
 #  socket
 #  connect
 #  f/utime/s/at

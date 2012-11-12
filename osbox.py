@@ -326,10 +326,14 @@ class OS:
             self.mark_deleted_file(hpn)
 
     @redirect_at
-    def stat_enter(self, proc, sc):
+    def readlink_enter(self, proc, sc):
         pass
 
-    def stat_exit(self, proc, sc):
+    def readlinkat_enter(self, proc, sc):
+        self.rewrite_path(proc, sc)
+
+    @redirect_at
+    def stat_enter(self, proc, sc):
         pass
 
     def fstatat_enter(self, proc, sc):

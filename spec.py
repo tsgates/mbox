@@ -37,6 +37,8 @@ SYSCALLS = {
   "readlinkat" : ("f_len", "dirfd:f_fd"  , "f_path" , "f_ptr"   , "f_int"  ),
   "mkdir"      : ("f_err", "f_path"      , "f_mode"                        ),
   "mkdirat"    : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
+  "chmod"      : ("f_err", "f_path"      , "f_mode"                        ),
+  "fchmodat"   : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
 }
 
 # XXX. syscall priorities that we should check

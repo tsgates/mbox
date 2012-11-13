@@ -165,7 +165,7 @@ class OS:
         #  will be written   : copy the file and use that file path
         if exists(spn) or self.is_deleted(hpn) or flag != RW_NONE:
             # it has writing intent
-            if flag == RW_WRITING:
+            if flag == RW_WRITING and not file_exists(spn):
                 self.copy_to(hpn, spn)
 
             # deletion: we know it will fail in syscall(), but it's correct
@@ -205,6 +205,13 @@ class OS:
 
     def faccessat_enter(self, proc, sc):
         self.rewrite_path(proc, sc)
+
+    @redirect_at
+    def chmod_enter(self, proc, sc):
+        pass
+
+    def fchmodat_enter(self, proc, sc):
+        self.rewrite_path(proc, sc, RW_WRITING)
 
     def chdir_exit(self, proc, sc):
         if sc.ret.ok():

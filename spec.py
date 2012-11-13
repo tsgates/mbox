@@ -333,6 +333,12 @@ class f_path(arg):
     def __str__(self):
         return "%s%s" % (self.path, "" if exists(self.path) else "(N)")
 
+class f_sysc(arg):
+    argtype = "int"
+    def __init__(self, arg, sc):
+        self.seq  = -1
+        self.flag = arg
+
 class f_flag(arg):
     argtype = "int"
     def __init__(self, arg, sc):
@@ -523,3 +529,9 @@ class f_fcntlcmd(arg):
             if eval(f) == self.cmd:
                 return f
         return "N/A"
+
+
+# construct convenient consts
+from ptrace.syscall.linux_syscall64 import SYSCALL_NAMES
+for (sc, name) in SYSCALL_NAMES.iteritems():
+    exec "NR_%s = %d" % (name, sc)

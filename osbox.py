@@ -24,6 +24,11 @@ RW_WRITING = 1
 RW_FORCE   = 2
 RW_NONE    = 3
 
+# fd->path converting
+FD_ASIS    = 1
+FD_SANDBOX = 2
+FD_HOST    = 3
+
 class OS:
     def __init__(self, root, cwd):
         #
@@ -32,9 +37,7 @@ class OS:
         # filefd in hostfs|sandboxfs
         #
         self.root    = root.rstrip("/")   # root dir of sandboxfs
-        self.fds     = defaultdict(dict)  # fd->path (normalized, original)
         self.cwd     = cwd                # initial cwd
-        self.cwds    = {}                 # cwd of each process
         self.stat    = defaultdict(int)   # statistics of syscalls
         self.dirents = defaultdict(dict)  # state (seek equivalent)
         self.deleted = defaultdict(set)   # fullpath -> set of filenames
@@ -85,33 +88,30 @@ class OS:
             dbg.ns(" copy %s -> %s", pn, spn)
             safecopy(pn, spn)
 
-    def getfd(self, proc, fd):
-        pid = proc.pid
-        if fd in self.fds[pid]:
-            return self.fds[pid][fd]
-        else:
-            return os.readlink("/proc/%s/%d" % (pid, fd))
+    def getfd(self, proc, fd, form=FD_ASIS):
+        path = None
+        pn = "/proc/%s/fd/%d" % (proc.pid, fd)
+        if exists(pn):
+            path = normpath(os.readlink(pn))
 
-    def setfd(self, proc, fd, path):
-        pid = proc.pid
-        if path is None:
-            if fd in self.fds[pid]:
-                del self.fds[pid][fd]
-        else:
-            self.fds[pid][fd] = path
+        # convert path form
+        if form == FD_ASIS:
+            return path
+        elif form == FD_SANDBOX:
+            return self.to_sandboxfs(path)
+        elif form == FD_HOST:
+            return self.to_hostfs(path)
+
+        # non-exsist fd
+        return None
 
     def getcwd(self, proc):
-        pid = proc.pid
-        if pid in self.cwds:
-            return self.cwds[proc.pid]
-        else:
-            # read /proc
-            return os.readlink("/proc/%s/cwd" % pid)
+        cwd = os.readlink("/proc/%s/cwd" % proc.pid)
+        assert self.is_hostfs(cwd)
+        return cwd
 
-    def setcwd(self, proc, path):
-        old = self.getcwd(proc)
-        self.cwds[proc.pid] = normpath(path)
-        dbg.info(" cwd: %s -> %s" % (old, path))
+    def chgcwd(self, proc, path):
+        dbg.info(" cwd: %s -> %s" % (self.getcwd(proc), path))
 
     def parse_path(self, path, proc):
         return self.parse_path_dirfd(AT_FDCWD, path, proc)
@@ -125,6 +125,9 @@ class OS:
         spn = path.chroot(self.root, self.getcwd(proc))
         return (hpn, spn)
 
+    #
+    # handle deleted files
+    #
     def is_deleted(self, hpn):
         (d, f) = os.path.split(hpn)
         return f in self.deleted.get(d, [])
@@ -173,6 +176,27 @@ class OS:
             dbg.info(" use: %s" % path)
 
     #
+    # host/sandbox path conversion
+    #
+    def is_sandboxfs(self, path):
+        return normpath(path).startswith(self.root)
+
+    def is_hostfs(self, path):
+        return not self.is_sandboxfs(path)
+
+    def to_sandboxfs(self, path):
+        pn = normpath(path)
+        if self.is_hostfs(pn):
+            return chjoin(self.root, pn)
+        return pn
+
+    def to_hostfs(self, path):
+        pn = normpath(path)
+        if self.is_sandboxfs(pn):
+            return pn[len(self.root):]
+        return pn
+
+    #
     # list of system calls to interleave
     #
     @redirect_at
@@ -184,11 +208,26 @@ class OS:
 
     def chdir_exit(self, proc, sc):
         if sc.ret.ok():
-            self.setcwd(proc, sc.path.str)
+            self.chgcwd(proc, sc.path.str)
+
+    def fchdir_enter(self, proc, sc):
+        pn = self.getfd(proc, sc.dirfd.fd)
+        if pn and self.is_sandboxfs(pn):
+            hpn = self.getfd(proc, sc.dirfd.fd, FD_HOST)
+
+            # fd -> path (the first argument)
+            path = f_path(hpn, sc)
+            path.seq = 0
+            self.add_hijack(path, hpn)
+
+            # change the syscall number
+            self.add_hijack(f_sysc(0, sc), NR_chdir)
+
+            dbg.info(" fchdir on the sandboxed dirfd: %s" % pn)
 
     def fchdir_exit(self, proc, sc):
         if sc.ret.ok():
-            self.setcwd(proc, self.getfd(proc, sc.dirfd.fd))
+            self.chgcwd(proc, self.getfd(proc, sc.dirfd.fd))
 
     def getdents_enter(self, proc, sc):
         pass
@@ -200,7 +239,7 @@ class OS:
         # exit on current syscall, let's dump hostfs too
         if sc.ret.int == 0:
             state = self.dirents[pid].get(fd, None)
-            hpn   = self.getfd(proc, fd)
+            hpn   = self.getfd(proc, fd, FD_HOST)
             sdir  = os.listdir(chjoin(self.root, hpn))
 
             # fetch previous dirents
@@ -300,11 +339,7 @@ class OS:
         # keep tracks of open files
         if not sc.ret.err():
             (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
-            self.setfd(proc, sc.ret.int, hpn)
             self.unmark_deleted_file(hpn)
-
-    def close_exit(self, proc, sc):
-        self.setfd(proc, sc.fd.int, None)
 
     def rename_enter(self, proc, sc):
         sc.oldfd = at_fd(AT_FDCWD, sc)
@@ -397,8 +432,6 @@ class OS:
             print "%s%15s: %3s" % (mark, name, cnt)
 
         print "-" * 60
-        pprint.pprint(self.fds)
         pprint.pprint(self.deleted)
-        pprint.pprint(self.cwds)
         # XXX. check
         os.system("tree %s" % self.root)

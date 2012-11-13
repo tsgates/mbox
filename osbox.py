@@ -283,14 +283,17 @@ class OS:
                     break
                 blob += pack
 
-            # reset state
-            if state is []:
-                self.dirents[pid].get(fd, None)
-
             # insert blob
             if len(blob) != 0:
                 self.add_hijack(sc.dirp, blob)
                 self.dirents[pid][fd] = dirents
+
+            dbg.dirent(" <- #dirent:%s (%s, state:%s, blob:%s)" \
+                           % (len(dirents), hpn, state, len(blob)))
+
+            # reset state
+            if state == []:
+                self.dirents[pid][fd] = None
 
     def getxattr_enter(self, proc, sc):
         self.rewrite_path(proc, sc)

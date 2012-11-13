@@ -47,9 +47,10 @@ SYSCALLS = {
 
 # XXX. syscall priorities that we should check
 #
-#  fcntl: we don't have to interpose
-#  dup/dup2: ditto
-#  ftruncate: ditto
+#  fcntl: ok
+#  dup/dup2: ok
+#  ftruncate: ok
+#  flock: ok
 #
 #  ioctl
 #  mmap

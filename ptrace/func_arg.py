@@ -101,4 +101,3 @@ class FunctionArgument(object):
 
     def __repr__(self):
         return "argument %s of %s()" % (self.name, self.function.name)
-

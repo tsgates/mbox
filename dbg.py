@@ -1,7 +1,7 @@
-# 
+#
 # dbg module
 #  by Taesoo Kim
-#  
+#
 
 import sys
 import os
@@ -25,7 +25,7 @@ settings = {
 #    dbg.test("#B<red text#> = %s", error)
 #    dbg.info("this is info")
 #    dbg.error("this is #R<error#>")
-# 
+#
 #    dbg.stop()  : invoke pdb
 #    dbg.quiet() : suppressing dbg messages
 #
@@ -41,7 +41,7 @@ settings = {
 # #Y<        : yellow
 # #C<        : cyan
 # #>         : end mark
-# 
+#
 
 header = "'[#B<%-18s#>] ' % (<<func>>)"
 
@@ -56,7 +56,7 @@ def currentframe() :
 
 def formatting(msg, tag, rv) :
     h = msg
-    
+
     h = h.replace("<<tag>> ", tag)
     h = h.replace("<<func>>", repr(rv[2]))
     h = h.replace("<<line>>", repr(rv[1]))
@@ -79,7 +79,7 @@ def dbg(tag, mark, *args):
         return
 
     f = currentframe()
-    
+
     # caller's frame
     if f is not None:
         f = f.f_back
@@ -99,7 +99,7 @@ def dbg(tag, mark, *args):
         msg = str(args[0]) % args[1:]
     else:
         msg = str(args[0])
-        
+
     sys.stderr.write(("%s%s %s\n" % (formatting(header, tag, rv),
                                      coloring(mark),
                                      coloring(msg))))
@@ -114,16 +114,14 @@ for k, v in settings.iteritems() :
 
 def fatal(*msg):
     dbg("fatal", ' ', *msg)
-    exit(1)
 
 def stop():
     import pdb
     pdb.Pdb().set_trace(sys._getframe().f_back)
-    
+
 def quiet(dbg, enable=[]):
     def ignore(*key, **kwds):
         return
     for k in set(settings.keys()) - set(enable):
         setattr(dbg, k, ignore)
         setattr(dbg, k + "m", ignore)
-    

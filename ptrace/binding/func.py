@@ -143,10 +143,12 @@ def ptrace(command, pid=0, arg1=0, arg2=0, check_errno=False):
             # it's not an error. For other operations, -1
             # is always an error
             if not(check_errno) or errno:
-                message = "ptrace(cmd=%s, pid=%s, %r, %r) error #%s: %s" % (
-                    command, pid, arg1, arg2,
-                    errno, strerror(errno))
-                raise PtraceError(message, errno=errno, pid=pid)
+                # XXX.
+                # message = "ptrace(cmd=%s, pid=%s, %r, %r) error #%s: %s" % (
+                #     command, pid, arg1, arg2,
+                #     errno, strerror(errno))
+                # raise PtraceError(message, errno=errno, pid=pid)
+                pass
     return result
 
 def ptrace_traceme():
@@ -273,4 +275,3 @@ else:
 if HAS_PTRACE_IO:
     def ptrace_io(pid, io_desc):
         ptrace(PTRACE_IO, pid, addressof(io_desc))
-

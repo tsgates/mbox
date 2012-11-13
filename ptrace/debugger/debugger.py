@@ -156,9 +156,9 @@ class PtraceDebugger(object):
                 for ppid, proc in self.dict.iteritems():
                     sc = proc.syscall_state.syscall
                     if sc and sc.name == "clone" and sc.result is None:
-                        process = self.addProcess(pid, True, proc)
+                        process = self.addProcess(pid, False, proc)
                         self.dict[pid] = process
-                        return NewProcessEvent(process)
+                        break
                 if process is None:
                     warning("waitpid() warning: Unknown PID %r" % pid)
 

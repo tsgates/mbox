@@ -285,6 +285,9 @@ class OS:
     def getxattr_enter(self, proc, sc):
         self.rewrite_path(proc, sc)
 
+    def creat_enter(self, proc, sc):
+        self.rewrite_path(proc, sc, RW_FORCE)
+
     @redirect_at
     def open_enter(self, proc, sc):
         pass

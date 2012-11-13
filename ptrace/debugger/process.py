@@ -173,7 +173,7 @@ class PtraceProcess(object):
 
     def getSyscall(self, opts):
         return self.syscall_state.event(opts)
-    
+
     def isTraced(self):
         if not HAS_PROC:
             self.notImplementedError()
@@ -569,7 +569,7 @@ class PtraceProcess(object):
                     formatAddress(address), size, err))
     #
     # using peek/pook
-    # 
+    #
     else:
         readBytes = _readBytes
 
@@ -762,4 +762,3 @@ class PtraceProcess(object):
 
     def notImplementedError(self):
         raise NotImplementedError()
-

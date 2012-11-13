@@ -39,6 +39,7 @@ SYSCALLS = {
   "mkdirat"    : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
   "chmod"      : ("f_err", "f_path"      , "f_mode"                        ),
   "fchmodat"   : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
+  "creat"      : ("f_err", "f_path"      , "f_mode"                        ),
 }
 
 # XXX. syscall priorities that we should check
@@ -47,7 +48,6 @@ SYSCALLS = {
 #  dup/dup2: ditto?
 #
 #  ioctl
-#  f/chmod/at
 #  f/l/chown/at
 #  f/truncate
 #  creat

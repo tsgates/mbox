@@ -297,8 +297,12 @@ class OS:
         (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
 
         #
+        # XXX. if users don't have any permission to modify dirs, we
+        #      don't have to sync at all
         # XXX. create a virtual layer to simulate /dev, /sys and /proc
         #
+        if hpn.startswith("/dev") or hpn.startswith("/proc"):
+            return
 
         # deleted file/dir
         if self.is_deleted(hpn):

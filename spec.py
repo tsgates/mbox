@@ -341,6 +341,10 @@ class f_sysc(arg):
         self.seq  = -1
         self.flag = arg
 
+    # rax is now used as return value
+    def restore(self, proc, blob):
+        pass
+
 class f_flag(arg):
     argtype = "int"
     def __init__(self, arg, sc):

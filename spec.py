@@ -430,7 +430,7 @@ def get_dirents(path):
     rtn = []
     off = 1
     for f in os.listdir(path):
-        s = os.stat(join(path, f))
+        s = os.lstat(join(path, f))
         d = dirent()
         d.d_name   = f
         d.d_type   = __st_to_dt(s)

@@ -289,10 +289,12 @@ class OS:
                 self.dirents[pid][fd] = dirents
 
             dbg.dirent(" <- #dirent:%s (%s, state:%s, blob:%s)" \
-                           % (len(dirents), hpn, state, len(blob)))
+                           % (len(dirents), hpn,
+                              state if state is None else len(state),
+                              len(blob)))
 
             # reset state
-            if state == []:
+            if state == [] and len(blob) == 0:
                 self.dirents[pid][fd] = None
 
     def getxattr_enter(self, proc, sc):

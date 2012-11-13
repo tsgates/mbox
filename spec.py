@@ -40,17 +40,18 @@ SYSCALLS = {
   "chmod"      : ("f_err", "f_path"      , "f_mode"                        ),
   "fchmodat"   : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
   "creat"      : ("f_err", "f_path"      , "f_mode"                        ),
+  "chown"      : ("f_err", "f_path"      , "o:f_int", "g:f_int"            ),
+  "fchownat"   : ("f_err", "dirfd:f_fd"  , "f_path" , "o:f_int", "g:f_int" ),
+  "truncate"   : ("f_err", "f_path"      , "f_int"                         ),
 }
 
 # XXX. syscall priorities that we should check
 #
-#  fcntl: we don't have to interpose?
-#  dup/dup2: ditto?
+#  fcntl: we don't have to interpose
+#  dup/dup2: ditto
+#  ftruncate: ditto
 #
 #  ioctl
-#  f/l/chown/at
-#  f/truncate
-#  creat
 #  mmap
 #  socket
 #  connect

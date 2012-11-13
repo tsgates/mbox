@@ -39,10 +39,6 @@ class Sandbox:
         self.debugger.quit()
         self.os.done()
 
-        # add a flag not to be interactive
-        if self.opts.interact:
-            chore.interactive(self.os)
-
     def print_syscall(self, syscall):
         name = syscall.name
         text = syscall.format()
@@ -202,6 +198,9 @@ def parse_args():
     parser.add_option("-i", "--interact",
                       help="Interactivly checking modified files",
                       action="store_true", default=False)
+    parser.add_option("-t", "--test",
+                      help="Run as test, check pre/post conditions",
+                      action="store_true", default=False)
     (opts, args) = parser.parse_args()
 
     # checking sanity
@@ -222,4 +221,21 @@ if __name__ == "__main__":
         print_syscalls(opts)
         exit(1)
 
-    Sandbox(opts, args).run()
+    # check pre condition when unit testing
+    if opts.test:
+        dbg.info("[!] checking %s" % args[0])
+        if not chore.check_pre(args[0]):
+            exit(1)
+
+    sandbox = Sandbox(opts, args)
+    sandbox.run()
+
+    # interactively committing back to host
+    if opts.interact:
+        chore.interactive(sandbox.os)
+
+    # check post condition when unit testing
+    if opts.test:
+        dbg.info("[!] checking %s" % args[0])
+        if not chore.check_post(args[0], sandbox.os.root):
+            exit(1)

@@ -213,6 +213,16 @@ class OS:
     def fchmodat_enter(self, proc, sc):
         self.rewrite_path(proc, sc, RW_WRITING)
 
+    @redirect_at
+    def chown_enter(self, proc, sc):
+        pass
+
+    def fchownat_enter(self, proc, sc):
+        self.rewrite_path(proc, sc, RW_WRITING)
+
+    def truncate_enter(self, proc, sc):
+        self.rewrite_path(proc, sc, RW_WRITING)
+
     def chdir_exit(self, proc, sc):
         if sc.ret.ok():
             self.chgcwd(proc, sc.path.str)

@@ -1,4 +1,5 @@
 import os
+import re
 import util
 
 class ask_diff:
@@ -58,3 +59,23 @@ def interactive(box):
                 for m in menu:
                     if m.desc.startswith(c+":"):
                         stop = m(spn, hpn)
+
+# check pre/post condision of a test script
+def check_pre(pn):
+    return check("pre", pn, "N/A")
+
+def check_post(pn, root):
+    return check("post", pn, root)
+
+def check(key, pn, root):
+    cwd  = os.getcwd()
+    spwd = util.chjoin(root, cwd)
+    hpwd = cwd
+    for l in re.findall("#\s*%s:(.*)" % key, open(pn).read()):
+        l = l.strip()
+        l = l.replace("$SPWD", spwd)
+        l = l.replace("$HPWD", hpwd)
+        if os.system(l) != 0:
+            print "[!] %s: failed" % l
+            return False
+    return True

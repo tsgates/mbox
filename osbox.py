@@ -385,7 +385,7 @@ class OS:
 
     def renameat_exit(self, proc, sc):
         if sc.err.ok():
-            (hpn, _) = self.parse_path_dirfd(sc.oldfd, sc.old, proc)
+            (hpn, _) = self.parse_path_dirfd(sc.oldfd.fd, sc.old, proc)
             self.mark_deleted_file(hpn)
 
     @redirect_at

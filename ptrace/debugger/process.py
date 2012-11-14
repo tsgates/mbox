@@ -399,8 +399,14 @@ class PtraceProcess(object):
             self.notImplementedError()
         if event in NEW_PROCESS_EVENT:
             new_pid = ptrace_geteventmsg(self.pid)
-            new_process = self.debugger.addProcess(new_pid, is_attached=True, parent=self)
-            return NewProcessEvent(new_process)
+            new_proc = self.debugger.dict.get(new_pid, None)
+            if new_proc is None:
+                new_proc = self.debugger.addProcess(new_pid, is_attached=True, parent=self)
+            else:
+                # first see this child in parent
+                new_proc.parent = self
+                new_proc.setoptions(self.debugger.options)
+            return NewProcessEvent(new_proc)
         elif event == PTRACE_EVENT_EXEC:
             return ProcessExecution(self)
         else:

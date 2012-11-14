@@ -41,9 +41,7 @@ class OS:
         self.stat    = defaultdict(int)   # statistics of syscalls
         self.dirents = defaultdict(dict)  # state (seek equivalent)
         self.deleted = defaultdict(set)   # fullpath -> set of filenames
-
-        # rewriting tasks
-        self.hijack = []
+        self.hijack  = defaultdict(list)  # rewriting tasks per process
 
         # init root
         mkdir(self.root)
@@ -52,8 +50,9 @@ class OS:
     # main driver
     #
     def run(self, proc, syscall):
+        pid = proc.pid
         if syscall.is_enter():
-            assert len(self.hijack) == 0
+            assert len(self.hijack[pid]) == 0
             self.stat[syscall.name] += 1
 
         cond = "enter" if syscall.is_enter() else "exit"
@@ -64,18 +63,18 @@ class OS:
             getattr(self, func)(proc, sc)
 
         if syscall.is_enter():
-            for (arg, new) in self.hijack:
+            for (arg, new) in self.hijack[pid]:
                 dbg.ns(" -> %s", new)
                 arg.hijack(proc, new)
         else:
-            for (arg, new) in self.hijack:
+            for (arg, new) in self.hijack[pid]:
                 dbg.ns(" <- %s", arg)
                 arg.restore(proc, new)
             # clean them up
-            self.hijack = []
+            self.hijack[pid] = []
 
-    def add_hijack(self, arg, new):
-        self.hijack.append((arg, new))
+    def add_hijack(self, proc, arg, new):
+        self.hijack[proc.pid].append((arg, new))
 
     def sync_parent_dirs(self, path):
         for crumb in itercrumb(path):
@@ -170,7 +169,7 @@ class OS:
 
             # deletion: we know it will fail in syscall(), but it's correct
             # semantic in terms of correctness
-            self.add_hijack(path, spn)
+            self.add_hijack(proc, path, spn)
         else:
             # use a file in the host: it could be dangerous
             dbg.info(" use: %s" % path)
@@ -235,10 +234,10 @@ class OS:
             # fd -> path (the first argument)
             path = f_path(hpn, sc)
             path.seq = 0
-            self.add_hijack(path, hpn)
+            self.add_hijack(proc, path, hpn)
 
             # change the syscall number
-            self.add_hijack(f_sysc(0, sc), NR_chdir)
+            self.add_hijack(proc, f_sysc(0, sc), NR_chdir)
 
             dbg.info(" fchdir on the sandboxed dirfd: %s" % pn)
 
@@ -285,7 +284,7 @@ class OS:
 
             # insert blob
             if len(blob) != 0:
-                self.add_hijack(sc.dirp, blob)
+                self.add_hijack(proc, sc.dirp, blob)
                 self.dirents[pid][fd] = dirents
 
             dbg.dirent(" <- #dirent:%s (%s, state:%s, blob:%s)" \
@@ -324,7 +323,7 @@ class OS:
 
         # deleted file/dir
         if self.is_deleted(hpn):
-            self.add_hijack(sc.path, spn)
+            self.add_hijack(proc, sc.path, spn)
             return
 
         # for dirs
@@ -332,13 +331,13 @@ class OS:
             # sync parent dir
             self.sync_parent_dirs(hpn)
             # rewrite pn -> spn
-            self.add_hijack(sc.path, spn)
+            self.add_hijack(proc, sc.path, spn)
             return
 
         # for files
         if file_exists(spn):
             # rewrite pn -> spn
-            self.add_hijack(sc.path, spn)
+            self.add_hijack(proc, sc.path, spn)
             return
 
         # file does not exist in the sandboxfs
@@ -351,7 +350,7 @@ class OS:
             # sync parent dir
             self.sync_parent_dirs(hpn)
             # rewrite pn -> spn
-            self.add_hijack(sc.path, spn)
+            self.add_hijack(proc, sc.path, spn)
             return
 
         # read/write
@@ -361,7 +360,7 @@ class OS:
             # copy the file to sandbox
             self.copy_to(hpn, spn)
             # rewrite pn -> spn
-            self.add_hijack(sc.path, spn)
+            self.add_hijack(proc, sc.path, spn)
             return
 
     def openat_exit(self, proc, sc):
@@ -420,7 +419,7 @@ class OS:
         # emulate successfully deleted (or deleted in sandboxfs)
         if (sc.ret.err() and exists(hpn)) or sc.ret.ok():
             self.mark_deleted_file(hpn)
-            self.add_hijack(sc.ret, 0)
+            self.add_hijack(proc, sc.ret, 0)
 
     @redirect_at
     def stat_enter(self, proc, sc):
@@ -451,7 +450,7 @@ class OS:
         # emulate successfully deleted (or deleted in sandboxfs)
         if (sc.ret.err() and exists(hpn)) or sc.ret.ok():
             self.mark_deleted_file(hpn)
-            self.add_hijack(sc.ret, 0)
+            self.add_hijack(proc, sc.ret, 0)
 
     def done(self):
         # XXX.

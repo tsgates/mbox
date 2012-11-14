@@ -1,6 +1,6 @@
 from logging import info, warning, error
 from ptrace import PtraceError
-from os import waitpid, WNOHANG
+from os import waitpid, WNOHANG, getpid
 from signal import SIGTRAP, SIGSTOP
 from errno import ECHILD
 from ptrace.debugger import PtraceProcess, ProcessSignal
@@ -63,33 +63,38 @@ class PtraceDebugger(object):
         self.use_sysgood = False
         self.enableSysgood()
 
-    def addProcess(self, pid, is_attached, parent=None):
+    def addProcess(self, pid, is_attached, parent=None, waiting=True):
         """
         Add a new process using its identifier. Use is_attached=False to
         attach an existing (running) process, and is_attached=True to trace
         a new (stopped) process.
         """
         if pid in self.dict:
-            raise KeyError("The process %s is already registered!" % pid)
+            return self.dict[pid]
+
         process = PtraceProcess(self, pid, is_attached, parent=parent)
         info("Attach %s to debugger" % process)
         self.dict[pid] = process
         self.list.append(process)
-        try:
-            process.waitSignals(SIGTRAP, SIGSTOP)
-        except KeyboardInterrupt:
-            error(
-                "User interrupt! Force the process %s attach "
-                "(don't wait for signals)."
-                % pid)
-        except ProcessSignal, event:
-            event.display()
-        except:
-            process.is_attached = False
-            process.detach()
-            raise
+
+        if waiting:
+            try:
+                process.waitSignals(SIGTRAP, SIGSTOP)
+            except KeyboardInterrupt:
+                error(
+                    "User interrupt! Force the process %s attach "
+                    "(don't wait for signals)."
+                    % pid)
+            except ProcessSignal, event:
+                event.display()
+            except:
+                process.is_attached = False
+                process.detach()
+                raise
+
         if HAS_PTRACE_EVENTS and self.options:
             process.setoptions(self.options)
+
         return process
 
     def quit(self):
@@ -146,21 +151,12 @@ class PtraceDebugger(object):
                     raise err
             if not blocking and not pid:
                 return None
-            try:
-                process = self.dict[pid]
-            except KeyError:
-                #
-                # if child's clone() executes first, find parent to keep track of
-                #
-                process = None
-                for ppid, proc in self.dict.iteritems():
-                    sc = proc.syscall_state.syscall
-                    if sc and sc.name == "clone" and sc.result is None:
-                        process = self.addProcess(pid, False, proc)
-                        self.dict[pid] = process
-                        break
-                if process is None:
-                    warning("waitpid() warning: Unknown PID %r" % pid)
+
+            process = self.dict.get(pid, None)
+
+            # we first see this pid
+            if process is None:
+                process = self.addProcess(pid, False, None, False)
 
         return process.processStatus(status)
 

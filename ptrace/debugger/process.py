@@ -371,6 +371,7 @@ class PtraceProcess(object):
         else:
             signum = WSTOPSIG(status)
             event = self.processSignal(signum)
+
         return event
 
     def processTerminated(self):

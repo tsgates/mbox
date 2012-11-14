@@ -160,8 +160,10 @@ class Sandbox:
         return path.replace("%PID", str(pid))
 
 def print_syscalls(opts):
+    import spec
+
     pn = "syscall64.tbl"
-    if not exists(pn):
+    if not util.file_exists(pn):
         dbg.fatal("Failed to find %s" % pn)
 
     for l in open(pn):
@@ -175,7 +177,7 @@ def print_syscalls(opts):
         entry = "N/A" if len(toks) < 4 else toks[3]
 
         # what we are keeping track of
-        mark = "*" if name in SYSCALLS else " "
+        mark = "*" if name in spec.SYSCALLS else " "
         print "%s% 3s: %s" % (mark, num, name)
 
 def parse_args():

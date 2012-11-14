@@ -172,9 +172,10 @@ class arg(object):
 
     def _hijack_str(self, proc, new):
         assert type(new) is str and len(new) < MAX_PATH - 1
+        assert self.seq >= 0
 
-        # memcpy to the lower part of stack
-        ptr = proc.getStackPointer() - MAX_PATH
+        # memcpy to the lower part of stack (unique regions per argument)
+        ptr = proc.getStackPointer() - MAX_PATH * (self.seq+1)
         proc.writeBytes(ptr, new + "\x00")
 
         # write to the proper register

@@ -217,8 +217,8 @@ class arg(object):
         assert self.seq >= 0
 
         # memcpy to the lower part of stack (unique regions per argument)
-        ptr = proc.getStackPointer() - MAX_PATH * (self.seq+1)
-        proc.writeBytes(ptr, new + "\x00")
+        ptr = proc.getreg("rsp") - MAX_PATH * (self.seq+1)
+        proc.write_str(ptr, new)
 
         # write to the proper register
         (reg, self.old) = self._get_arg(proc, self.seq)
@@ -306,7 +306,7 @@ class f_dirp(ptr):
         # < alloced memory
         assert len(blob) < self.sc.size.int
         # overwrite buf
-        proc.writeBytes(self.ptr, blob)
+        proc.write_bytes(self.ptr, blob)
         # overwrite ret (size of blob)
         proc.setreg("rax", len(blob))
 
@@ -581,7 +581,10 @@ class f_fcntlcmd(arg):
                 return f
         return "N/A"
 
-if __name__ == '__main__':
+def print_syscalls():
     for (num, name) in sorted(list(SYSCALL_MAP.items())):
         mark = "*" if name in SYSCALLS else " "
         print "%s%3d: %s" % (mark, num, name)
+    
+if __name__ == '__main__':
+    print_syscalls()

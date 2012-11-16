@@ -2,8 +2,8 @@ import os
 import dbg
 import pprint
 
-from spec import *
-from util import *
+from syscall import *
+from util    import *
 
 #
 # redirect to f[func]at-like function (dirfd-relative syscall)
@@ -30,14 +30,13 @@ FD_SANDBOX = 2
 FD_HOST    = 3
 
 class OS:
-    def __init__(self, root, cwd):
+    def __init__(self, root):
         #
         # cwd    in hostfs
         # dirfd  in sandboxfs
         # filefd in hostfs|sandboxfs
         #
         self.root    = root.rstrip("/")   # root dir of sandboxfs
-        self.cwd     = cwd                # initial cwd
         self.stat    = defaultdict(int)   # statistics of syscalls
         self.dirents = defaultdict(dict)  # state (seek equivalent)
         self.deleted = defaultdict(set)   # fullpath -> set of filenames
@@ -49,20 +48,19 @@ class OS:
     #
     # main driver
     #
-    def run(self, proc, syscall):
+    def run(self, proc, sc):
         pid = proc.pid
-        if syscall.is_enter():
+        if sc.entering:
             assert len(self.hijack[pid]) == 0
-            self.stat[syscall.name] += 1
+            self.stat[sc.name] += 1
 
-        cond = "enter" if syscall.is_enter() else "exit"
-        func = "%s_%s" % (syscall.name, cond)
+        cond = "enter" if sc.entering else "exit"
+        func = "%s_%s" % (sc.name, cond)
         if hasattr(self, func):
-            sc = Syscall(syscall)
             dbg.ns(sc)
             getattr(self, func)(proc, sc)
 
-        if syscall.is_enter():
+        if sc.entering:
             for (arg, new) in self.hijack[pid]:
                 dbg.ns(" -> %s", new)
                 arg.hijack(proc, new)

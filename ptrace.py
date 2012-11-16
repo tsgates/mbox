@@ -116,7 +116,7 @@ def ptrace_getregs(pid):
     ptrace(PTRACE_GETREGS, pid, 0, addressof(regs))
     return regs
 
-def ptrace_setregs(pid):
+def ptrace_setregs(pid, regs):
     ptrace(PTRACE_SETREGS, pid, 0, addressof(regs))
 
 def ptrace_syscall(pid):

@@ -35,11 +35,16 @@ PS_EXITING  = 1
 
 class Process(object):
     def __init__(self, pid):
-        self.pid = pid
+        self.gen   = 0
+        self.pid   = pid
         self.state = PS_ENTERING
-        self.sc = None
+        self.sc    = None
+        self.regs  = (-1, None)
     
     def syscall(self):
+        # new syscall
+        self.gen += 1
+        
         # new syscall
         if self.sc is None or self.sc.exiting:
             self.sc = Syscall(self)
@@ -48,11 +53,14 @@ class Process(object):
         return self.sc
 
     def getregs(self):
-        return ptrace_getregs(self.pid)
+        if self.regs[0] != self.gen:
+            regs = ptrace_getregs(self.pid)
+            self.regs = (self.gen, regs)
+        return self.regs[1]
 
     def getreg(self, regname):
-        reg = self.getregs()
-        return getattr(reg, regname)
+        regs = self.getregs()
+        return getattr(regs, regname)
 
     def setregs(self, regs):
         return ptrace_setregs(self.pid, regs)

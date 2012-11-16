@@ -42,9 +42,9 @@ def trace(args, handler):
             
         ptrace_syscall(pid)
 
-if __name__ == '__main__':
-    # dump syscall
-    def handler(proc, sc):
-        print sc
+# dump syscall
+def dump_syscall(proc, sc):
+    print sc
     
-    trace(sys.argv[1:], handler)
+if __name__ == '__main__':
+    trace(sys.argv[1:], dump_syscall)

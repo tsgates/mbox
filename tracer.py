@@ -2,7 +2,7 @@
 
 import os
 import sys
-import signal
+import signals
 import dbg
 
 from ptrace   import *
@@ -32,22 +32,23 @@ def trace(args, handler):
         if os.WIFSIGNALED(status):
             code = os.WTERMSIG(status)
             del pinfo[pid]
-            dbg.tracer("[%s] signal: code=%s" % (pid, code))
+            dbg.tracer("[%s] killed by code=%s" % (pid, code))
             continue
 
         sig = os.WSTOPSIG(status)
         evt = status >> 16
-        if sig == signal.SIGTRAP and evt != 0:
+        if sig == signals.SIGTRAP and evt != 0:
             dbg.tracer("[%s] ptrace event: %s" % (pid, PTRACE_EVENTS[evt]))
-
-        if evt == 0:
+        elif sig == (signals.SIGTRAP|0x80):
             handler(proc, proc.syscall())
-            
+        else:
+            dbg.tracer("[%s] signaled: %s" % (pid, signals.signame(sig)))
+
         ptrace_syscall(pid)
 
 # dump syscall
 def dump_syscall(proc, sc):
-    print sc
+    dbg.info(sc)
     
 if __name__ == '__main__':
     trace(sys.argv[1:], dump_syscall)

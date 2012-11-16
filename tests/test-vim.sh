@@ -1,8 +1,8 @@
 #!/bin/bash -x
 #
-# pre: test -f README
-# post: diff "$SPWD/README" "$HPWD/README" | grep -q Python
+# pre: test -f tests/NOTE
+# post: diff "$SPWD/tests/NOTE" "$HPWD/tests/NOTE" | grep -q NOTE
 #
 
-vim -c ":delete" -c ":wq" README
-vi  -c ":wq" README
+vim -c ":delete" -c ":wq" tests/NOTE
+vi  -c ":wq" tests/NOTE

@@ -1,15 +1,3 @@
-# NOTE
- - tests/test-*.sh should be initiated in the fixed path
-
-    $ ./sandbox.py -t tests/test-vim.sh
-
- - check pre/post conditions for the script (if -t is provided to sandbox.py)
-
-    #!/bin/bash -x
-    #
-    # pre: test -f README
-    # post: diff "$SPWD/README" "$HPWD/README" | grep -q Python
-    #
 
     vim -c ":delete" -c ":wq" README
 

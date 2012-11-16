@@ -152,7 +152,8 @@ class Syscall:
         if regs.orig_rax != self.regs.orig_rax:
             #
             # XXX. there are some inconsistent state when signaled
-            # dbg.info("XXX:%s" % str(self))
+            dbg.info("XXX:%s" % str(self))
+            dbg.stop()
             # 
             pass
 

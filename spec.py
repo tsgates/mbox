@@ -31,7 +31,7 @@ SYSCALLS = {
   "chdir"      : ("err"  , "f_path"                                        ),
   "fchdir"     : ("err"  , "dirfd:f_fd"                                    ),
   "rename"     : ("err"  , "old:f_path"  , "new:f_path"                    ),
-  "renameat"   : ("err"  , "oldfd:f_fd"  , "old:f_path"  , "newfd:f_fd",  "new:f_path" ),
+  "renameat"   : ("err"  , "oldfd:f_fd"  , "old:f_path", "newfd:f_fd", "new:f_path" ),
   "fcntl"      : ("err"  , "f_fd"        , "f_fcntlcmd"                    ),
   "readlink"   : ("f_len", "f_path"      , "f_ptr"  , "f_int"              ),
   "readlinkat" : ("f_len", "dirfd:f_fd"  , "f_path" , "f_ptr"   , "f_int"  ),

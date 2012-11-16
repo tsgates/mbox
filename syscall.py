@@ -101,13 +101,17 @@ for l in open(pn):
 def scname(scnum):
     return SYSCALL_MAP.get(scnum, "N/A")
 
+# system call state
+SC_ENTERING = 0
+SC_EXITING  = 1
+
 class Syscall:
     def __init__(self, proc):
         self.rtn   = None
         self.proc  = proc
         self.regs  = proc.getregs()
         self.name  = scname(self.regs.orig_rax)
-        self.state = PS_ENTERING
+        self.state = SC_ENTERING
         self.args  = []
 
         # generate args
@@ -126,17 +130,17 @@ class Syscall:
         
     @property
     def entering(self):
-        return self.state == PS_ENTERING
+        return self.state == SC_ENTERING
 
     @property
     def exiting(self):
-        return self.state == PS_EXITING
+        return self.state == SC_EXITING
 
     def update(self):
-        assert self.state == PS_ENTERING and self.rtn is None
+        assert self.state == SC_ENTERING and self.rtn is None
         regs = self.proc.getregs()
         self.rtn = regs.rax
-        self.state = PS_EXITING
+        self.state = SC_EXITING
 
         # generate 
         ret = "err"
@@ -144,7 +148,7 @@ class Syscall:
         if len(args) > 0:
             ret = args[0]
         (name, kls) = self.__parse_syscall(ret)
-        val = self.__parse_ret(self.proc, regs, kls)
+        val = self.__parse_arg(self.proc, regs, kls, -1)
 
         setattr(self, "ret", val)
         setattr(self, name , val)
@@ -161,27 +165,21 @@ class Syscall:
                 name = kls
         return (name, eval(kls))
 
+    def __get_reg_from_seq(self, regs, seq):
+        rn = ("rdi", "rsi", "rdx", "r10", "r8", "r9", "rax")[seq]
+        return getattr(regs, rn)
+    
     def __parse_arg(self, proc, regs, kls, seq):
-        arg = None
+        arg = self.__get_reg_from_seq(regs, seq)
         if kls.argtype == "str":
-            # XXX
-            arg = "str"
-        elif kls.argtype == "int":
-            # XXX
-            arg = regs.rax
-        else:
-            raise Exception("Not implemented yet")
+            arg = proc.read_str(arg)
         return newarg(kls, arg, seq, self)
 
-    def __parse_ret(self, proc, regs, kls):
-        assert kls.argtype == "int"
-        return newarg(kls, regs.rax, -1, self)
-
     def __str__(self):
-        pid = self.sc.process.pid
-        seq = ">" if self.sc.is_enter() else "<"
+        pid = self.proc.pid
+        seq = ">" if self.entering else "<"
         rtn = "[%d]%s %s(%s)" % (pid, seq, self.name, ",".join(str(a) for a in self.args))
-        if self.sc.is_exit():
+        if self.exiting:
             rtn += " = %s" % str(self.rtn)
         return rtn
 
@@ -585,5 +583,5 @@ class f_fcntlcmd(arg):
 
 if __name__ == '__main__':
     for (num, name) in sorted(list(SYSCALL_MAP.items())):
-        print "%3d: %s" % (num, name)
-        
+        mark = "*" if name in SYSCALLS else " "
+        print "%s%3d: %s" % (mark, num, name)

@@ -1,5 +1,8 @@
-from ptrace import *
-    
+import os
+
+from ptrace  import *
+from syscall import *
+
 def run(args):
     pid = os.fork()
     
@@ -30,7 +33,7 @@ def run(args):
 PS_ENTERING = 0
 PS_EXITING  = 1
 
-class process(object):
+class Process(object):
     def __init__(self, pid):
         self.pid = pid
         self.state = PS_ENTERING
@@ -39,7 +42,7 @@ class process(object):
     def syscall(self):
         # new syscall
         if self.sc is None or self.sc.exiting:
-            self.sc = syscall(self)
+            self.sc = Syscall(self)
         else:
             self.sc.update()
         return self.sc

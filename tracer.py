@@ -6,18 +6,19 @@ import signal
 
 from ptrace   import *
 from syscall  import *
+from process  import *
 
 def trace(args, handler):
     pinfo = {}
     pid = run(args)
-    pinfo[pid] = process(pid)
+    pinfo[pid] = Process(pid)
 
     while len(pinfo) != 0:
         (pid, status) = os.wait()
 
         if not pid in pinfo:
             print "> new pid: %s" % pid
-            pinfo[pid] = process(pid)
+            pinfo[pid] = Process(pid)
 
         proc = pinfo[pid]
         

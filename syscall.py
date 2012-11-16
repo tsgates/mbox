@@ -3,6 +3,7 @@ import stat
 import errno
 import struct
 import dbg
+import ctypes
 
 from util import *
 
@@ -34,14 +35,14 @@ SYSCALLS = {
   "fcntl"      : ("err"  , "f_fd"        , "f_fcntlcmd"                    ),
   "readlink"   : ("f_len", "f_path"      , "f_ptr"  , "f_int"              ),
   "readlinkat" : ("f_len", "dirfd:f_fd"  , "f_path" , "f_ptr"   , "f_int"  ),
-  "mkdir"      : ("f_err", "f_path"      , "f_mode"                        ),
-  "mkdirat"    : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
-  "chmod"      : ("f_err", "f_path"      , "f_mode"                        ),
-  "fchmodat"   : ("f_err", "dirfd:f_fd"  , "f_path" , "f_mode"             ),
-  "creat"      : ("f_err", "f_path"      , "f_mode"                        ),
-  "chown"      : ("f_err", "f_path"      , "o:f_int", "g:f_int"            ),
-  "fchownat"   : ("f_err", "dirfd:f_fd"  , "f_path" , "o:f_int", "g:f_int" ),
-  "truncate"   : ("f_err", "f_path"      , "f_int"                         ),
+  "mkdir"      : ("err"  , "f_path"      , "f_mode"                        ),
+  "mkdirat"    : ("err"  , "dirfd:f_fd"  , "f_path" , "f_mode"             ),
+  "chmod"      : ("err"  , "f_path"      , "f_mode"                        ),
+  "fchmodat"   : ("err"  , "dirfd:f_fd"  , "f_path" , "f_mode"             ),
+  "creat"      : ("err"  , "f_path"      , "f_mode"                        ),
+  "chown"      : ("err"  , "f_path"      , "o:f_int", "g:f_int"            ),
+  "fchownat"   : ("err"  , "dirfd:f_fd"  , "f_path" , "o:f_int", "g:f_int" ),
+  "truncate"   : ("err"  , "f_path"      , "f_int"                         ),
 }
 
 # XXX. syscall priorities that we should check
@@ -101,6 +102,12 @@ for l in open(pn):
 def scname(scnum):
     return SYSCALL_MAP.get(scnum, "N/A")
 
+def to_clong(arg):
+    return ctypes.c_long(arg).value
+
+def to_culong(arg):
+    return ctypes.c_ulong(arg).value
+
 # system call state
 SC_ENTERING = 0
 SC_EXITING  = 1
@@ -137,10 +144,17 @@ class Syscall:
         return self.state == SC_EXITING
 
     def update(self):
-        assert self.state == SC_ENTERING and self.rtn is None
-        regs = self.proc.getregs()
-        self.rtn = regs.rax
+        assert self.state == SC_ENTERING and self.ret is None
         self.state = SC_EXITING
+
+        # check if same syscall
+        regs = self.proc.getregs()
+        if regs.orig_rax != self.regs.orig_rax:
+            #
+            # XXX. there are some inconsistent state when signaled
+            # dbg.info("XXX:%s" % str(self))
+            # 
+            pass
 
         # generate 
         ret = "err"
@@ -180,7 +194,7 @@ class Syscall:
         seq = ">" if self.entering else "<"
         rtn = "[%d]%s %s(%s)" % (pid, seq, self.name, ",".join(str(a) for a in self.args))
         if self.exiting:
-            rtn += " = %s" % str(self.rtn)
+            rtn += " = %s" % self.ret
         return rtn
 
 #
@@ -242,7 +256,7 @@ class arg(object):
 class err(arg):
     argtype = "int"
     def __init__(self, arg, sc):
-        self.arg = arg
+        self.arg = to_clong(arg)
     def ok(self):
         return self.arg == 0
     def err(self):
@@ -254,7 +268,9 @@ class err(arg):
     def __str__(self):
         if self.ok():
             return "ok"
-        return "%s" % errno.errorcode[-self.arg]
+        if self.arg > 2**16:
+            return "0x%x" % self.arg
+        return errno.errorcode.get(-self.arg, str(self.arg))
 
 class serr(err):
     argtype = "int"
@@ -317,7 +333,7 @@ class f_dirp(ptr):
 class f_fd(arg):
     argtype = "int"
     def __init__(self, arg, sc):
-        self.fd = arg
+        self.fd = to_clong(arg)
     def err(self):
         return self.fd < 0
     def __str__(self):
@@ -435,7 +451,7 @@ class f_mode(arg):
             return "-"
         return "0%o" % self.mode
 
-AT_FDCWD = (MAX_INT - 100)
+AT_FDCWD = -100
 
 class at_fd(f_fd):
     def __init__(self, arg, sc):

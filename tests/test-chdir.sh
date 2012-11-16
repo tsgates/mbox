@@ -1,11 +1,11 @@
 #!/bin/sh -x
 #
-# pre: test -d doc
-# post: test -f doc/process_events.rst
-# post: test -f doc/ptrace_signal.rst
+# pre: test -d tests
+# post: test -f tests/NOTE
+# post: test -f tests/test-chdir.sh
 #
 
-ls -al doc
+ls -al tests
 pwd
 cd ..
 pwd
@@ -15,6 +15,6 @@ ls
 pwd
 cd -
 pwd
-cd doc
+cd tests
 pwd
 ls -al .

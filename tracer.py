@@ -3,6 +3,7 @@
 import os
 import sys
 import signal
+import dbg
 
 from ptrace   import *
 from syscall  import *
@@ -17,7 +18,7 @@ def trace(args, handler):
         (pid, status) = os.wait()
 
         if not pid in pinfo:
-            print "> new pid: %s" % pid
+            dbg.tracer("new pid: %s" % pid)
             pinfo[pid] = Process(pid)
 
         proc = pinfo[pid]
@@ -25,17 +26,19 @@ def trace(args, handler):
         if os.WIFEXITED(status):
             code = os.WEXITSTATUS(status)
             del pinfo[pid]
+            dbg.tracer("[%s] exited code=%s" % (pid, code))
             continue
 
         if os.WIFSIGNALED(status):
             code = os.WTERMSIG(status)
             del pinfo[pid]
+            dbg.tracer("[%s] signal: code=%s" % (pid, code))
             continue
 
         sig = os.WSTOPSIG(status)
         evt = status >> 16
         if sig == signal.SIGTRAP and evt != 0:
-            print "> event: %s" % PTRACE_EVENTS[evt]
+            dbg.tracer("[%s] ptrace event: %s" % (pid, PTRACE_EVENTS[evt]))
 
         if evt == 0:
             handler(proc, proc.syscall())

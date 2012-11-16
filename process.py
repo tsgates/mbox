@@ -30,26 +30,30 @@ def run(args):
         
     return pid
 
-PS_ENTERING = 0
-PS_EXITING  = 1
-
 class Process(object):
     def __init__(self, pid):
         self.gen   = 0
         self.pid   = pid
-        self.state = PS_ENTERING
         self.sc    = None
         self.regs  = (-1, None)
     
     def syscall(self):
-        # new syscall
+        # inc generation
         self.gen += 1
-        
+
         # new syscall
         if self.sc is None or self.sc.exiting:
             self.sc = Syscall(self)
         else:
             self.sc.update()
+
+        #
+        # tweak inconsistent ptrace
+        #  - clone(): force state to be exiting
+        # 
+        if self.gen == 1 and self.sc.name == "clone":
+            self.sc.update()
+        
         return self.sc
 
     def getregs(self):

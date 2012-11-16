@@ -15,8 +15,9 @@ settings = {
     "parse"     : True,
     "error"     : True,
     "ns"        : True,
-    "trace"     : False,
+    "trace"     : True,
     "dirent"    : True,
+    "tracer"    : True,
     }
 
 #

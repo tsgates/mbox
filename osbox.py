@@ -413,6 +413,9 @@ class OS:
             self.mark_deleted_file(hpn)
             self.add_hijack(proc, sc.ret, 0)
 
+    def utimensat_enter(self, proc, sc):
+        self.rewrite_path(proc, sc)
+            
     @redirect_at
     def stat_enter(self, proc, sc):
         pass

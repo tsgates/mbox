@@ -1,18 +1,18 @@
 #!/bin/sh
 #
-# pre: test ! -f tests/crash/newfile
-# pre: test -f tests/crash/abort.c
-# post: test -f $HPWD/tests/crash/abort.c
-# post: test ! -f $SPWD/tests/crash/newfile
+# pre: test ! -f tests/newfile
+# pre: test -f tests/NOTE
+# post: test -f $HPWD/tests/NOTE
+# post: test ! -f $SPWD/tests/newfile
 #
 
 # creating new file
-echo 1234 > ./tests/crash/newfile
+echo 1234 > ./tests/newfile
 # checking
-ls ./tests/crash
+ls ./tests
 # unlinking the existing file
-rm ./tests/crash/abort.c
+rm ./tests/NOTE
 # unlinking the new file
-rm ./tests/crash/newfile
+rm ./tests/newfile
 # double checking
-ls ./tests/crash
+ls ./tests

@@ -71,10 +71,13 @@ def check(key, pn, root):
     cwd  = os.getcwd()
     spwd = util.chjoin(root, cwd)
     hpwd = cwd
+    home = util.chjoin(root, os.path.expanduser("~"))
     for l in re.findall("#\s*%s:(.*)" % key, open(pn).read()):
         l = l.strip()
-        l = l.replace("$SPWD", spwd)
-        l = l.replace("$HPWD", hpwd)
+        l = l.replace("$SPWD"  , spwd)
+        l = l.replace("$HPWD"  , hpwd)
+        l = l.replace("$SHOME" , home)
+        l = l.replace("$ROOT"  , root)
         if os.system(l) != 0:
             print "[!] %s: failed" % l
             return False

@@ -39,6 +39,21 @@ def trace(args, handler):
         evt = status >> 16
         if sig == signals.SIGTRAP and evt != 0:
             dbg.tracer("[%s] ptrace event: %s" % (pid, PTRACE_EVENTS[evt]))
+            if evt == PTRACE_EVENT_CLONE:
+                print pinfo
+                newpid = ptrace_geteventmsg(pid)
+                dbg.tracer("XXX: %s" % newpid)
+                ptrace_attach(newpid)
+                ptrace(PTRACE_SETOPTIONS, newpid, 0,
+                       PTRACE_O_TRACESYSGOOD    # SIGTRAP|0x80 if syscall call traps
+                       | PTRACE_O_TRACEFORK     # PTRACE_EVENT_FORK
+                       | PTRACE_O_TRACEVFORK    # PTRACE_EVENT_VFORK
+                       | PTRACE_O_TRACECLONE    # PTRACE_EVENT_CLONE
+                       | PTRACE_O_TRACEEXEC     # PTRACE_EVENT_EXEC
+                       | PTRACE_O_TRACEEXIT)    # PTRACE_EVENT_EXIT
+                ptrace(PTRACE_CONT, newpid, 0, 0)
+                (pid, status) = os.waitpid(newpid, 0)
+                
         elif sig == (signals.SIGTRAP|0x80):
             handler(proc, proc.syscall())
         else:

@@ -1,5 +1,6 @@
 import struct
 
+from ctypes import c_int
 from ctypes import c_long 
 from ctypes import c_ulong
 from ctypes import cdll
@@ -127,10 +128,18 @@ def ptrace_traceme():
 
 def ptrace_peek(pid, addr):
     word = ptrace(PTRACE_PEEKDATA, pid, addr, 0)
-    return struct.pack("L", word)
+    return struct.pack("q", word)
 
 def ptrace_poke(pid, addr, data):
     ptrace(PTRACE_POKEDATA, pid, addr, data)
+
+def ptrace_geteventmsg(pid):
+    newpid = c_int()
+    ptrace(PTRACE_GETEVENTMSG, pid, 0, addressof(newpid))
+    return newpid.value
+
+def ptrace_attach(pid):
+    ptrace(PTRACE_ATTACH, pid, 0, 0)
 
 def byte2word(byte):
     return struct.unpack("L", byte)[0]

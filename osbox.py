@@ -254,6 +254,9 @@ class OS:
         if sc.ret.int == 0:
             state = self.dirents[pid].get(fd, None)
             hpn   = self.getfd(proc, fd, FD_HOST)
+            # XXX
+            if hpn.startswith("/proc"):
+                return
             sdir  = os.listdir(chjoin(self.root, hpn))
 
             # fetch previous dirents
@@ -400,20 +403,11 @@ class OS:
     def mkdirat_enter(self, proc, sc):
         self.rewrite_path(proc, sc, RW_FORCE)
 
-    @redirect_at
     def rmdir_enter(self, proc, sc):
-        pass
-
-    @redirect_at
-    def rmdir_exit(self, proc, sc):
-        pass
-
-    def rmdirat_enter(self, proc, sc):
         self.rewrite_path(proc, sc, RW_FORCE)
 
-    # XXX. duplicated with unlinkat_exit()
-    def rmdirat_exit(self, proc, sc):
-        (hpn, spn) = self.parse_path_dirfd(sc.dirfd.fd, sc.path, proc)
+    def rmdir_exit(self, proc, sc):
+        (hpn, spn) = self.parse_path(sc.path, proc)
         # emulate successfully deleted (or deleted in sandboxfs)
         if (sc.ret.err() and exists(hpn)) or sc.ret.ok():
             self.mark_deleted_file(hpn)

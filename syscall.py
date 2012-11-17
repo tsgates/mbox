@@ -43,6 +43,7 @@ SYSCALLS = {
   "chown"      : ("err"  , "f_path"      , "o:f_int", "g:f_int"            ),
   "fchownat"   : ("err"  , "dirfd:f_fd"  , "f_path" , "o:f_int", "g:f_int" ),
   "truncate"   : ("err"  , "f_path"      , "f_int"                         ),
+  "rmdir"      : ("err"  , "f_path"                                        ),
 }
 
 # XXX. syscall priorities that we should check

@@ -120,8 +120,8 @@ def ptrace_getregs(pid):
 def ptrace_setregs(pid, regs):
     ptrace(PTRACE_SETREGS, pid, 0, addressof(regs))
 
-def ptrace_syscall(pid):
-    ptrace(PTRACE_SYSCALL, pid, 0, 0)
+def ptrace_syscall(pid, sig=0):
+    ptrace(PTRACE_SYSCALL, pid, 0, sig)
 
 def ptrace_traceme():
     ptrace(PTRACE_TRACEME, 0, 0, 0)

@@ -12,20 +12,6 @@ import tracer
 
 from optparse import OptionParser
 
-
-    # def print_syscall(self, syscall):
-    #     name = syscall.name
-    #     text = syscall.format()
-
-    #     if syscall.result is not None:
-    #         text = "%-40s = %s" % (text, syscall.result_text)
-
-    #     prefix = []
-    #     prefix.append("[%s]" % syscall.process.pid)
-    #     prefix.append(">" if syscall.is_enter() else "<")
-
-    #     dbg.info(''.join(prefix) + ' ' + text)
-
 def print_syscalls(opts):
     syscall.print_syscalls()
     

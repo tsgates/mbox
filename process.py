@@ -3,6 +3,8 @@ import os
 from ptrace  import *
 from syscall import *
 
+WALL = 0x40000000
+
 def run(args):
     pid = os.fork()
     
@@ -16,27 +18,44 @@ def run(args):
     else:
         (pid, status) = os.wait()
 
-        # set to follow children
-        ptrace(PTRACE_SETOPTIONS, pid, 0,
-               PTRACE_O_TRACESYSGOOD    # SIGTRAP|0x80 if syscall call traps
-               | PTRACE_O_TRACEFORK     # PTRACE_EVENT_FORK
-               | PTRACE_O_TRACEVFORK    # PTRACE_EVENT_VFORK
-               | PTRACE_O_TRACECLONE    # PTRACE_EVENT_CLONE
-               | PTRACE_O_TRACEEXEC     # PTRACE_EVENT_EXEC
-               | PTRACE_O_TRACEEXIT)    # PTRACE_EVENT_EXIT
-
+        # following child
+        set_ptrace_flags(pid)
+                
         # interpose next syscall
         ptrace_syscall(pid)
         
     return pid
 
+def set_ptrace_flags(pid):
+    # set to follow children
+    ptrace(PTRACE_SETOPTIONS, pid, 0,
+           PTRACE_O_TRACESYSGOOD    # SIGTRAP|0x80 if syscall call traps
+           | PTRACE_O_TRACEFORK     # PTRACE_EVENT_FORK
+           | PTRACE_O_TRACEVFORK    # PTRACE_EVENT_VFORK
+           | PTRACE_O_TRACECLONE    # PTRACE_EVENT_CLONE
+           | PTRACE_O_TRACEEXEC)    # PTRACE_EVENT_EXEC
+
+PS_RUNNING = 1
+PS_IGNSTOP = 2
+
 class Process(object):
-    def __init__(self, pid):
+    def __init__(self, pid, sigstop=False):
         self.gen   = 0
         self.pid   = pid
         self.sc    = None
         self.regs  = (-1, None)
-    
+        self.state = PS_RUNNING
+
+        if sigstop:
+            self.set_ptrace_flags()
+
+    def set_ptrace_flags(self):
+        set_ptrace_flags(self.pid)
+        self.state = PS_IGNSTOP
+
+    def set_ptrace_flags_done(self):
+        self.state = PS_RUNNING
+
     def syscall(self):
         # inc generation
         self.gen += 1
@@ -47,13 +66,6 @@ class Process(object):
         else:
             self.sc.update()
 
-        #
-        # tweak inconsistent ptrace
-        #  - clone(): force state to be exiting
-        # 
-        if self.gen == 1 and self.sc.name == "clone":
-            self.sc.update()
-        
         return self.sc
 
     def getregs(self):

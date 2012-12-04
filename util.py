@@ -24,6 +24,11 @@ def safestat(pn):
     except OSError:
         return None
 
+def safelistdir(pn):
+    if dir_exists(pn):
+        return os.listdir(pn)
+    return []
+
 def dir_exists(pn):
     s = safestat(pn)
     return s and stat.S_ISDIR(s.st_mode)
@@ -31,6 +36,9 @@ def dir_exists(pn):
 def file_exists(pn):
     s = safestat(pn)
     return s and stat.S_ISREG(s.st_mode)
+
+def path_exists(pn):
+    return safestat(pn) is not None
 
 def mkdir(pn):
     try:

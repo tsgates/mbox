@@ -122,6 +122,13 @@ class OS:
         spn = path.chroot(self.root, self.getcwd(proc))
         return (hpn, spn)
 
+    # 
+    # handle cases where path should be rewritten
+    #
+    def need_to_rewrite_path(self, hpn):
+        # XXX
+        return self.is_deleted(hpn)
+
     #
     # handle deleted files
     #
@@ -254,11 +261,12 @@ class OS:
         if sc.ret.int == 0:
             state = self.dirents[pid].get(fd, None)
             hpn   = self.getfd(proc, fd, FD_HOST)
+            sdir  = safelistdir(chjoin(self.root, hpn))
+
             # XXX
             if hpn.startswith("/proc"):
                 return
-            sdir  = os.listdir(chjoin(self.root, hpn))
-
+            
             # fetch previous dirents
             if state is None:
                 # initial to dump hostfs
@@ -322,21 +330,13 @@ class OS:
         if hpn.startswith("/dev") or hpn.startswith("/proc"):
             return
 
-        # deleted file/dir
-        if self.is_deleted(hpn):
+        # deleted file/dir ..
+        if self.need_to_rewrite_path(hpn):
             self.add_hijack(proc, sc.path, spn)
             return
-
-        # for dirs
-        if (dir_exists(hpn) and sc.flag.is_dir()) or dir_exists(spn):
-            # sync parent dir
-            self.sync_parent_dirs(hpn)
-            # rewrite pn -> spn
-            self.add_hijack(proc, sc.path, spn)
-            return
-
-        # for files
-        if file_exists(spn):
+        
+        # whenever path exists in the sandbox, go to there
+        if path_exists(spn):
             # rewrite pn -> spn
             self.add_hijack(proc, sc.path, spn)
             return
@@ -456,5 +456,12 @@ class OS:
 
         print "-" * 60
         pprint.pprint(self.deleted)
-        # XXX. check
-        os.system("tree %s" % self.root)
+
+        print "=" * 60
+        print "Root: %s" % self.root
+        for root, dirs, files in os.walk(self.root):
+            print "  D", root
+            for name in files:
+                pn = os.path.join(root, name)
+                print "  F", pn
+                

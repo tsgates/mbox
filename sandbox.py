@@ -29,8 +29,8 @@ def parse_args():
     parser.add_option("-r", "--root",
                       help="Root of the sandbox dir (ex /tmp/sandbox-%PID)",
                       default="/tmp/sandbox-%PID")
-    parser.add_option("-q", "--quiet",
-                      help="Quiet",
+    parser.add_option("-v", "--verbose",
+                      help="Verbose",
                       action="store_true", default=False)
     parser.add_option("-i", "--interact",
                       help="Interactivly checking modified files",
@@ -46,7 +46,7 @@ def parse_args():
         exit(1)
 
     # control verbosity
-    if opts.quiet:
+    if not opts.verbose:
         dbg.quiet(dbg, ["error"])
 
     return (opts, args)

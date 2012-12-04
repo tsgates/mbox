@@ -457,11 +457,22 @@ class OS:
         print "-" * 60
         pprint.pprint(self.deleted)
 
+        # depth-first, no duplicate print out
+        visited = set()
         print "=" * 60
         print "Root: %s" % self.root
-        for root, dirs, files in os.walk(self.root):
-            print "  D", root
+        for root, dirs, files in os.walk(self.root, False):
             for name in files:
                 pn = os.path.join(root, name)
                 print "  F", pn
+
+            # print out only interesting dirs
+            if len(files) == 0 and not root in visited:
+                print "  D", root
+
+            # mark visited
+            pn = root
+            while pn != self.root:
+                (pn, _) = os.path.split(pn)
+                visited.add(pn)
                 

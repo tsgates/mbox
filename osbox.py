@@ -159,15 +159,15 @@ class OS:
         # fetch host/sandbox path name
         (hpn, spn) = self.parse_path_dirfd(dirfd, path, proc)
 
-        # sync up host/sandbox dir hierarchy
-        if not exists(spn) and exists(hpn):
-            self.sync_parent_dirs(hpn)
-
         # hijack pathname:
         #  exist in sandbox  : need to use the file in the sandbox
         #  deleted in sandbox: do not look for the path in the host
         #  will be written   : copy the file and use that file path
         if exists(spn) or self.is_deleted(hpn) or flag != RW_NONE:
+            # sync up host/sandbox dir hierarchy
+            if not exists(spn):
+                self.sync_parent_dirs(hpn)
+            
             # it has writing intent
             if flag == RW_WRITING and not file_exists(spn):
                 self.copy_to(hpn, spn)

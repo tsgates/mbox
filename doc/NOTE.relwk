@@ -1,10 +1,25 @@
-# x86 sandbox
+x86 sandbox
+===========
+
  - Vx32
  - NaCL
 
-# application vm
+application vm
+==============
+
  - QubeOS
  - lguest
  
-# syscall interposition
+seccomp-nurse
+=============
+
+  - ref. http://chdir.org/~nico/seccomp-nurse/
+  - seccomp-secured the main process
+  - redirect system calls to syscall proxy (trusted one), and examine syscall/arguments
+  - but not resilient to a malicious binary directly invoking syscall (LD_PRELOAD/VDSO)
+
+References
+==========
  - Traps and Pitfalls: Practical Problems in System Call Interposition Based Security Tools
+   
+   

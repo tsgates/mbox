@@ -4,18 +4,20 @@ Why do we need yet another sandbox?
 
 XXX
 
-- seccomp-nurse?
-  ref. http://chdir.org/~nico/seccomp-nurse/
-  
-  - not resilient against a malicious binary directly invoking syscall (LD_PRELOAD)
-
 Syscall interposition
 =====================
 
-- compare performance overhead
+ - compare performance overhead
+
+## LD_PRELOAD (and VDSO)
+
+ - redirect libc wrapper or system-wide vdso wrapper (vdso: %gs:0x10)
+ - inappropriate for secure sandbox directly invoking syscalls
 
 ## ptrace
+
 ## seccomp (with bpf)
+
  - as of XXX (Jan 2011),
    - http://lwn.net/Articles/475019/
    - http://lwn.net/Articles/475043/

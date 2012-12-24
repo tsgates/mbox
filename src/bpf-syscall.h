@@ -1,0 +1,38 @@
+
+#pragma once
+
+static struct sock_filter filter[] = {
+    LD_SYSCALL,
+    TRACE_SYSCALL(rename),
+    TRACE_SYSCALL(creat),
+    TRACE_SYSCALL(chmod),
+    TRACE_SYSCALL(fchownat),
+    TRACE_SYSCALL(close),
+    TRACE_SYSCALL(open),
+    TRACE_SYSCALL(newfstatat),
+    TRACE_SYSCALL(truncate),
+    TRACE_SYSCALL(getdents),
+    TRACE_SYSCALL(mkdir),
+    TRACE_SYSCALL(access),
+    TRACE_SYSCALL(faccessat),
+    TRACE_SYSCALL(rmdir),
+    TRACE_SYSCALL(fstat),
+    TRACE_SYSCALL(fcntl),
+    TRACE_SYSCALL(stat),
+    TRACE_SYSCALL(fchmodat),
+    TRACE_SYSCALL(lstat),
+    TRACE_SYSCALL(openat),
+    TRACE_SYSCALL(getxattr),
+    TRACE_SYSCALL(readlink),
+    TRACE_SYSCALL(fchdir),
+    TRACE_SYSCALL(unlink),
+    TRACE_SYSCALL(unlinkat),
+    TRACE_SYSCALL(readlinkat),
+    TRACE_SYSCALL(chdir),
+    TRACE_SYSCALL(renameat),
+    TRACE_SYSCALL(chown),
+    TRACE_SYSCALL(utimensat),
+    TRACE_SYSCALL(mkdirat),
+    ALLOWED,
+};
+

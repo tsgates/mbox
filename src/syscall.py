@@ -604,6 +604,22 @@ def print_syscalls():
     for (num, name) in sorted(list(SYSCALL_MAP.items())):
         mark = "*" if name in SYSCALLS else " "
         print "%s%3d: %s" % (mark, num, name)
-    
+
+def print_seccomp():
+    print """
+#pragma once
+
+static struct sock_filter filter[] = {
+    LD_SYSCALL,\
+"""
+    for s in SYSCALLS:
+		if s in SYSCALL_MAP.values():
+			print "    TRACE_SYSCALL(%s)," % s
+	
+    print """\
+    ALLOWED,
+};
+"""
+        
 if __name__ == '__main__':
     print_syscalls()

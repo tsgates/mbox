@@ -21,6 +21,7 @@ Syscall interposition
  - as of XXX (Jan 2011),
    - http://lwn.net/Articles/475019/
    - http://lwn.net/Articles/475043/
+ - PTRACE_O_TRACESECCOMP
 
 Common concerns over syscall interposition
 ==========================================

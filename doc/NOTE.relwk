@@ -13,10 +13,15 @@ application vm
 seccomp-nurse
 =============
 
-  - ref. http://chdir.org/~nico/seccomp-nurse/
-  - seccomp-secured the main process
-  - redirect system calls to syscall proxy (trusted one), and examine syscall/arguments
-  - but not resilient to a malicious binary directly invoking syscall (LD_PRELOAD/VDSO)
+ - ref. http://chdir.org/~nico/seccomp-nurse/
+ - seccomp-secured the main process
+ - redirect system calls to syscall proxy (trusted one), and examine syscall/arguments
+ - but not resilient to a malicious binary directly invoking syscall (LD_PRELOAD/VDSO)
+
+minijail
+========
+
+ - ??
 
 References
 ==========

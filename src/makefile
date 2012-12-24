@@ -8,4 +8,10 @@ test:
 dist:
 	;;
 
+seccomp.so: seccomp.c
+	gcc $^ -o $@ --shared -fPIC
+
+bpf-syscall.h: syscall.py
+	python2 -c "import syscall; syscall.print_seccomp()" > $@
+
 .PHONY: test dist

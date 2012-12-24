@@ -1,0 +1,37 @@
+
+Why do we need yet another sandbox?
+===================================
+
+XXX
+
+- seccomp-nurse?
+  ref. http://chdir.org/~nico/seccomp-nurse/
+  
+  - not resilient against a malicious binary directly invoking syscall (LD_PRELOAD)
+
+Syscall interposition
+=====================
+
+- compare performance overhead
+
+## ptrace
+## seccomp (with bpf)
+ - as of XXX (Jan 2011),
+   - http://lwn.net/Articles/475019/
+   - http://lwn.net/Articles/475043/
+
+Common concerns over syscall interposition
+==========================================
+
+ - ref. Documentation/prctl/seccomp_filter.txt
+ - ref. pitfalls-syscall-interposition.pdf
+
+## TOCTOU
+
+ - check/rewrite syscall arguments in read-only place
+   (a straight way is to pause all threads before examining the syscall)
+   
+## OS State
+
+ - do not maintain OS state, instead query to kernel (/proc/pid/fd/*)
+ 

@@ -1,0 +1,13 @@
+
+Getting started
+===============
+
+     - src/sandbox.py      : main ptrace wrapper
+          /spec.py         : definition of syscalls
+          /{util,dbg}.py   : helper functions
+          /tests/test-*    : test codes
+
+    $ src/sandbox.py [opts] -- prog [args]
+    $ src/sandbox.py -h
+    $ src/sandbox.py -q -- python2 -i
+

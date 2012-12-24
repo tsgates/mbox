@@ -1,0 +1,10 @@
+# x86 sandbox
+ - Vx32
+ - NaCL
+
+# application vm
+ - QubeOS
+ - lguest
+ 
+# syscall interposition
+ - Traps and Pitfalls: Practical Problems in System Call Interposition Based Security Tools

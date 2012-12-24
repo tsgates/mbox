@@ -1,0 +1,13 @@
+# 64 bit system call argument
+
+ * rax  system call number
+ * rdi  arg0
+ * rcx  return address for syscall/sysret, C arg3
+ * rsi  arg1
+ * rdx  arg2
+ * r10  arg3    (--> moved to rcx for C)
+ * r8   arg4
+ * r9   arg5
+ * r11  eflags for syscall/sysret, temporary for C
+ * r12-r15,rbp,rbx saved by C code, not touched.
+

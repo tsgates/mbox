@@ -8,7 +8,7 @@ test:
 dist:
 	;;
 
-seccomp.so: seccomp.c
+libseccomp.so: seccomp.c
 	gcc $^ -o $@ --shared -fPIC
 
 bpf-syscall.h: syscall.py

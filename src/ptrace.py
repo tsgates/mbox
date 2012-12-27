@@ -56,7 +56,8 @@ PTRACE_O_TRACECLONE     = 0x00000008
 PTRACE_O_TRACEEXEC      = 0x00000010
 PTRACE_O_TRACEVFORKDONE = 0x00000020
 PTRACE_O_TRACEEXIT      = 0x00000040
-PTRACE_O_MASK           = 0x0000007f
+PTRACE_O_TRACESECCOMP   = 0x00000080
+PTRACE_O_MASK           = 0x000000ff
 
 # events
 PTRACE_EVENT_FORK       = 1
@@ -65,6 +66,7 @@ PTRACE_EVENT_CLONE      = 3
 PTRACE_EVENT_EXEC       = 4
 PTRACE_EVENT_VFORK_DONE = 5
 PTRACE_EVENT_EXIT       = 6
+PTRACE_EVENT_SECCOMP    = 7
 
 # reverse map
 PTRACE_EVENTS = {
@@ -74,6 +76,7 @@ PTRACE_EVENTS = {
     PTRACE_EVENT_EXEC       : "EXEC"       ,
     PTRACE_EVENT_VFORK_DONE : "VFORK_DONE" ,
     PTRACE_EVENT_EXIT       : "EXIT"       ,
+    PTRACE_EVENT_SECCOMP    : "SECCOMP"    ,
 }
 
 # cpu flag
@@ -122,6 +125,9 @@ def ptrace_setregs(pid, regs):
 
 def ptrace_syscall(pid, sig=0):
     ptrace(PTRACE_SYSCALL, pid, 0, sig)
+
+def ptrace_cont(pid, sig=0):
+    ptrace(PTRACE_CONT, pid, 0, sig)
 
 def ptrace_traceme():
     ptrace(PTRACE_TRACEME, 0, 0, 0)

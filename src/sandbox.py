@@ -18,26 +18,29 @@ def print_syscalls(opts):
 def parse_args():
     parser = OptionParser(usage="%prog [options] -- program [arg1 arg2 ...]")
     parser.add_option("--list-syscalls", "-l",
-                      help="Display system calls and exit",
+                      help="display system calls and exit",
                       action="store_true", default=None)
     parser.add_option("--strace", "-s",
-                      help="Print out system calls",
+                      help="print out system calls",
                       action="store_true", default=False)
     parser.add_option("--no-sandbox", "-n",
-                      help="No sandboxing",
+                      help="no sandboxing",
                       action="store_true", default=False)
     parser.add_option("-r", "--root",
-                      help="Root of the sandbox dir (ex /tmp/sandbox-%PID)",
+                      help="root of the sandbox dir (ex /tmp/sandbox-%PID)",
                       default="/tmp/sandbox-%PID")
     parser.add_option("-v", "--verbose",
-                      help="Verbose",
+                      help="verbose",
                       action="store_true", default=False)
     parser.add_option("-i", "--interact",
-                      help="Interactivly checking modified files",
+                      help="interactivly checking modified files",
                       action="store_true", default=False)
     parser.add_option("-t", "--test",
-                      help="Run as test, check pre/post conditions",
+                      help="run as test, check pre/post conditions",
                       action="store_true", default=False)
+    parser.add_option("-j", "--interpose",
+                      help="interpose syscall using [ptrace, seccomp]",
+                      default="ptrace")
     (opts, args) = parser.parse_args()
 
     # checking sanity
@@ -70,9 +73,9 @@ if __name__ == "__main__":
     # sandbox container
     box = osbox.OS(parse_root(opts.root))
     if opts.no_sandbox:
-        tracer.trace(args, tracer.dump_syscall)
+        tracer.trace(opts.interpose, args, tracer.dump_syscall)
     else:
-        tracer.trace(args, box.run)
+        tracer.trace(opts.interpose, args, box.run)
     box.done()
     
     # interactively committing back to host

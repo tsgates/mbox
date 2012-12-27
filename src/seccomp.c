@@ -31,6 +31,6 @@ int install_seccomp(void) {
 	if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog)) {
 		err(1, "prctl(SECCOMP)");
 	}
-    
+
 	return 0;
 }

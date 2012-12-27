@@ -3,14 +3,22 @@ import os
 from ptrace  import *
 from syscall import *
 
+TRACE_PTRACE  = 0
+TRACE_SECCOMP = 1
+
 WALL = 0x40000000
 
-def run(args):
+def run(opt, args):
     pid = os.fork()
     
     # child
     if pid == 0:
         ptrace_traceme()
+        # install seccomp bfp
+        if opt == TRACE_SECCOMP:
+            import seccomp
+            seccomp.install_seccomp()
+        # run tracee
         os.execvp(args[0], args)
         print "Failed to execute: %s" % " ".join(args)
         exit(1)
@@ -20,9 +28,12 @@ def run(args):
 
         # following child
         set_ptrace_flags(pid)
-                
-        # interpose next syscall
-        ptrace_syscall(pid)
+
+        # interpose either next seccomp event, or syscall
+        if opt == TRACE_SECCOMP:
+            ptrace_cont(pid)
+        else:
+            ptrace_syscall(pid)
         
     return pid
 
@@ -33,7 +44,8 @@ def set_ptrace_flags(pid):
            | PTRACE_O_TRACEFORK     # PTRACE_EVENT_FORK
            | PTRACE_O_TRACEVFORK    # PTRACE_EVENT_VFORK
            | PTRACE_O_TRACECLONE    # PTRACE_EVENT_CLONE
-           | PTRACE_O_TRACEEXEC)    # PTRACE_EVENT_EXEC
+           | PTRACE_O_TRACEEXEC     # PTRACE_EVENT_EXEC
+           | PTRACE_O_TRACESECCOMP) # PTRACE_EVENT_SECCOMP
 
 PS_RUNNING = 1
 PS_IGNSTOP = 2

@@ -43,20 +43,15 @@ def trace(opt, args, handler):
             dbg.tracer("ignored: %s" % proc.pid)
             proc.set_ptrace_flags_done()
         elif sig == signals.SIGTRAP and evt != 0:
-            # if using seccomp
+            # stop at the exit of the current syscall
             if opt == TRACE_SECCOMP and evt == PTRACE_EVENT_SECCOMP:
-                # NOTE. only entered syscall in case of using seccomp.
-                handler(proc, proc.syscall())
-                # stop at the exit of the current syscall
                 ptrace_syscall(pid, child_sig)
                 continue
             else:
                 dbg.tracer("[%s] ptrace event: %s" % (pid, PTRACE_EVENTS[evt]))
         elif sig == (signals.SIGTRAP|0x80):
-            # NOTE. handle the current trap, but unfortunately we shoul guess
-            # the state of tracee's syscalls, whether exit or enter. In case of
-            # ptrace, we constantly invoke handle() this place, but in case of
-            # seccomp, only exited syscalls will de handled here.
+            # handle the current trap, but unfortunately we shoul guess the
+            # state of tracee's syscalls, whether exit or enter.
             handler(proc, proc.syscall())
         else:
             # deliver signal to child
@@ -64,9 +59,12 @@ def trace(opt, args, handler):
             dbg.tracer("[%s] signaled: %s" % (pid, signals.signame(sig)))
 
         # interpose on next syscall
-        if opt == TRACE_SECCOMP:
+        if opt == TRACE_SECCOMP and proc.is_exiting():
+            # we expect to stop at the next seccomp event
             ptrace_cont(pid, child_sig)
-        elif opt == TRACE_PTRACE:
+        else:
+            # in ptrace, we always expect to stop at the next syscall.
+            # in seccomp, we stop to interpose the exit of the current syscall.
             ptrace_syscall(pid, child_sig)
 
 # dump syscall

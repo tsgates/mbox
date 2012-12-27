@@ -1,3 +1,5 @@
+# NOTE
+
  - tests/test-*.sh should be initiated in the fixed path
 
     $ ./sandbox.py -t tests/test-vim.sh

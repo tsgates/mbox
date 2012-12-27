@@ -68,12 +68,15 @@ class Process(object):
     def set_ptrace_flags_done(self):
         self.state = PS_RUNNING
 
+    def is_exiting(self):
+        return self.sc is None or self.sc.exiting
+    
     def syscall(self):
         # inc generation
         self.gen += 1
 
         # new syscall
-        if self.sc is None or self.sc.exiting:
+        if self.is_exiting():
             self.sc = Syscall(self)
         else:
             self.sc.update()

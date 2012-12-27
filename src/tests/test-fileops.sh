@@ -14,7 +14,7 @@ echo 1234 > ./tests/NOTE
 # creating a new file
 echo 5678 > ./tests/test
 # reading the overwritten file
-/bin/cat ./tests/abort.c
+/bin/cat ./tests/NOTE
 # checking
 /bin/ls -al ./tests
 # unlinking

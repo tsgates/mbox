@@ -9,9 +9,8 @@ from ptrace   import *
 from syscall  import *
 from process  import *
 
-def trace(interpose, args, handler):
+def trace(opt, args, handler):
     pinfo = {}
-    opt = eval("TRACE_%s" % interpose.upper())
     pid = run(opt, args)
     pinfo[pid] = Process(pid)
 
@@ -44,15 +43,15 @@ def trace(interpose, args, handler):
             dbg.tracer("ignored: %s" % proc.pid)
             proc.set_ptrace_flags_done()
         elif sig == signals.SIGTRAP and evt != 0:
-            dbg.tracer("[%s] ptrace event: %s" % (pid, PTRACE_EVENTS[evt]))
             # if using seccomp
             if opt == TRACE_SECCOMP and evt == PTRACE_EVENT_SECCOMP:
-                dbg.tracer("[%s] ptrace_syscall" % pid)
                 # NOTE. only entered syscall in case of using seccomp.
                 handler(proc, proc.syscall())
                 # stop at the exit of the current syscall
                 ptrace_syscall(pid, child_sig)
                 continue
+            else:
+                dbg.tracer("[%s] ptrace event: %s" % (pid, PTRACE_EVENTS[evt]))
         elif sig == (signals.SIGTRAP|0x80):
             # NOTE. handle the current trap, but unfortunately we shoul guess
             # the state of tracee's syscalls, whether exit or enter. In case of

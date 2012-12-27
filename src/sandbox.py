@@ -70,12 +70,18 @@ if __name__ == "__main__":
         if not chore.check_pre(args[0]):
             exit(1)
 
+    # interpose opt
+    if opts.interpose == "seccomp":
+        interpose = tracer.TRACE_SECCOMP
+    else:
+        interpose = tracer.TRACE_PTRACE
+
     # sandbox container
     box = osbox.OS(parse_root(opts.root))
     if opts.no_sandbox:
-        tracer.trace(opts.interpose, args, tracer.dump_syscall)
+        tracer.trace(interpose, args, tracer.dump_syscall)
     else:
-        tracer.trace(opts.interpose, args, box.run)
+        tracer.trace(interpose, args, box.run)
     box.done()
     
     # interactively committing back to host

@@ -31,8 +31,9 @@ Common concerns over syscall interposition
 
 ## TOCTOU
 
- - check/rewrite syscall arguments in read-only place
+ - check/rewrite syscall arguments in read-only memory
    (a straight way is to pause all threads before examining the syscall)
+ - /proc/self/maps (elf header)
    
 ## OS State
 

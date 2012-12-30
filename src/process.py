@@ -52,6 +52,7 @@ PS_IGNSTOP = 2
 
 class Process(object):
     def __init__(self, pid, sigstop=False):
+        self.robuf = None
         self.gen   = 0
         self.pid   = pid
         self.sc    = None
@@ -60,6 +61,13 @@ class Process(object):
 
         if sigstop:
             self.set_ptrace_flags()
+
+    def get_arg_robuf(self, arg):
+        if self.robuf is None:
+            # XXX. read /proc/pid/maps and verify r flag,
+            # and test writing with ptrace
+            self.robuf = 0x00400000
+        return self.robuf + arg * MAX_PATH
 
     def set_ptrace_flags(self):
         set_ptrace_flags(self.pid)

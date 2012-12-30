@@ -1,0 +1,4 @@
+# TODO
+ - handle deleted path
+ - persistent meta data
+ - write arguments to the readonly memory

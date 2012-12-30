@@ -26,6 +26,7 @@ SYSCALLS = {
   "unlink"     : ("err"  , "f_path"                                        ),
   "unlinkat"   : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
   "getxattr"   : ("serr" , "f_path"      , "f_cstr" , "f_ptr"   , "f_int"  ),
+  "getcwd"     : ("err"  , "f_cstr"      , "f_size"                        ),
   "access"     : ("err"  , "f_path"      , "f_int"                         ),
   "faccessat"  : ("err"  , "dirfd:at_fd" , "f_path" , "f_int"              ),
   "chdir"      : ("err"  , "f_path"                                        ),
@@ -311,6 +312,11 @@ class f_cstr(arg):
         self.arg = arg
     def __str__(self):
         return "%s" % self.arg
+    def _restore_str(self, proc, new):
+        # NOTE. blindly overwrite char* with new str
+        assert type(new) is str
+        (reg, _) = self._get_arg(proc, self.seq)
+        proc.write_str(reg, new)
 
 class f_dirp(ptr):
     argtype = "int"

@@ -1,3 +1,5 @@
+a usable sandbox for desktop applications by rewriting system calls
+
 safe?
  - to system, isolation: uid/process domain gives us strong abstraction
    (userfs is to find a way to safely allow normal users to use uid protection domain)
@@ -6,8 +8,13 @@ safe?
    - data? (integrity) seems to be what we want?
 
 sandbox?
- - binary rewriting: lack of semantics (i.e., pin, dynamicRIO)
- - vm: 
+ - code: complete control (or constraint resource)
+    - browser: html/js, nacl
+    - binary rewriting: pin, dynamicRIO, vx86
+    - os: process
+ - data: protect user's data
+    - os: uid separation
+    - vm (both code/data)
 
 usable sandbox?
 

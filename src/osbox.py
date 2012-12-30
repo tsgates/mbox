@@ -104,8 +104,7 @@ class OS:
 
     def getcwd(self, proc):
         cwd = os.readlink("/proc/%s/cwd" % proc.pid)
-        assert self.is_hostfs(cwd)
-        return cwd
+        return self.to_hostfs(cwd)
 
     def chgcwd(self, proc, path):
         dbg.info(" cwd: %s -> %s" % (self.getcwd(proc), path))
@@ -203,6 +202,10 @@ class OS:
     #
     # list of system calls to interleave
     #
+    def getcwd_exit(self, proc, sc):
+        if sc.ret.ok():
+            self.add_hijack(proc, sc.cstr, self.getcwd())
+
     @redirect_at
     def access_enter(self, proc, sc):
         pass
@@ -226,6 +229,9 @@ class OS:
 
     def truncate_enter(self, proc, sc):
         self.rewrite_path(proc, sc, RW_WRITING)
+
+    def chdir_enter(self, proc, sc):
+        self.rewrite_path(proc, sc)
 
     def chdir_exit(self, proc, sc):
         if sc.ret.ok():

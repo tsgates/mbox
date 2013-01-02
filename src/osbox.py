@@ -103,6 +103,7 @@ class OS:
         return None
 
     def getcwd(self, proc):
+        # NOTE. getcwd() seems to be called a lot, need to optimize later
         cwd = os.readlink("/proc/%s/cwd" % proc.pid)
         return self.to_hostfs(cwd)
 
@@ -196,7 +197,9 @@ class OS:
     def to_hostfs(self, path):
         pn = normpath(path)
         if self.is_sandboxfs(pn):
-            return pn[len(self.root):]
+            pn = pn[len(self.root):]
+        if pn == "":
+            return "/"
         return pn
 
     #

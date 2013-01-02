@@ -29,7 +29,7 @@ def run(opt, args):
         # following child
         set_ptrace_flags(pid)
 
-        # interpose either next seccomp event, or syscall
+        # interpose either next seccomp event or syscall
         if opt == TRACE_SECCOMP:
             ptrace_cont(pid)
         else:

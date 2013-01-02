@@ -1,0 +1,40 @@
+Run: make -C /tmp/libseccomp src
+
+real    0m1.121s
+user    0m0.593s
+sys     0m0.143s
+--------
+Run: ./bench/../sandbox.py -j ptrace -C /tmp/libseccomp make src
+[set_arg_robuf     ]   0x400000 is not writable (read=ffffffffffffffff, but write=deadbeef)
+
+real    0m8.894s
+user    0m6.330s
+sys     0m0.837s
+--------
+Run: ./bench/../sandbox.py -j seccomp -C /tmp/libseccomp make src
+[set_arg_robuf     ]   0x400000 is not writable (read=ffffffffffffffff, but write=deadbeef)
+
+real    0m8.260s
+user    0m5.430s
+sys     0m0.633s
+--------
+Run: strace -f -o /dev/null make -C /tmp/libseccomp src
+
+real    0m2.005s
+user    0m0.783s
+sys     0m0.420s
+--------
+Run: ./bench/../sandbox.py -n -j ptrace -C /tmp/libseccomp make src
+[set_arg_robuf     ]   0x400000 is not writable (read=ffffffffffffffff, but write=deadbeef)
+
+real    0m7.098s
+user    0m4.646s
+sys     0m0.640s
+--------
+Run: ./bench/../sandbox.py -n -j seccomp -C /tmp/libseccomp make src
+[set_arg_robuf     ]   0x400000 is not writable (read=ffffffffffffffff, but write=deadbeef)
+
+real    0m5.860s
+user    0m3.793s
+sys     0m0.543s
+--------

@@ -29,6 +29,9 @@ def parse_args():
     parser.add_option("-r", "--root",
                       help="root of the sandbox dir (ex /tmp/sandbox-%PID)",
                       default="/tmp/sandbox-%PID")
+    parser.add_option("-C", "--cd",
+                      help="change directory before executing the binary",
+                      default=None)
     parser.add_option("-v", "--verbose",
                       help="verbose",
                       action="store_true", default=False)
@@ -75,6 +78,10 @@ if __name__ == "__main__":
         interpose = tracer.TRACE_SECCOMP
     else:
         interpose = tracer.TRACE_PTRACE
+
+    # change directory
+    if opts.cd:
+        os.chdir(opts.cd)
 
     # sandbox container
     box = osbox.OS(parse_root(opts.root))

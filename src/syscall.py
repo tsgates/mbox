@@ -339,7 +339,7 @@ class f_dirp(ptr):
 
     def read(self):
         assert self.sc.ret
-        return self.sc.proc.readBytes(self.ptr, self.sc.ret.int)
+        return self.sc.proc.read_bytes(self.ptr, self.sc.ret.int)
 
 class f_fd(arg):
     argtype = "int"

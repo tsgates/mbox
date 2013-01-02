@@ -94,12 +94,9 @@ class Process(object):
                 # use readv instead of ptrace peek/poke
                 self.read_str    = self.read_str_readv
                 self.read_bytes  = self.read_bytes_readv
-                # XXX.
-                # self.write_bytes = self.write_bytes_writev
-                pass
             else:
                 dbg.warn("process_vm_readv(addr=%x)=%s, word=%x)" \
-                             % (self.robuf, readv.value, word))
+                             % (self.robuf, readv, word))
 
     def get_arg_robuf(self, arg):
         if self.robuf:
@@ -215,9 +212,6 @@ class Process(object):
             rtn.extend(blob)
             ptr += WORD
         return ''.join(rtn)
-
-    def write_bytes_writev(self, ptr, blob):
-        ptrace_writemem(self.pid, ptr, blob)
 
     def write_bytes(self, ptr, blob):
         # off

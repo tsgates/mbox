@@ -20,6 +20,7 @@ from ctypes.util import find_library
 
 libc = cdll.LoadLibrary(find_library('c'))
 
+# ptrace(request, pid, addr, data)
 libc_ptrace = libc.ptrace
 libc_ptrace.argtypes = (c_ulong,                # request
                         c_ulong,                # pid_t
@@ -31,6 +32,7 @@ class IOVec(Structure):
     _fields_ = [("base", c_void_p),
                 ("len" , c_size_t)]
 
+# process_vm_readv(pid, liov, lcnt, riov, rcnt, flag)
 libc_readv = libc.process_vm_readv
 libc_readv.argtypes = (c_ulong,                 # pid_t
                        POINTER(IOVec), c_ulong, # iovec, cnt
@@ -38,6 +40,7 @@ libc_readv.argtypes = (c_ulong,                 # pid_t
                        c_ulong)                 # flag
 libc_readv.restype  = c_ulong                   # ssize_t
 
+# process_vm_writev(pid, liov, lcnt, riov, rcnt, flag)
 libc_writev = libc.process_vm_writev
 libc_writev.argtypes = (c_ulong,                # pid_t
                         POINTER(IOVec), c_ulong,# iovec, cnt
@@ -182,19 +185,18 @@ def ptrace_readmem(pid, addr, size):
     local  = IOVec(base=addressof(buf), len=size)
     remote = IOVec(base=addr, len=size)
     ret    = libc_readv(pid,
-                        byref(local), 1,
+                        byref(local) , 1,
                         byref(remote), 1,
                         0)
     return buf[:]
 
 def ptrace_writemem(pid, addr, blob):
     buf    = c_char_p(blob)
-    # buf    = create_string_buffer(blob)
     size   = len(blob)
     local  = IOVec(base=cast(buf, c_void_p), len=size)
     remote = IOVec(base=addr, len=size)
     ret    = libc_writev(pid,
-                         byref(local), 1,
+                         byref(local) , 1,
                          byref(remote), 1,
                          0)
     return ret

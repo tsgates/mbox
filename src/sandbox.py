@@ -50,7 +50,7 @@ def parse_args():
 
     # control verbosity
     if not opts.verbose:
-        dbg.quiet(dbg, ["error"])
+        dbg.quiet(dbg, ["error", "warn"])
 
     return (opts, args)
 

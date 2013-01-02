@@ -235,7 +235,7 @@ class arg(object):
         assert self.seq >= 0
 
         # memcpy to the lower part of stack (unique regions per argument)
-        ptr = proc.getreg("rsp") - MAX_PATH * (self.seq+1)
+        ptr = proc.get_arg_robuf(self.seq + 1)
         proc.write_str(ptr, new)
 
         # write to the proper register

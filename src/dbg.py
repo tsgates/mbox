@@ -12,6 +12,7 @@ import os
 settings = {
     "test"      : True,
     "info"      : True,
+    "warn"      : True,
     "parse"     : True,
     "error"     : True,
     "ns"        : True,
@@ -120,7 +121,7 @@ def stop():
     import pdb
     pdb.Pdb().set_trace(sys._getframe().f_back)
 
-def quiet(dbg, enable=[]):
+def quiet(dbg, enable=["info", "warn"]):
     def ignore(*key, **kwds):
         return
     for k in set(settings.keys()) - set(enable):

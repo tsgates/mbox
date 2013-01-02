@@ -59,15 +59,39 @@ class Process(object):
         self.regs  = (-1, None)
         self.state = PS_RUNNING
 
+        self.set_arg_robuf()
+        
         if sigstop:
             self.set_ptrace_flags()
+        
+    def set_arg_robuf(self):
+        self.robuf = None
+        
+        # iterate maps and find the elf header
+        self.img = os.readlink("/proc/%s/exe" % self.pid)
+        for l in open("/proc/%s/maps" % self.pid):
+            l = l.rstrip()
+            if l.endswith(self.img) and "r-xp" in l:
+                self.robuf = int(l.split("-")[0], 16)
+                break
+
+        # verify robuf is properly loaded
+        if not self.robuf:
+            dbg.warn("Could not find the elf header (readonly memory), use %rsp")
+
+        # check if writable
+        if self.robuf:
+            word = 0xdeadbeef
+            self.poke(self.robuf, word)
+            peek = byte2word(self.peek(self.robuf))
+            if peek != word:
+                dbg.warn("0x%x is not writable (read=%x, but write=%x)" \
+                             % (self.robuf, peek, word))
 
     def get_arg_robuf(self, arg):
-        if self.robuf is None:
-            # XXX. read /proc/pid/maps and verify r flag,
-            # and test writing with ptrace
-            self.robuf = 0x00400000
-        return self.robuf + arg * MAX_PATH
+        if self.robuf:
+            return self.robuf + arg * MAX_PATH
+        return self.getreg("rsp") - MAX_PATH * arg
 
     def set_ptrace_flags(self):
         set_ptrace_flags(self.pid)

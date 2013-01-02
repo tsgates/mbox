@@ -102,3 +102,14 @@ def kbhit():
     c = sys.stdin.read(1)
     termios.tcsetattr(fd, termios.TCSANOW, oldterm)
     return c
+
+# memorize return value of a single arg
+def memorize(func):
+    def __new__(arg):
+	if arg in __new__.cache:
+	    return __new__.cache[arg]
+        print arg
+	ret = __new__.cache[arg] = func(arg)
+	return ret
+    __new__.cache = {}
+    return __new__

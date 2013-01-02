@@ -95,13 +95,13 @@ for l in open(pn):
 
     # syscall number as integer
     num = int(num)
-    
+
     # construct a table
     SYSCALL_MAP[num] = name
 
     # NR_syscall
     exec "NR_%s = %d" % (name, num)
-    
+
 def scname(scnum):
     return SYSCALL_MAP.get(scnum, "N/A")
 
@@ -115,11 +115,25 @@ def to_culong(arg):
 SC_ENTERING = 0
 SC_EXITING  = 1
 
+@memorize
+def parse_syscall_table(arg):
+    kls  = arg
+    name = None
+    if ":" in arg:
+        (name, kls) = arg.split(":")
+    else:
+        if "_" in kls:
+            name = kls.split("_")[1]
+        else:
+            name = kls
+    return (name, eval(kls))
+
 class Syscall:
     def __init__(self, proc):
         self.rtn   = None
         self.proc  = proc
         self.regs  = proc.getregs()
+        self.name  = None
         self.name  = scname(self.regs.orig_rax)
         self.state = SC_ENTERING
         self.args  = []
@@ -127,17 +141,17 @@ class Syscall:
         # generate args
         args = SYSCALLS.get(self.name, [])
         for (i, arg) in enumerate(args[1:]):
-            (name, kls) = self.__parse_syscall(arg)
+            (name, kls) = parse_syscall_table(arg)
             val = self.__parse_arg(proc, self.regs, kls, i)
-
+            
             # alias: arg#, name, args
             setattr(self, "arg%d" % i, val)
             setattr(self, name, val)
             self.args.append(val)
-            
+
         # return
         setattr(self, "ret", None)
-        
+
     @property
     def entering(self):
         return self.state == SC_ENTERING
@@ -149,6 +163,7 @@ class Syscall:
     def update(self):
         assert self.state == SC_ENTERING and self.ret is None
         self.state = SC_EXITING
+        return
 
         # check if same syscall
         regs = self.proc.getregs()
@@ -157,36 +172,24 @@ class Syscall:
             # XXX. there are some inconsistent state when signaled
             dbg.info("XXX:%s (new:%x, old:%x)" % (str(self), regs.orig_rax, self.regs.orig_rax))
             # dbg.stop()
-            # 
+            #
             pass
 
-        # generate 
+        # generate
         ret = "err"
         args = SYSCALLS.get(self.name, [])
         if len(args) > 0:
             ret = args[0]
-        (name, kls) = self.__parse_syscall(ret)
+        (name, kls) = parse_syscall_table(ret)
         val = self.__parse_arg(self.proc, regs, kls, -1)
 
         setattr(self, "ret", val)
         setattr(self, name , val)
-        
-    def __parse_syscall(self, arg):
-        kls  = arg
-        name = None
-        if ":" in arg:
-            (name, kls) = arg.split(":")
-        else:
-            if "_" in kls:
-                name = kls.split("_")[1]
-            else:
-                name = kls
-        return (name, eval(kls))
 
     def __get_reg_from_seq(self, regs, seq):
         rn = ("rdi", "rsi", "rdx", "r10", "r8", "r9", "rax")[seq]
         return getattr(regs, rn)
-    
+
     def __parse_arg(self, proc, regs, kls, seq):
         arg = self.__get_reg_from_seq(regs, seq)
         if kls.argtype == "str":
@@ -619,13 +622,12 @@ static struct sock_filter filter[] = {
     LD_SYSCALL,\
 """
     for s in SYSCALLS:
-		if s in SYSCALL_MAP.values():
-			print "    TRACE_SYSCALL(%s)," % s
-	
+        if s in SYSCALL_MAP.values():
+            print "    TRACE_SYSCALL(%s)," % s
     print """\
     ALLOWED,
 };
 """
-        
+
 if __name__ == '__main__':
     print_syscalls()

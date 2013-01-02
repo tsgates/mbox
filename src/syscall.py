@@ -163,7 +163,6 @@ class Syscall:
     def update(self):
         assert self.state == SC_ENTERING and self.ret is None
         self.state = SC_EXITING
-        return
 
         # check if same syscall
         regs = self.proc.getregs()

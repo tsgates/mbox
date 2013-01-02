@@ -88,6 +88,19 @@ class Process(object):
                 dbg.warn("0x%x is not writable (read=%x, but write=%x)" \
                              % (self.robuf, peek, word))
 
+            # check if process_vm_readv works
+            readv = ptrace_readmem(self.pid, self.robuf, 8)
+            if byte2word(readv) == word:
+                # use readv instead of ptrace peek/poke
+                self.read_str    = self.read_str_readv
+                self.read_bytes  = self.read_bytes_readv
+                # XXX.
+                # self.write_bytes = self.write_bytes_writev
+                pass
+            else:
+                dbg.warn("process_vm_readv(addr=%x)=%s, word=%x)" \
+                             % (self.robuf, readv.value, word))
+
     def get_arg_robuf(self, arg):
         if self.robuf:
             return self.robuf + arg * MAX_PATH
@@ -138,6 +151,9 @@ class Process(object):
 
     def poke(self, addr, word):
         return ptrace_poke(self.pid, addr, word)
+
+    def read_bytes_readv(self, ptr, size):
+        return ptrace_readmem(self.pid, ptr, size)
     
     def read_bytes(self, ptr, size):
         data = b''
@@ -185,6 +201,23 @@ class Process(object):
             rtn.extend(blob)
             ptr += WORD
         return ''.join(rtn)
+
+    def read_str_readv(self, ptr, limit=1024):
+        rtn = []
+        LEN = 256
+        while len(rtn) < limit:
+            blob = ptrace_readmem(self.pid, ptr, LEN)
+            null = blob.find(b'\0')
+            # done
+            if null != -1:
+                rtn.extend(blob[:null])
+                break
+            rtn.extend(blob)
+            ptr += WORD
+        return ''.join(rtn)
+
+    def write_bytes_writev(self, ptr, blob):
+        ptrace_writemem(self.pid, ptr, blob)
 
     def write_bytes(self, ptr, blob):
         # off

@@ -1,19 +1,49 @@
 import struct
 
+from ctypes import c_char
+from ctypes import c_char_p
 from ctypes import c_int
 from ctypes import c_long 
 from ctypes import c_ulong
+from ctypes import c_void_p
+from ctypes import c_size_t
+from ctypes import byref
+from ctypes import cast
+from ctypes import sizeof
 from ctypes import cdll
+from ctypes import create_string_buffer
 from ctypes import addressof
 from ctypes import Structure
+from ctypes import POINTER
 
 from ctypes.util import find_library
 
 libc = cdll.LoadLibrary(find_library('c'))
 
 libc_ptrace = libc.ptrace
-libc_ptrace.argtypes = (c_ulong, c_ulong, c_ulong, c_ulong)
-libc_ptrace.restype  = c_ulong
+libc_ptrace.argtypes = (c_ulong,                # request
+                        c_ulong,                # pid_t
+                        c_ulong,                # *addr
+                        c_ulong)                # *data
+libc_ptrace.restype  = c_ulong                  # long
+
+class IOVec(Structure):
+    _fields_ = [("base", c_void_p),
+                ("len" , c_size_t)]
+
+libc_readv = libc.process_vm_readv
+libc_readv.argtypes = (c_ulong,                 # pid_t
+                       POINTER(IOVec), c_ulong, # iovec, cnt
+                       POINTER(IOVec), c_ulong, # iovec, cnt
+                       c_ulong)                 # flag
+libc_readv.restype  = c_ulong                   # ssize_t
+
+libc_writev = libc.process_vm_writev
+libc_writev.argtypes = (c_ulong,                # pid_t
+                        POINTER(IOVec), c_ulong,# iovec, cnt
+                        POINTER(IOVec), c_ulong,# iovec, cnt
+                        c_ulong)                # flag
+libc_writev.restype  = c_ulong                  # ssize_t
 
 # ptrace cmd
 PTRACE_TRACEME    = 0
@@ -146,6 +176,28 @@ def ptrace_geteventmsg(pid):
 
 def ptrace_attach(pid):
     ptrace(PTRACE_ATTACH, pid, 0, 0)
+
+def ptrace_readmem(pid, addr, size):
+    buf    = (c_char * size)()
+    local  = IOVec(base=addressof(buf), len=size)
+    remote = IOVec(base=addr, len=size)
+    ret    = libc_readv(pid,
+                        byref(local), 1,
+                        byref(remote), 1,
+                        0)
+    return buf[:]
+
+def ptrace_writemem(pid, addr, blob):
+    buf    = c_char_p(blob)
+    # buf    = create_string_buffer(blob)
+    size   = len(blob)
+    local  = IOVec(base=cast(buf, c_void_p), len=size)
+    remote = IOVec(base=addr, len=size)
+    ret    = libc_writev(pid,
+                         byref(local), 1,
+                         byref(remote), 1,
+                         0)
+    return ret
 
 def byte2word(byte):
     return struct.unpack("L", byte)[0]

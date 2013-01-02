@@ -108,7 +108,6 @@ def memorize(func):
     def __new__(arg):
 	if arg in __new__.cache:
 	    return __new__.cache[arg]
-        print arg
 	ret = __new__.cache[arg] = func(arg)
 	return ret
     __new__.cache = {}

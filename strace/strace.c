@@ -42,6 +42,7 @@
 #if defined(IA64)
 # include <asm/ptrace_offsets.h>
 #endif
+
 /* In some libc, these aren't declared. Do it ourself: */
 extern char **environ;
 extern int optind;
@@ -62,17 +63,15 @@ extern char *optarg;
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 cflag_t cflag = CFLAG_NONE;
-unsigned int followfork = 0;
+unsigned int followfork = 1;
 unsigned int ptrace_setoptions = 0;
 unsigned int xflag = 0;
 bool debug_flag = 0;
 bool Tflag = 0;
 bool qflag = 0;
+
 /* Which WSTOPSIG(status) value marks syscall traps? */
 static unsigned int syscall_trap_sig = SIGTRAP;
-static unsigned int tflag = 0;
-static bool iflag = 0;
-static bool rflag = 0;
 static bool print_pid_pfx = 0;
 
 /* -I n */
@@ -88,6 +87,14 @@ static int opt_intr;
 /* We play with signal mask only if this mode is active: */
 #define interactive (opt_intr == INTR_WHILE_WAIT)
 
+/* sandbox options */
+#define DEFAULT_ROOT "/tmp/sandbox-$PID"
+
+char *opt_root = NULL;
+char *opt_chdir = NULL;
+bool opt_seccomp = 0;
+bool opt_interactive = 0;
+
 /*
  * daemonized_tracer supports -D option.
  * With this option, strace forks twice.
@@ -100,7 +107,7 @@ static int opt_intr;
  * wait() etc. Without -D, strace process gets lodged in between,
  * disrupting parent<->child link.
  */
-static bool daemonized_tracer = 0;
+static const bool daemonized_tracer = 0;
 
 #ifdef USE_SEIZE
 static int post_attach_sigstop = TCB_IGNORE_ONE_SIGSTOP;
@@ -166,9 +173,6 @@ extern int sys_nerr;
 extern char *sys_errlist[];
 #endif
 
-/* sandbox options */
-
-
 const char *
 strerror(int err_no)
 {
@@ -187,27 +191,15 @@ static void
 usage(FILE *ofp, int exitval)
 {
 	fprintf(ofp, "\
-usage: strace [-CdffhiqrtttTvVxxy] [-I n] [-e expr]...\n\
-              [-a column] [-o file] [-s strsize] [-P path]\n\
-              -p pid... / [-D] [-E var=val]... [-u username] PROG [ARGS]\n\
-   or: strace -c[df] [-I n] [-e expr]... [-O overhead] [-S sortby]\n\
-              -p pid... / [-D] [-E var=val]... [-u username] PROG [ARGS]\n\
+usage: sandbox [-r root] [-s] [PROG]\n\
 \n\
         -c      : count time, calls, and errors for each syscall and report summary\n\
-        -C      : like -c but also print regular output\n\
         -d      : enable debug output to stderr\n\
-        -D      : run tracer process as a detached grandchild, not as parent\n\
-        -f      : follow forks, -ff -- with output into separate files\n\
-        -F      : attempt to follow vforks (deprecated, use -f)\n\
-        -i      : print instruction pointer at time of syscall\n\
         -q      : suppress messages about attaching, detaching, etc.\n\
-        -r      : print relative timestamp, -t -- absolute timestamp, -tt -- with usecs\n\
-        -T      : print time spent in each syscall\n\
         -v      : verbose mode: print unabbreviated argv, stat, termios, etc. args\n\
         -x      : print non-ascii strings in hex, -xx -- print all strings in hex\n\
         -y      : print paths associated with file descriptor arguments\n\
         -h      : print help message, -V -- print version\n\
-        -a col  : alignment COLUMN for printing syscall results (default %d)\n\
         -e expr : a qualifying expression: option=[!]all or option=[!]val1[,val2]...\n\
            opts : trace, abbrev, verbose, raw, signal, read, or write\n\
         -I interruptible\n\
@@ -218,14 +210,14 @@ usage: strace [-CdffhiqrtttTvVxxy] [-I n] [-e expr]...\n\
                (useful to make 'strace -o FILE PROG' not stop on ^Z)\n\
         -o file : send trace output to FILE instead of stderr\n\
         -O ovrh : set overhead for tracing syscalls to OVERHEAD usecs\n\
-        -p pid  : trace process with process id PID, may be repeated\n\
-        -s size : limit length of print strings to STRSIZE chars (default %d)\n\
         -S sort : sort syscall counts by: time, calls, name, nothing (default %s)\n\
-        -u name : run command as username handling setuid and/or setgid\n\
         -E var  : put var=val in the environment for command\n\
-        -E var  : remove var from the environment for command\n\
-        -P path : trace accesses to path\n",
-		DEFAULT_ACOLUMN, DEFAULT_STRLEN, DEFAULT_SORTBY);
+\n\
+        -i      : interactive session at the end\n\
+        -s      : use seccomp instead of ptrace\n\
+        -C path : change directory\n\
+        -r path : sandbox root (default:%s)\n",
+		DEFAULT_SORTBY, DEFAULT_ROOT);
         exit(exitval);
 }
 
@@ -578,36 +570,6 @@ printleader(struct tcb *tcp)
 		tprintf("%-5d ", tcp->pid);
 	else if (nprocs > 1 && !outfname)
 		tprintf("[pid %5u] ", tcp->pid);
-
-	if (tflag) {
-		char str[sizeof("HH:MM:SS")];
-		struct timeval tv, dtv;
-		static struct timeval otv;
-
-		gettimeofday(&tv, NULL);
-		if (rflag) {
-			if (otv.tv_sec == 0)
-				otv = tv;
-			tv_sub(&dtv, &tv, &otv);
-			tprintf("%6ld.%06ld ",
-				(long) dtv.tv_sec, (long) dtv.tv_usec);
-			otv = tv;
-		}
-		else if (tflag > 2) {
-			tprintf("%ld.%06ld ",
-				(long) tv.tv_sec, (long) tv.tv_usec);
-		}
-		else {
-			time_t local = tv.tv_sec;
-			strftime(str, sizeof(str), "%T", localtime(&local));
-			if (tflag > 1)
-				tprintf("%s.%06ld ", str, (long) tv.tv_usec);
-			else
-				tprintf("%s ", str);
-		}
-	}
-	if (iflag)
-		printcall(tcp);
 }
 
 void
@@ -812,34 +774,6 @@ detach(struct tcb *tcp)
 	droptcb(tcp);
 
 	return error;
-}
-
-static void
-process_opt_p_list(char *opt)
-{
-	while (*opt) {
-		/*
-		 * We accept -p PID,PID; -p "`pidof PROG`"; -p "`pgrep PROG`".
-		 * pidof uses space as delim, pgrep uses newline. :(
-		 */
-		int pid;
-		char *delim = opt + strcspn(opt, ", \n\t");
-		char c = *delim;
-
-		*delim = '\0';
-		pid = string_to_uint(opt);
-		if (pid <= 0) {
-			error_msg_and_die("Invalid process id: '%s'", opt);
-		}
-		if (pid == strace_tracer_pid) {
-			error_msg_and_die("I'm sorry, I can't let you do that, Dave.");
-		}
-		*delim = c;
-		alloctcb(pid);
-		if (c == '\0')
-			break;
-		opt = delim + 1;
-	}
 }
 
 static void
@@ -1449,7 +1383,6 @@ init(int argc, char *argv[])
 {
 	struct tcb *tcp;
 	int c, i;
-	int optF = 0;
 	struct sigaction sa;
 
 	progname = argv[0] ? argv[0] : "strace";
@@ -1484,9 +1417,8 @@ init(int argc, char *argv[])
 	qualify("verbose=all");
 	qualify("signal=all");
 	while ((c = getopt(argc, argv,
-		"+bcCdfFhiqrtTvVxyz"
-		"D"
-		"a:e:o:O:p:s:S:u:E:P:I:")) != EOF) {
+		"+bcdhqvVxyzis"
+		"e:o:O:S:E:I:C:r:")) != EOF) {
 		switch (c) {
 		case 'b':
 			detach_on_execve = 1;
@@ -1497,44 +1429,14 @@ init(int argc, char *argv[])
 			}
 			cflag = CFLAG_ONLY_STATS;
 			break;
-		case 'C':
-			if (cflag == CFLAG_ONLY_STATS) {
-				error_msg_and_die("-c and -C are mutually exclusive");
-			}
-			cflag = CFLAG_BOTH;
-			break;
 		case 'd':
 			debug_flag = 1;
-			break;
-		case 'D':
-			daemonized_tracer = 1;
-			break;
-		case 'F':
-			optF = 1;
-			break;
-		case 'f':
-			followfork++;
 			break;
 		case 'h':
 			usage(stdout, 0);
 			break;
-		case 'i':
-			iflag = 1;
-			break;
 		case 'q':
 			qflag = 1;
-			break;
-		case 'r':
-			rflag = 1;
-			/* fall through to tflag++ */
-		case 't':
-			tflag++;
-			break;
-		case 'T':
-			Tflag = 1;
-			break;
-		case 'x':
-			xflag++;
 			break;
 		case 'y':
 			show_fd_path = 1;
@@ -1549,11 +1451,6 @@ init(int argc, char *argv[])
 		case 'z':
 			not_failing_only = 1;
 			break;
-		case 'a':
-			acolumn = string_to_uint(optarg);
-			if (acolumn < 0)
-				error_opt_arg(c, optarg);
-			break;
 		case 'e':
 			qualify(optarg);
 			break;
@@ -1566,26 +1463,8 @@ init(int argc, char *argv[])
 				error_opt_arg(c, optarg);
 			set_overhead(i);
 			break;
-		case 'p':
-			process_opt_p_list(optarg);
-			break;
-		case 'P':
-			tracing_paths = 1;
-			if (pathtrace_select(optarg)) {
-				error_msg_and_die("Failed to select path '%s'", optarg);
-			}
-			break;
-		case 's':
-			i = string_to_uint(optarg);
-			if (i < 0)
-				error_opt_arg(c, optarg);
-			max_strlen = i;
-			break;
 		case 'S':
 			set_sortby(optarg);
-			break;
-		case 'u':
-			username = strdup(optarg);
 			break;
 		case 'E':
 			if (putenv(optarg) < 0)
@@ -1596,13 +1475,25 @@ init(int argc, char *argv[])
 			if (opt_intr <= 0 || opt_intr >= NUM_INTR_OPTS)
 				error_opt_arg(c, optarg);
 			break;
+		/* sandbox opts */
+		case 'i':
+			opt_interactive = 1;
+			break;
+		case 's':
+			opt_seccomp = 1;
+			break;
+		case 'C':
+			opt_chdir = strdup(optarg);
+			break;
+		case 'r':
+			opt_root = strdup(optarg);
+			break;
 		default:
 			usage(stderr, 1);
 			break;
 		}
 	}
 	argv += optind;
-	/* argc -= optind; - no need, argc is not used below */
 
 	acolumn_spaces = malloc(acolumn + 1);
 	if (!acolumn_spaces)
@@ -1618,31 +1509,12 @@ init(int argc, char *argv[])
 		error_msg_and_die("-D and -p are mutually exclusive");
 	}
 
-	if (!followfork)
-		followfork = optF;
-
 	if (followfork >= 2 && cflag) {
 		error_msg_and_die("(-c or -C) and -ff are mutually exclusive");
 	}
 
-	/* See if they want to run as another user. */
-	if (username != NULL) {
-		struct passwd *pent;
-
-		if (getuid() != 0 || geteuid() != 0) {
-			error_msg_and_die("You must be root to use the -u option");
-		}
-		pent = getpwnam(username);
-		if (pent == NULL) {
-			error_msg_and_die("Cannot find user '%s'", username);
-		}
-		run_uid = pent->pw_uid;
-		run_gid = pent->pw_gid;
-	}
-	else {
-		run_uid = getuid();
-		run_gid = getgid();
-	}
+	run_uid = getuid();
+	run_gid = getgid();
 
 	if (followfork)
 		test_ptrace_setoptions_followfork();
@@ -1663,10 +1535,6 @@ init(int argc, char *argv[])
 		}
 		else if (followfork < 2)
 			shared_log = strace_fopen(outfname);
-	} else {
-		/* -ff without -o FILE is the same as single -f */
-		if (followfork >= 2)
-			followfork = 1;
 	}
 
 	if (!outfname || outfname[0] == '|' || outfname[0] == '!') {

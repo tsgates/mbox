@@ -43,11 +43,13 @@
 # include <asm/ptrace_offsets.h>
 #endif
 
+#include "bpf.h"
+#include "bpf-syscall.h"
+
 /* In some libc, these aren't declared. Do it ourself: */
 extern char **environ;
 extern int optind;
 extern char *optarg;
-
 
 #if defined __NR_tkill
 # define my_tkill(tid, sig) syscall(__NR_tkill, (tid), (sig))
@@ -262,6 +264,23 @@ static void verror_msg(int err_no, const char *fmt, va_list p)
 	/* We don't switch stderr to buffered, thus fprintf(stderr)
 	 * always flushes its output and this is not necessary: */
 	/* fflush(stderr); */
+}
+
+static int
+install_seccomp(void) {
+	struct sock_fprog prog = {
+		.len = (unsigned short)(sizeof(filter)/sizeof(filter[0])),
+		.filter = filter,
+	};
+
+	if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
+		err(1, "prctl(NO_NEW_PRIVS)");
+	}
+	if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog)) {
+		err(1, "prctl(SECCOMP)");
+	}
+
+	return 0;
 }
 
 void error_msg(const char *fmt, ...)
@@ -532,7 +551,7 @@ void
 line_ended(void)
 {
 	if (!debug_flag) {
-		return; 
+		return;
 	}
 	if (current_tcp) {
 		current_tcp->curcol = 0;
@@ -858,6 +877,9 @@ startup_child(char **argv)
 		if (!daemonized_tracer && !use_seize) {
 			if (ptrace(PTRACE_TRACEME, 0L, 0L, 0L) < 0) {
 				perror_msg_and_die("ptrace(PTRACE_TRACEME, ...)");
+			}
+			if (opt_seccomp) {
+				install_seccomp();
 			}
 		}
 
@@ -1634,6 +1656,13 @@ trace(void)
 			fprintf(stderr, " [wait(0x%04x) = %u] %s%s\n", status, pid, buf, evbuf);
 		}
 
+		if (opt_seccomp && event == PTRACE_EVENT_SECCOMP) {
+			if (ptrace(PTRACE_SYSCALL, pid, 0, 0) < 0) {
+				err(1, "failed to continue");
+			}
+			continue;
+		}
+
 		/* Look up 'pid' in our table. */
 		tcp = pid2tcb(pid);
 
@@ -1922,10 +1951,17 @@ trace(void)
  restart_tracee_with_sig_0:
 		sig = 0;
  restart_tracee:
-		/* Remember current print column before continuing. */
-		if (ptrace_restart(PTRACE_SYSCALL, tcp, sig) < 0) {
-			cleanup();
-			return -1;
+		/* NOTE. entering(tcp): entering in the next syscall trap */
+		if (opt_seccomp && entering(tcp)) {
+			if (ptrace(PTRACE_CONT, tcp->pid, 0, sig) < 0) {
+				cleanup();
+				return -1;
+			}
+		} else {
+			if (ptrace_restart(PTRACE_SYSCALL, tcp, sig) < 0) {
+				cleanup();
+				return -1;
+			}
 		}
 	}
 	return 0;

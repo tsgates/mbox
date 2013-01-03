@@ -630,10 +630,38 @@ extern void tv_div(struct timeval *, struct timeval *, int);
  */
 extern struct tcb *printing_tcp;
 extern void printleader(struct tcb *);
-extern void line_ended(void);
-extern void tabto(void);
-extern void tprintf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
-extern void tprints(const char *str);
+extern void __line_ended(void);
+extern void __tabto(void);
+extern void __tprintf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+extern void __tprints(const char *str);
+
+#define tprintf(fmt, ...)					\
+	({							\
+		if (debug_flag) {				\
+			__tprintf(fmt, __VA_ARGS__);		\
+		}						\
+	})
+
+#define tprints(str)						\
+	({							\
+		if (debug_flag) {				\
+			__tprints(str);				\
+		}						\
+	})
+
+#define line_ended()						\
+	({							\
+		if (debug_flag) {				\
+			__line_ended();				\
+		}						\
+	})
+
+#define tabto()							\
+	({							\
+		if (debug_flag) {				\
+			__tabto();				\
+		}						\
+	})
 
 #if SUPPORTED_PERSONALITIES > 1
 extern void set_personality(int personality);

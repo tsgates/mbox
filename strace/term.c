@@ -208,10 +208,10 @@ int term_ioctl(struct tcb *tcp, long code, long arg)
 		if (!(tios.c_lflag & ICANON))
 			tprintf("c_cc[VMIN]=%d, c_cc[VTIME]=%d, ",
 				tios.c_cc[VMIN], tios.c_cc[VTIME]);
-		tprintf("c_cc=\"");
+		tprints("c_cc=\"");
 		for (i = 0; i < NCCS; i++)
 			tprintf("\\x%02x", tios.c_cc[i]);
-		tprintf("\"}");
+		tprints("\"}");
 		return 1;
 #endif /* TCGETS */
 
@@ -248,10 +248,10 @@ int term_ioctl(struct tcb *tcp, long code, long arg)
 			tprintf("c_cc[VMIN]=%d, c_cc[VTIME]=%d, ",
 				tio.c_cc[VMIN], tio.c_cc[VTIME]);
 #endif /* !_VMIN */
-		tprintf("c_cc=\"");
+		tprints("c_cc=\"");
 		for (i = 0; i < NCC; i++)
 			tprintf("\\x%02x", tio.c_cc[i]);
-		tprintf("\"}");
+		tprints("\"}");
 		return 1;
 #endif /* TCGETA */
 

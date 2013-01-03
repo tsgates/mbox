@@ -516,12 +516,12 @@ strace_popen(const char *command)
 }
 
 void
-tprintf(const char *fmt, ...)
+__tprintf(const char *fmt, ...)
 {
 	va_list args;
 
 	va_start(args, fmt);
-	if (debug_flag && current_tcp) {
+	if (current_tcp) {
 		int n = strace_vfprintf(current_tcp->outf, fmt, args);
 		if (n < 0) {
 			if (current_tcp->outf != stderr)
@@ -534,9 +534,9 @@ tprintf(const char *fmt, ...)
 }
 
 void
-tprints(const char *str)
+__tprints(const char *str)
 {
-	if (debug_flag && current_tcp) {
+	if (current_tcp) {
 		int n = fputs_unlocked(str, current_tcp->outf);
 		if (n >= 0) {
 			current_tcp->curcol += strlen(str);
@@ -548,11 +548,8 @@ tprints(const char *str)
 }
 
 void
-line_ended(void)
+__line_ended(void)
 {
-	if (!debug_flag) {
-		return;
-	}
 	if (current_tcp) {
 		current_tcp->curcol = 0;
 		fflush(current_tcp->outf);
@@ -597,7 +594,7 @@ printleader(struct tcb *tcp)
 }
 
 void
-tabto(void)
+__tabto(void)
 {
 	if (current_tcp->curcol < acolumn)
 		tprints(acolumn_spaces + current_tcp->curcol);
@@ -1897,8 +1894,7 @@ trace(void)
 				if (!stopped) {
 					tprintf("--- %s ", signame(sig));
 					printsiginfo(&si, verbose(tcp));
-					tprintf(PC_FORMAT_STR " ---\n"
-						PC_FORMAT_ARG);
+					tprints(PC_FORMAT_STR " ---\n" PC_FORMAT_ARG);
 				} else
 					tprintf("--- stopped by %s" PC_FORMAT_STR " ---\n",
 						signame(sig)

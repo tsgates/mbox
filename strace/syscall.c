@@ -1272,10 +1272,9 @@ internal_syscall(struct tcb *tcp)
 
 	func = sysent[tcp->scno].sys_func;
 
-	if (   sys_fork == func
+	if ( sys_fork == func
 	    || sys_vfork == func
-	    || sys_clone == func
-	   ) {
+	    || sys_clone == func) {
 		internal_fork(tcp);
 		return;
 	}

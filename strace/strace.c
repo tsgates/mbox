@@ -166,6 +166,9 @@ extern int sys_nerr;
 extern char *sys_errlist[];
 #endif
 
+/* sandbox options */
+
+
 const char *
 strerror(int err_no)
 {
@@ -185,51 +188,45 @@ usage(FILE *ofp, int exitval)
 {
 	fprintf(ofp, "\
 usage: strace [-CdffhiqrtttTvVxxy] [-I n] [-e expr]...\n\
-              [-a column] [-o file] [-s strsize] [-P path]...\n\
+              [-a column] [-o file] [-s strsize] [-P path]\n\
               -p pid... / [-D] [-E var=val]... [-u username] PROG [ARGS]\n\
    or: strace -c[df] [-I n] [-e expr]... [-O overhead] [-S sortby]\n\
               -p pid... / [-D] [-E var=val]... [-u username] PROG [ARGS]\n\
--c -- count time, calls, and errors for each syscall and report summary\n\
--C -- like -c but also print regular output\n\
--d -- enable debug output to stderr\n\
--D -- run tracer process as a detached grandchild, not as parent\n\
--f -- follow forks, -ff -- with output into separate files\n\
--F -- attempt to follow vforks (deprecated, use -f)\n\
--i -- print instruction pointer at time of syscall\n\
--q -- suppress messages about attaching, detaching, etc.\n\
--r -- print relative timestamp, -t -- absolute timestamp, -tt -- with usecs\n\
--T -- print time spent in each syscall\n\
--v -- verbose mode: print unabbreviated argv, stat, termios, etc. args\n\
--x -- print non-ascii strings in hex, -xx -- print all strings in hex\n\
--y -- print paths associated with file descriptor arguments\n\
--h -- print help message, -V -- print version\n\
--a column -- alignment COLUMN for printing syscall results (default %d)\n\
--e expr -- a qualifying expression: option=[!]all or option=[!]val1[,val2]...\n\
-   options: trace, abbrev, verbose, raw, signal, read, or write\n\
--I interruptible --\n\
-   1: no signals are blocked\n\
-   2: fatal signals are blocked while decoding syscall (default)\n\
-   3: fatal signals are always blocked (default if '-o FILE PROG')\n\
-   4: fatal signals and SIGTSTP (^Z) are always blocked\n\
-      (useful to make 'strace -o FILE PROG' not stop on ^Z)\n\
--o file -- send trace output to FILE instead of stderr\n\
--O overhead -- set overhead for tracing syscalls to OVERHEAD usecs\n\
--p pid -- trace process with process id PID, may be repeated\n\
--s strsize -- limit length of print strings to STRSIZE chars (default %d)\n\
--S sortby -- sort syscall counts by: time, calls, name, nothing (default %s)\n\
--u username -- run command as username handling setuid and/or setgid\n\
--E var=val -- put var=val in the environment for command\n\
--E var -- remove var from the environment for command\n\
--P path -- trace accesses to path\n\
-"
-/* this is broken, so don't document it
--z -- print only succeeding syscalls\n\
- */
-/* experimental, don't document it yet (option letter may change in the future!)
--b -- detach on successful execve\n\
- */
-, DEFAULT_ACOLUMN, DEFAULT_STRLEN, DEFAULT_SORTBY);
-	exit(exitval);
+\n\
+        -c      : count time, calls, and errors for each syscall and report summary\n\
+        -C      : like -c but also print regular output\n\
+        -d      : enable debug output to stderr\n\
+        -D      : run tracer process as a detached grandchild, not as parent\n\
+        -f      : follow forks, -ff -- with output into separate files\n\
+        -F      : attempt to follow vforks (deprecated, use -f)\n\
+        -i      : print instruction pointer at time of syscall\n\
+        -q      : suppress messages about attaching, detaching, etc.\n\
+        -r      : print relative timestamp, -t -- absolute timestamp, -tt -- with usecs\n\
+        -T      : print time spent in each syscall\n\
+        -v      : verbose mode: print unabbreviated argv, stat, termios, etc. args\n\
+        -x      : print non-ascii strings in hex, -xx -- print all strings in hex\n\
+        -y      : print paths associated with file descriptor arguments\n\
+        -h      : print help message, -V -- print version\n\
+        -a col  : alignment COLUMN for printing syscall results (default %d)\n\
+        -e expr : a qualifying expression: option=[!]all or option=[!]val1[,val2]...\n\
+           opts : trace, abbrev, verbose, raw, signal, read, or write\n\
+        -I interruptible\n\
+            1: no signals are blocked\n\
+            2: fatal signals are blocked while decoding syscall (default)\n\
+            3: fatal signals are always blocked (default if '-o FILE PROG')\n\
+            4: fatal signals and SIGTSTP (^Z) are always blocked\n\
+               (useful to make 'strace -o FILE PROG' not stop on ^Z)\n\
+        -o file : send trace output to FILE instead of stderr\n\
+        -O ovrh : set overhead for tracing syscalls to OVERHEAD usecs\n\
+        -p pid  : trace process with process id PID, may be repeated\n\
+        -s size : limit length of print strings to STRSIZE chars (default %d)\n\
+        -S sort : sort syscall counts by: time, calls, name, nothing (default %s)\n\
+        -u name : run command as username handling setuid and/or setgid\n\
+        -E var  : put var=val in the environment for command\n\
+        -E var  : remove var from the environment for command\n\
+        -P path : trace accesses to path\n",
+		DEFAULT_ACOLUMN, DEFAULT_STRLEN, DEFAULT_SORTBY);
+        exit(exitval);
 }
 
 static void die(void) __attribute__ ((noreturn));

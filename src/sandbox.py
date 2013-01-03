@@ -76,8 +76,11 @@ if __name__ == "__main__":
     # interpose opt
     if opts.interpose == "seccomp":
         interpose = tracer.TRACE_SECCOMP
-    else:
+    elif opts.interpose == "ptrace":
         interpose = tracer.TRACE_PTRACE
+    else:
+        dbg.error("Failed to find %s module" % opts.interpose)
+        exit(1)
 
     # change directory
     if opts.cd:

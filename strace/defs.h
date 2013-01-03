@@ -280,6 +280,9 @@ extern long ptrace(int, int, char *, long);
 #if !HAVE_DECL_PTRACE_O_TRACEEXIT
 # define PTRACE_O_TRACEEXIT	0x00000040
 #endif
+#if !HAVE_DECL_PTRACE_O_TRACESECCOMP
+# define PTRACE_O_TRACESECCOMP 0x00000080
+#endif
 
 #if !HAVE_DECL_PTRACE_EVENT_FORK
 # define PTRACE_EVENT_FORK	1
@@ -298,6 +301,9 @@ extern long ptrace(int, int, char *, long);
 #endif
 #if !HAVE_DECL_PTRACE_EVENT_EXIT
 # define PTRACE_EVENT_EXIT	6
+#endif
+#if !HAVE_DECL_PTRACE_EVENT_SECCOMP
+# define PTRACE_EVENT_SECCOMP 7
 #endif
 
 /* Experimental code using PTRACE_SEIZE can be enabled here: */

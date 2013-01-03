@@ -94,6 +94,7 @@ char *opt_root = NULL;
 char *opt_chdir = NULL;
 bool opt_seccomp = 0;
 bool opt_interactive = 0;
+bool opt_trace = 0;
 
 /*
  * daemonized_tracer supports -D option.
@@ -215,6 +216,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
 \n\
         -i      : interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
+        -t      : trace syscalls\n\
         -C path : change directory\n\
         -r path : sandbox root (default:%s)\n",
 		DEFAULT_SORTBY, DEFAULT_ROOT);
@@ -500,7 +502,7 @@ tprintf(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	if (current_tcp) {
+	if (debug_flag && current_tcp) {
 		int n = strace_vfprintf(current_tcp->outf, fmt, args);
 		if (n < 0) {
 			if (current_tcp->outf != stderr)
@@ -515,7 +517,7 @@ tprintf(const char *fmt, ...)
 void
 tprints(const char *str)
 {
-	if (current_tcp) {
+	if (debug_flag && current_tcp) {
 		int n = fputs_unlocked(str, current_tcp->outf);
 		if (n >= 0) {
 			current_tcp->curcol += strlen(str);
@@ -529,6 +531,9 @@ tprints(const char *str)
 void
 line_ended(void)
 {
+	if (!debug_flag) {
+		return; 
+	}
 	if (current_tcp) {
 		current_tcp->curcol = 0;
 		fflush(current_tcp->outf);
@@ -777,144 +782,6 @@ detach(struct tcb *tcp)
 }
 
 static void
-startup_attach(void)
-{
-	int tcbi;
-	struct tcb *tcp;
-
-	/*
-	 * Block user interruptions as we would leave the traced
-	 * process stopped (process state T) if we would terminate in
-	 * between PTRACE_ATTACH and wait4() on SIGSTOP.
-	 * We rely on cleanup() from this point on.
-	 */
-	if (interactive)
-		sigprocmask(SIG_BLOCK, &blocked_set, NULL);
-
-	if (daemonized_tracer) {
-		pid_t pid = fork();
-		if (pid < 0) {
-			perror_msg_and_die("fork");
-		}
-		if (pid) { /* parent */
-			/*
-			 * Wait for grandchild to attach to straced process
-			 * (grandparent). Grandchild SIGKILLs us after it attached.
-			 * Grandparent's wait() is unblocked by our death,
-			 * it proceeds to exec the straced program.
-			 */
-			pause();
-			_exit(0); /* paranoia */
-		}
-		/* grandchild */
-		/* We will be the tracer process. Remember our new pid: */
-		strace_tracer_pid = getpid();
-	}
-
-	for (tcbi = 0; tcbi < tcbtabsize; tcbi++) {
-		tcp = tcbtab[tcbi];
-
-		if (!(tcp->flags & TCB_INUSE))
-			continue;
-
-		/* Is this a process we should attach to, but not yet attached? */
-		if (tcp->flags & TCB_ATTACHED)
-			continue; /* no, we already attached it */
-
-		if (followfork && !daemonized_tracer) {
-			char procdir[sizeof("/proc/%d/task") + sizeof(int) * 3];
-			DIR *dir;
-
-			sprintf(procdir, "/proc/%d/task", tcp->pid);
-			dir = opendir(procdir);
-			if (dir != NULL) {
-				unsigned int ntid = 0, nerr = 0;
-				struct dirent *de;
-
-				while ((de = readdir(dir)) != NULL) {
-					struct tcb *cur_tcp;
-					int tid;
-
-					if (de->d_fileno == 0)
-						continue;
-					/* we trust /proc filesystem */
-					tid = atoi(de->d_name);
-					if (tid <= 0)
-						continue;
-					++ntid;
-					if (ptrace_attach_or_seize(tid) < 0) {
-						++nerr;
-						if (debug_flag)
-							fprintf(stderr, "attach to pid %d failed\n", tid);
-						continue;
-					}
-					if (debug_flag)
-						fprintf(stderr, "attach to pid %d succeeded\n", tid);
-					cur_tcp = tcp;
-					if (tid != tcp->pid)
-						cur_tcp = alloctcb(tid);
-					cur_tcp->flags |= TCB_ATTACHED | TCB_STARTUP | post_attach_sigstop;
-					newoutf(cur_tcp);
-				}
-				closedir(dir);
-				if (interactive) {
-					sigprocmask(SIG_SETMASK, &empty_set, NULL);
-					if (interrupted)
-						goto ret;
-					sigprocmask(SIG_BLOCK, &blocked_set, NULL);
-				}
-				ntid -= nerr;
-				if (ntid == 0) {
-					perror("attach: ptrace(PTRACE_ATTACH, ...)");
-					droptcb(tcp);
-					continue;
-				}
-				if (!qflag) {
-					fprintf(stderr, ntid > 1
-? "Process %u attached with %u threads\n"
-: "Process %u attached\n",
-						tcp->pid, ntid);
-				}
-				if (!(tcp->flags & TCB_ATTACHED)) {
-					/* -p PID, we failed to attach to PID itself
-					 * but did attach to some of its sibling threads.
-					 * Drop PID's tcp.
-					 */
-					droptcb(tcp);
-				}
-				continue;
-			} /* if (opendir worked) */
-		} /* if (-f) */
-		if (ptrace_attach_or_seize(tcp->pid) < 0) {
-			perror("attach: ptrace(PTRACE_ATTACH, ...)");
-			droptcb(tcp);
-			continue;
-		}
-		tcp->flags |= TCB_ATTACHED | TCB_STARTUP | post_attach_sigstop;
-		newoutf(tcp);
-		if (debug_flag)
-			fprintf(stderr, "attach to pid %d (main) succeeded\n", tcp->pid);
-
-		if (daemonized_tracer) {
-			/*
-			 * Make parent go away.
-			 * Also makes grandparent's wait() unblock.
-			 */
-			kill(getppid(), SIGKILL);
-		}
-
-		if (!qflag)
-			fprintf(stderr,
-				"Process %u attached\n",
-				tcp->pid);
-	} /* for each tcbtab[] */
-
- ret:
-	if (interactive)
-		sigprocmask(SIG_SETMASK, &empty_set, NULL);
-}
-
-static void
 startup_child(char **argv)
 {
 	struct stat statbuf;
@@ -1072,6 +939,7 @@ startup_child(char **argv)
 			if (!strace_vforked)
 				kill(pid, SIGCONT);
 		}
+		/* NOTE. common code for seize and traceme */
 		tcp = alloctcb(pid);
 		if (!strace_vforked)
 			tcp->flags |= TCB_ATTACHED | TCB_STRACE_CHILD | TCB_STARTUP | post_attach_sigstop;
@@ -1417,7 +1285,7 @@ init(int argc, char *argv[])
 	qualify("verbose=all");
 	qualify("signal=all");
 	while ((c = getopt(argc, argv,
-		"+bcdhqvVxyzis"
+		"+bcdhqvVxyzist"
 		"e:o:O:S:E:I:C:r:")) != EOF) {
 		switch (c) {
 		case 'b':
@@ -1434,9 +1302,6 @@ init(int argc, char *argv[])
 			break;
 		case 'h':
 			usage(stdout, 0);
-			break;
-		case 'q':
-			qflag = 1;
 			break;
 		case 'y':
 			show_fd_path = 1;
@@ -1481,6 +1346,10 @@ init(int argc, char *argv[])
 			break;
 		case 's':
 			opt_seccomp = 1;
+			ptrace_setoptions |= PTRACE_O_TRACESECCOMP;
+			break;
+		case 't':
+			opt_trace = 1;
 			break;
 		case 'C':
 			opt_chdir = strdup(optarg);
@@ -1502,22 +1371,18 @@ init(int argc, char *argv[])
 	acolumn_spaces[acolumn] = '\0';
 
 	/* Must have PROG [ARGS], or -p PID. Not both. */
-	if (!argv[0] == !nprocs)
+	if (!argv[0]) {
 		usage(stderr, 1);
-
+	}
 	if (nprocs != 0 && daemonized_tracer) {
 		error_msg_and_die("-D and -p are mutually exclusive");
-	}
-
-	if (followfork >= 2 && cflag) {
-		error_msg_and_die("(-c or -C) and -ff are mutually exclusive");
 	}
 
 	run_uid = getuid();
 	run_gid = getgid();
 
-	if (followfork)
-		test_ptrace_setoptions_followfork();
+	/* XXX. apply general arguments without testing them */
+	test_ptrace_setoptions_followfork();
 	test_ptrace_setoptions_for_all();
 	test_ptrace_seize();
 
@@ -1562,10 +1427,8 @@ init(int argc, char *argv[])
 	   installed below as they are inherited into the spawned process.
 	   Also we do not need to be protected by them as during interruption
 	   in the STARTUP_CHILD mode we kill the spawned process anyway.  */
-	if (argv[0]) {
-		skip_startup_execve = 1;
-		startup_child(argv);
-	}
+	skip_startup_execve = 1;
+	startup_child(argv);
 
 	sigemptyset(&empty_set);
 	sigemptyset(&blocked_set);
@@ -1598,8 +1461,6 @@ init(int argc, char *argv[])
 		sigaction(SIGPIPE, &sa, NULL);
 		sigaction(SIGTERM, &sa, NULL);
 	}
-	if (nprocs != 0 || daemonized_tracer)
-		startup_attach();
 
 	/* Do we want pids printed in our -o OUTFILE?
 	 * -ff: no (every pid has its own file); or
@@ -1609,6 +1470,7 @@ init(int argc, char *argv[])
 	print_pid_pfx = (outfname && followfork < 2 && (followfork == 1 || nprocs > 1));
 }
 
+/* XXX. pid2tcb can be optimized */
 static struct tcb *
 pid2tcb(int pid)
 {
@@ -1752,12 +1614,13 @@ trace(void)
 			evbuf[0] = '\0';
 			if (event != 0) {
 				static const char *const event_names[] = {
-					[PTRACE_EVENT_CLONE] = "CLONE",
-					[PTRACE_EVENT_FORK]  = "FORK",
-					[PTRACE_EVENT_VFORK] = "VFORK",
+					[PTRACE_EVENT_CLONE]      = "CLONE",
+					[PTRACE_EVENT_FORK]       = "FORK",
+					[PTRACE_EVENT_VFORK]      = "VFORK",
 					[PTRACE_EVENT_VFORK_DONE] = "VFORK_DONE",
-					[PTRACE_EVENT_EXEC]  = "EXEC",
-					[PTRACE_EVENT_EXIT]  = "EXIT",
+					[PTRACE_EVENT_EXEC]       = "EXEC",
+					[PTRACE_EVENT_EXIT]       = "EXIT",
+					[PTRACE_EVENT_SECCOMP]    = "SECCOMP",
 				};
 				const char *e;
 				if (event < ARRAY_SIZE(event_names))
@@ -1788,9 +1651,8 @@ trace(void)
 				tcp = alloctcb(pid);
 				tcp->flags |= TCB_ATTACHED | TCB_STARTUP | post_attach_sigstop;
 				newoutf(tcp);
-				if (!qflag)
-					fprintf(stderr, "Process %d attached\n",
-						pid);
+				if (debug_flag)
+					fprintf(stderr, "Process %d attached\n", pid);
 			} else {
 				/* This can happen if a clone call used
 				   CLONE_PTRACE itself.  */
@@ -1910,8 +1772,7 @@ trace(void)
 
 		/* Is this the very first time we see this tracee stopped? */
 		if (tcp->flags & TCB_STARTUP) {
-			if (debug_flag)
-				fprintf(stderr, "pid %d has TCB_STARTUP, initializing it\n", tcp->pid);
+			tprintf("pid %d has TCB_STARTUP, initializing it\n", tcp->pid);
 			tcp->flags &= ~TCB_STARTUP;
 			if (tcp->flags & TCB_BPTSET) {
 				/*
@@ -1926,8 +1787,7 @@ trace(void)
 				}
 			}
 			if (ptrace_setoptions) {
-				if (debug_flag)
-					fprintf(stderr, "setting opts %x on pid %d\n", ptrace_setoptions, tcp->pid);
+				tprintf("setting opts %x on pid %d\n", ptrace_setoptions, tcp->pid);
 				if (ptrace(PTRACE_SETOPTIONS, tcp->pid, NULL, ptrace_setoptions) < 0) {
 					if (errno != ESRCH) {
 						/* Should never happen, really */

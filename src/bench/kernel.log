@@ -2,3 +2,4 @@ make kernel                                        60.16s user  7.45s system 103
 strace -o /dev/null -f make kernel                166.44s user 74.58s system 113% cpu  3:32.08 total
 ./sandbox.py -j ptrace -C /tmp/linux make kernel  650.09s user 94.20s system 108% cpu 11:28.67 total
 ./sandbox.py -j seccomp -C /tmp/linux make kernel 566.25s user 83.31s system 106% cpu 10:08.13 total
+./strace -s -C /tmp/linux make kernel             131.75s user 59.06s system 110% cpu  2:52.34 total

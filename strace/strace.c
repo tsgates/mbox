@@ -30,6 +30,7 @@
 
 #include "defs.h"
 #include <stdarg.h>
+#include <err.h>
 #include <sys/param.h>
 #include <fcntl.h>
 #include <sys/resource.h>
@@ -93,7 +94,6 @@ static int opt_intr;
 #define DEFAULT_ROOT "/tmp/sandbox-$PID"
 
 char *opt_root = NULL;
-char *opt_chdir = NULL;
 bool opt_seccomp = 0;
 bool opt_interactive = 0;
 bool opt_trace = 0;
@@ -1374,7 +1374,9 @@ init(int argc, char *argv[])
 			opt_trace = 1;
 			break;
 		case 'C':
-			opt_chdir = strdup(optarg);
+			if (chdir(optarg) < 0) {
+				err(1, "failed to chdir to %s", optarg);
+			}
 			break;
 		case 'r':
 			opt_root = strdup(optarg);

@@ -91,7 +91,7 @@ static int opt_intr;
 #define interactive (opt_intr == INTR_WHILE_WAIT)
 
 /* sandbox options */
-#define DEFAULT_ROOT "/tmp/sandbox-$PID"
+#define DEFAULT_ROOT "/tmp/sandbox-"
 
 char *opt_root = NULL;
 bool opt_seccomp = 0;
@@ -196,9 +196,6 @@ usage(FILE *ofp, int exitval)
 	fprintf(ofp, "\
 usage: sandbox [-r root] [-s] [PROG]\n\
 \n\
-        -c      : count time, calls, and errors for each syscall and report summary\n\
-        -d      : enable debug output to stderr\n\
-        -q      : suppress messages about attaching, detaching, etc.\n\
         -v      : verbose mode: print unabbreviated argv, stat, termios, etc. args\n\
         -x      : print non-ascii strings in hex, -xx -- print all strings in hex\n\
         -y      : print paths associated with file descriptor arguments\n\
@@ -216,6 +213,8 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -S sort : sort syscall counts by: time, calls, name, nothing (default %s)\n\
         -E var  : put var=val in the environment for command\n\
 \n\
+        -c      : count time, calls, and errors for each syscall and report summary\n\
+        -d      : enable debug output to stderr\n\
         -i      : interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
         -t      : trace syscalls\n\
@@ -1443,7 +1442,11 @@ init(int argc, char *argv[])
 	 * yes		0	1	INTR_NEVER
 	 * no		1	1	INTR_WHILE_WAIT
 	 */
-
+	if (!opt_root) {
+		asprintf(&opt_root, DEFAULT_ROOT "%d", getpid());
+		mkdir(opt_root, 0755);
+	}
+	
 	/* STARTUP_CHILD must be called before the signal handlers get
 	   installed below as they are inherited into the spawned process.
 	   Also we do not need to be protected by them as during interruption

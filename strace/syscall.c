@@ -820,6 +820,9 @@ get_scno(struct tcb *tcp)
 		return -1;
 	scno = x86_64_regs.orig_rax;
 
+	/* cached registers for rewriting */
+	tcp->regs = x86_64_regs;
+
 	/* Check CS register value. On x86-64 linux it is:
 	 *	0x33	for long mode (64 bit)
 	 *	0x23	for compatibility mode (32 bit)
@@ -2168,6 +2171,12 @@ trace_syscall_exiting(struct tcb *tcp)
 int
 trace_syscall(struct tcb *tcp)
 {
-	return exiting(tcp) ?
-		trace_syscall_exiting(tcp) : trace_syscall_entering(tcp);
+	if (exiting(tcp)) {
+		if (tcp->hijacked) {
+			sbox_restore_hijack(tcp);
+		}
+		return trace_syscall_exiting(tcp);
+	} else {
+		return trace_syscall_entering(tcp);
+	}
 }

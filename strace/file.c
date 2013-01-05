@@ -29,6 +29,7 @@
  */
 
 #include "defs.h"
+#include "sbox.h"
 #include <dirent.h>
 #include <sys/swap.h>
 
@@ -410,7 +411,12 @@ decode_open(struct tcb *tcp, int offset)
 int
 sys_open(struct tcb *tcp)
 {
-	return decode_open(tcp, 0);
+	if (entering(tcp)) {
+		sbox_open_enter(tcp, 0, tcp->u_arg[1]);
+	} else {
+		/* XXX */
+	}
+	return 0;
 }
 
 int

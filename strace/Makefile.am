@@ -14,12 +14,12 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS = $(WARN_CFLAGS)
 AM_CPPFLAGS = -I$(srcdir)/$(OS)/$(ARCH) -I$(srcdir)/$(OS) -I$(builddir)/$(OS)
 
-strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c ipc.c \
+strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c sbox.c ipc.c \
 		 io.c ioctl.c mem.c net.c process.c bjm.c quota.c \
 		 resource.c signal.c sock.c system.c term.c time.c \
 		 scsi.c stream.c block.c pathtrace.c mtd.c vsprintf.c \
 		 loop.c
-noinst_HEADERS = defs.h
+noinst_HEADERS = defs.h sbox.h
 
 EXTRA_DIST = $(man_MANS) errnoent.sh signalent.sh syscallent.sh ioctlsort.c \
 	     debian/changelog debian/compat debian/control debian/copyright \

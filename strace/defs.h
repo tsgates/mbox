@@ -59,6 +59,11 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
+#include <sys/user.h>
+
+#ifndef PATH_MAX
+# define PATH_MAX MAXPATHLEN
+#endif
 
 #ifndef HAVE_STRERROR
 const char *strerror(int);
@@ -356,6 +361,11 @@ struct tcb {
 	struct timeval etime;	/* Syscall entry time */
 				/* Support for tracing forked processes: */
 	long inst[2];		/* Saved clone args (badly named) */
+	
+	struct user_regs_struct regs; /* Registers fetched when entering */
+	bool hijacked;		/* Wheither hijacked or not */
+	int hijacked_old_arg;	/* Hijacked old argument */
+	int hijacked_old_val;	/* Hijacked old value */
 };
 
 /* TCB flags */
@@ -473,6 +483,10 @@ extern unsigned int xflag;
 extern unsigned int followfork;
 extern unsigned int ptrace_setoptions;
 extern unsigned int max_strlen;
+
+extern char *opt_root;
+extern int opt_root_len;
+extern bool opt_seccomp;
 
 enum bitness_t { BITNESS_CURRENT = 0, BITNESS_32 };
 

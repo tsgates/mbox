@@ -94,9 +94,9 @@ static int opt_intr;
 #define DEFAULT_ROOT "/tmp/sandbox-"
 
 char *opt_root = NULL;
+int opt_root_len = 0;
 bool opt_seccomp = 0;
 bool opt_interactive = 0;
-bool opt_trace = 0;
 
 /*
  * daemonized_tracer supports -D option.
@@ -217,7 +217,6 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -d      : enable debug output to stderr\n\
         -i      : interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
-        -t      : trace syscalls\n\
         -C path : change directory\n\
         -r path : sandbox root (default:%s)\n",
 		DEFAULT_SORTBY, DEFAULT_ROOT);
@@ -1303,7 +1302,7 @@ init(int argc, char *argv[])
 	qualify("verbose=all");
 	qualify("signal=all");
 	while ((c = getopt(argc, argv,
-		"+bcdhqvVxyzist"
+		"+bcdhqvVxyzis"
 		"e:o:O:S:E:I:C:r:")) != EOF) {
 		switch (c) {
 		case 'b':
@@ -1365,9 +1364,6 @@ init(int argc, char *argv[])
 		case 's':
 			opt_seccomp = 1;
 			ptrace_setoptions |= PTRACE_O_TRACESECCOMP;
-			break;
-		case 't':
-			opt_trace = 1;
 			break;
 		case 'C':
 			if (chdir(optarg) < 0) {
@@ -1445,7 +1441,19 @@ init(int argc, char *argv[])
 	if (!opt_root) {
 		asprintf(&opt_root, DEFAULT_ROOT "%d", getpid());
 		mkdir(opt_root, 0755);
+	} else {
+		/* force opt_root not starting with a slash */
+		int last = strlen(opt_root) - 1;
+		if (opt_root[last] == '/') {
+			opt_root[last] = '\0';
+		}
+		/* opt_root should exist */
+		if (access(opt_root, F_OK) < 0) {
+			err(1, "Failed to access %s", opt_root);
+		}
 	}
+
+	opt_root_len = strlen(opt_root);
 	
 	/* STARTUP_CHILD must be called before the signal handlers get
 	   installed below as they are inherited into the spawned process.

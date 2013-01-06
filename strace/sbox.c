@@ -63,7 +63,7 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
 
 	/* XXX. need to find the readonly memory */
 	long new_ptr = regs.rsp - PATH_MAX * (arg+1);
-	sbox_remote_write(tcp, new_ptr, new, strlen(new));
+	sbox_remote_write(tcp, new_ptr, new, strlen(new)+1);
 	sbox_rewrite_arg(tcp, arg, new_ptr);
 }
 
@@ -83,6 +83,7 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
 
     /* XXX */
     if (strstr(hpn, "testme")) {
+        printf("hpn: %s\nspn: %s\n", hpn, spn);
         sbox_hijack_str(tcp, arg, "/tmp/x");
     }
     

@@ -693,7 +693,7 @@ static int
 get_scno(struct tcb *tcp)
 {
 	long scno = 0;
-
+	
 #if defined(S390) || defined(S390X)
 	if (upeek(tcp, PT_GPR2, &syscall_mode) < 0)
 		return -1;
@@ -1628,6 +1628,8 @@ get_syscall_result(struct tcb *tcp)
 #elif defined(X86_64) || defined(X32)
 	if (ptrace(PTRACE_GETREGS, tcp->pid, NULL, (long) &x86_64_regs) < 0)
 		return -1;
+	/* update regs for rewriting arg when exiting */
+	tcp->regs = x86_64_regs;
 #elif defined(IA64)
 #	define IA64_PSR_IS	((long)1 << 34)
 	if (upeek(tcp, PT_CR_IPSR, &psr) >= 0)
@@ -2171,12 +2173,14 @@ trace_syscall_exiting(struct tcb *tcp)
 int
 trace_syscall(struct tcb *tcp)
 {
+	int ret;
 	if (exiting(tcp)) {
+		ret = trace_syscall_exiting(tcp);
 		if (tcp->hijacked) {
 			sbox_restore_hijack(tcp);
 		}
-		return trace_syscall_exiting(tcp);
 	} else {
-		return trace_syscall_entering(tcp);
+		ret = trace_syscall_entering(tcp);
 	}
+	return ret;
 }

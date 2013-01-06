@@ -32,6 +32,7 @@
  */
 
 #include "defs.h"
+#include "sbox.h"
 #include <sys/user.h>
 #include <sys/param.h>
 

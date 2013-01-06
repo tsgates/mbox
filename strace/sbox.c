@@ -8,14 +8,18 @@
 #include <sys/uio.h>
 #include <sys/stat.h>
 
-void get_hpn_from_arg(struct tcb *tcp, int arg, char *path, int len)
+void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int len)
 {
     char pn[PATH_MAX];
-    const long ptr = tcp->u_arg[arg];
-    if (umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
-        pn[0] = '\0';
+    if (fd == AT_FDCWD) {
+        const long ptr = tcp->u_arg[arg];
+        if (umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
+            pn[0] = '\0';
+        }
+        realpath(pn, path);
+    } else {
+        
     }
-    realpath(pn, path);
 }
 
 void get_spn_from_hpn(char *hpn, char *spn, int len)
@@ -130,20 +134,14 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
     *last = '/';
 }
 
-int sbox_open(struct tcb *tcp)
+static
+void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
 {
-    if (!exiting(tcp)) {
-        sbox_open_enter(tcp, 0, tcp->u_arg[1]);
-    }
-}
-
-void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
-{
-    mode_t accmode;
+    int accmode;
     char hpn[PATH_MAX];
     char spn[PATH_MAX];
 
-    get_hpn_from_arg(tcp, arg, hpn, PATH_MAX);
+    get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
     // NOTE. ignore /dev and /proc
@@ -170,13 +168,13 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
     }
 
     // readonly, just use hostfs
-    accmode = mode & O_ACCMODE;
+    accmode = oflag & O_ACCMODE;
     if (accmode == O_RDONLY) {
         return;
     }
 
     // trunc
-    if (mode & O_TRUNC) {
+    if (oflag & O_TRUNC) {
         sbox_sync_parent_dirs(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
         return;
@@ -188,4 +186,20 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
         copyfile(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
     }
+}
+
+int sbox_open(struct tcb *tcp)
+{
+    if (!exiting(tcp)) {
+        sbox_open_enter(tcp, AT_FDCWD, 0, tcp->u_arg[1]);
+    }
+    return 0;
+}
+
+int sbox_openat(struct tcb *tcp) 
+{
+    if (!exiting(tcp)) {
+        sbox_open_enter(tcp, tcp->u_arg[0], 1, tcp->u_arg[2]);
+    }
+    return 0;
 }

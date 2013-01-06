@@ -361,7 +361,7 @@ struct tcb {
 	struct timeval etime;	/* Syscall entry time */
 				/* Support for tracing forked processes: */
 	long inst[2];		/* Saved clone args (badly named) */
-	
+
 	struct user_regs_struct regs; /* Registers fetched when entering */
 	bool hijacked;		/* Wheither hijacked or not */
 	int hijacked_old_arg;	/* Hijacked old argument */
@@ -536,6 +536,7 @@ extern long getrval2(struct tcb *);
  */
 extern int setbpt(struct tcb *);
 extern int clearbpt(struct tcb *);
+extern int mkdirp(char *pn, mode_t mode);
 
 extern const char *signame(int);
 extern int is_restart_error(struct tcb *);

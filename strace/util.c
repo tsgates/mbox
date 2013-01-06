@@ -1534,3 +1534,34 @@ clearbpt(struct tcb *tcp)
 	tcp->flags &= ~TCB_BPTSET;
 	return 0;
 }
+
+int
+mkdirp(char *pn, mode_t mode)
+{
+	bool done = 0;
+	int ret = 0;
+	char *iter = pn;
+
+	while (!done) {
+		// skip /
+		iter ++;
+		
+		// find next '/' or '\0'
+		for (; *iter != '\0' || *iter != '/'; iter ++);
+
+		// done
+		if (*iter == '\0') {
+			done = 1;
+		}
+
+		// make a dir
+		*iter = '\0';
+		ret = mkdir(pn, mode);
+		if (done) {
+			return ret == 0 || errno == EEXIST;
+		}
+
+		// continue
+		*iter = "/";
+	}
+}

@@ -411,12 +411,7 @@ decode_open(struct tcb *tcp, int offset)
 int
 sys_open(struct tcb *tcp)
 {
-    if (entering(tcp)) {
-        sbox_open_enter(tcp, 0, tcp->u_arg[1]);
-    } else {
-        /* XXX */
-    }
-    return 0;
+    return decode_open(tcp, 0);
 }
 
 int

@@ -432,7 +432,7 @@ static const struct xlat openmodessol[] = {
     { 0,        "O_RDWR"    },
     { 1,        "O_RDONLY"  },
     { 2,        "O_WRONLY"  },
-    { 0x80,     "O_NONBLOCK"    },
+    { 0x80,     "O_NONBLOCK"},
     { 8,        "O_APPEND"  },
     { 0x100,    "O_CREAT"   },
     { 0x200,    "O_TRUNC"   },

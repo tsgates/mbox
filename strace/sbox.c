@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "sbox.h"
+#include "dbg.h"
 
 #include <err.h>
 #include <dirent.h>
@@ -34,7 +35,7 @@ void set_regs_with_arg(struct user_regs_struct *regs, int arg, long val)
     }
 }
 
-void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len) 
+void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
 {
     struct iovec local[1], remote[1];
 
@@ -42,7 +43,7 @@ void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
     local[0].iov_len = len;
     remote[0].iov_base = (void*)ptr;
     remote[0].iov_len = len;
-    
+
     if (process_vm_writev(tcp->pid, local, 1, remote, 1, 0) < 0) {
         err(1, "writev failed: pid=%d", tcp->pid);
     }
@@ -75,17 +76,63 @@ void sbox_restore_hijack(struct tcb *tcp)
     tcp->hijacked = 0;
 }
 
-void sbox_sync_sbox_path(char *hpn, char *spn) 
+void sbox_sync_parent_dirs(char *hpn, char *spn)
 {
-    if (path_exists(hpn) && !path_exists(spn)) {
-        /* XXX. make it same as hostfs's mode */
-        mkdirp(spn, 0755);
+    // already synced
+    if (exists_parent_dir(spn)) {
+        return;
     }
-}
 
-void sbox_copy_to_sbox(char *hpn, char *spn) 
-{
+    // don't have to sync
+    if (!exists_parent_dir(hpn)) {
+        return;
+    }
+
+    dbg(path, "sync path '%s'", hpn);
     
+    // find the last / and split for a while
+    char *last = spn + strlen(spn);
+    for (; *last != '/' && last >= spn; last --);
+    if (*last != '/') {
+        return;
+    }
+
+    // split spn to iterate
+    *last = '\0';
+
+    int done = 0;
+    int ret = 0;
+    char *iter = spn + opt_root_len;
+
+    while (!done && *(++iter) != '\0') {
+        // find next '/' or '\0'
+        for (; *iter != '\0' && *iter != '/'; iter ++);
+
+        // done
+        if (*iter == '\0') {
+            done = 1;
+        }
+
+        // make a dir
+        *iter = '\0';
+
+        // fetch the mode
+        struct stat hpn_stat;
+        if (stat(spn + opt_root_len, &hpn_stat) < 0) {
+            break;
+        }
+        
+        ret = mkdir(spn, hpn_stat.st_mode);
+        if (done) {
+            break;
+        }
+
+        // continue
+        *iter = '/';
+    }
+
+    // restore
+    *last = '/';
 }
 
 void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
@@ -97,6 +144,13 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
     get_hpn_from_arg(tcp, arg, hpn, PATH_MAX);
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
+    // ignore /dev and /proc
+    //   /proc: need to emulate /proc/pid/fd/*
+    //   /dev : need to verify what is correct to do
+    if (strncmp(hpn, "/dev/", 5) == 0 || strncmp(hpn, "/proc/", 6) == 0) {
+        return;
+    }
+
     /* XXX */
     /*
     if (strstr(hpn, "testme")) {
@@ -104,9 +158,9 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
         sbox_hijack_str(tcp, arg, "/tmp/x");
     }
     */
-    
+
     // deleted (or masked) file/dir
-    
+
     // whenever path exists in the sandbox, go to there
     if (path_exists(spn)) {
         sbox_hijack_str(tcp, arg, spn);
@@ -121,15 +175,15 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
 
     // trunc
     if (mode & O_TRUNC) {
-        sbox_sync_sbox_path(hpn, spn);
+        sbox_sync_parent_dirs(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
         return;
     }
 
     // write or read/write
     if (accmode == O_RDWR || accmode == O_RDWR) {
-        sbox_sync_sbox_path(hpn, spn);
-        sbox_copy_to_sbox(hpn, spn);
+        sbox_sync_parent_dirs(hpn, spn);
+        copyfile(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
     }
 }

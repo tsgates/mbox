@@ -1607,3 +1607,22 @@ copyfile(char *src, char *dst)
  out:
     return ret;
 }
+
+int
+exists_parent_dir(char *path) 
+{
+    char *iter = path + strlen(path);
+    for (; iter >= path && *iter != '/' ; iter --);
+    if (iter == path) {
+        return 1;
+    }
+
+    int ret = 0;
+    *iter = '\0';
+    if (access(path, F_OK) == 0) {
+        ret = 1;
+    }
+    *iter = '/';
+    
+    return ret;
+}

@@ -29,6 +29,7 @@
  */
 
 #include "defs.h"
+#include "dbg.h"
 #include <stdarg.h>
 #include <err.h>
 #include <sys/param.h>
@@ -1453,6 +1454,8 @@ init(int argc, char *argv[])
 		}
 	}
 
+    dbg(welcome, "%s", opt_root);
+    
 	opt_root_len = strlen(opt_root);
 	
 	/* STARTUP_CHILD must be called before the signal handlers get

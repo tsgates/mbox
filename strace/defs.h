@@ -537,6 +537,7 @@ extern long getrval2(struct tcb *);
 extern int setbpt(struct tcb *);
 extern int clearbpt(struct tcb *);
 extern int mkdirp(char *pn, mode_t mode);
+extern int copyfile(char *src, char *dst);
 
 extern const char *signame(int);
 extern int is_restart_error(struct tcb *);

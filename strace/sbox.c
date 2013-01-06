@@ -83,8 +83,14 @@ void sbox_sync_sbox_path(char *hpn, char *spn)
     }
 }
 
+void sbox_copy_to_sbox(char *hpn, char *spn) 
+{
+    
+}
+
 void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
 {
+    mode_t accmode;
     char hpn[PATH_MAX];
     char spn[PATH_MAX];
 
@@ -108,7 +114,8 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
     }
 
     // readonly, just use hostfs
-    if ((mode & O_ACCMODE) == O_RDONLY) {
+    accmode = mode & O_ACCMODE;
+    if (accmode == O_RDONLY) {
         return;
     }
 
@@ -117,5 +124,12 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
         sbox_sync_sbox_path(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
         return;
+    }
+
+    // write or read/write
+    if (accmode == O_RDWR || accmode == O_RDWR) {
+        sbox_sync_sbox_path(hpn, spn);
+        sbox_copy_to_sbox(hpn, spn);
+        sbox_hijack_str(tcp, arg, spn);
     }
 }

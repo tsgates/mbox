@@ -538,6 +538,7 @@ extern int setbpt(struct tcb *);
 extern int clearbpt(struct tcb *);
 extern int mkdirp(char *pn, mode_t mode);
 extern int copyfile(char *src, char *dst);
+extern int exists_parent_dir(char *path);
 
 extern const char *signame(int);
 extern int is_restart_error(struct tcb *);
@@ -694,6 +695,7 @@ struct sysent {
 	unsigned nargs;
 	int	sys_flags;
 	int	(*sys_func)();
+	int	(*sbox_func)();
 	const char *sys_name;
 };
 

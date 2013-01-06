@@ -101,7 +101,7 @@
 #define MA MAX_ARGS
 
 static const struct sysent sysent0[] = {
-#include "syscallent.h"
+#include "sboxcall.h"
 };
 
 #if SUPPORTED_PERSONALITIES >= 2

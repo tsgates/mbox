@@ -107,26 +107,21 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
     while (!done && *(++iter) != '\0') {
         // find next '/' or '\0'
         for (; *iter != '\0' && *iter != '/'; iter ++);
-
         // done
         if (*iter == '\0') {
             done = 1;
         }
-
         // make a dir
         *iter = '\0';
-
         // fetch the mode
         struct stat hpn_stat;
         if (stat(spn + opt_root_len, &hpn_stat) < 0) {
             break;
         }
-        
         ret = mkdir(spn, hpn_stat.st_mode);
         if (done) {
             break;
         }
-
         // continue
         *iter = '/';
     }
@@ -144,7 +139,7 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
     get_hpn_from_arg(tcp, arg, hpn, PATH_MAX);
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
-    // ignore /dev and /proc
+    // NOTE. ignore /dev and /proc
     //   /proc: need to emulate /proc/pid/fd/*
     //   /dev : need to verify what is correct to do
     if (strncmp(hpn, "/dev/", 5) == 0 || strncmp(hpn, "/proc/", 6) == 0) {
@@ -159,7 +154,7 @@ void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
     }
     */
 
-    // deleted (or masked) file/dir
+    // TODO. deleted (or masked) file/dir
 
     // whenever path exists in the sandbox, go to there
     if (path_exists(spn)) {

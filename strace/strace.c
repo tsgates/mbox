@@ -1964,6 +1964,7 @@ trace(void)
              */
             continue;
         }
+        
  restart_tracee_with_sig_0:
         sig = 0;
  restart_tracee:

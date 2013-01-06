@@ -375,3 +375,6 @@ int sys_shmsys();
 #ifdef X32
 int sys_lseek32();
 #endif
+
+// list of sandbox calls
+int sbox_open();

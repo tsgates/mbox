@@ -152,3 +152,6 @@ $(ioctlent_h): $(top_builddir)/config.status $(ioctlent_h_deps)
 	cat $(ioctlent_h_deps) | \
 		$(COMPILE) -E -P - | \
 		LC_ALL=C sort -u -k3,3 -k2,2 > $@
+
+bpf-syscall.h: bpf-gen.sh linux/syscall.h
+	./bpf-gen.sh > $@

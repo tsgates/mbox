@@ -130,6 +130,13 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
     *last = '/';
 }
 
+int sbox_open(struct tcb *tcp)
+{
+    if (!exiting(tcp)) {
+        sbox_open_enter(tcp, 0, tcp->u_arg[1]);
+    }
+}
+
 void sbox_open_enter(struct tcb *tcp, int arg, mode_t mode)
 {
     mode_t accmode;

@@ -1149,6 +1149,9 @@ $(ioctlent_h): $(top_builddir)/config.status $(ioctlent_h_deps)
 		$(COMPILE) -E -P - | \
 		LC_ALL=C sort -u -k3,3 -k2,2 > $@
 
+bpf-syscall.h: bpf-gen.sh linux/syscall.h
+	./bpf-gen.sh > $@
+
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

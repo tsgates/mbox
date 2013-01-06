@@ -1,6 +1,6 @@
 { 3,    TD,     sys_read,                   NULL,	"read"                           },  /* 0 */
 { 3,    TD,     sys_write,                  NULL,	"write"                          },  /* 1 */
-{ 3,    TD|TF,  sys_open,                   NULL,	"open"                           },  /* 2 */
+{ 3,    TD|TF,  sys_open,               sbox_open,	"open"                           },  /* 2 */
 { 1,    TD,     sys_close,                  NULL,	"close"                          },  /* 3 */
 { 2,    TF,     sys_stat,                   NULL,	"stat"                           },  /* 4 */
 { 2,    TD,     sys_fstat,                  NULL,	"fstat"                          },  /* 5 */

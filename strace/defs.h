@@ -82,8 +82,8 @@ extern char *stpcpy(char *dst, const char *src);
 #endif
 
 #ifndef offsetof
-# define offsetof(type, member)	\
-	(((char *) &(((type *) NULL)->member)) - ((char *) (type *) NULL))
+# define offsetof(type, member) \
+    (((char *) &(((type *) NULL)->member)) - ((char *) (type *) NULL))
 #endif
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -98,17 +98,17 @@ extern char *stpcpy(char *dst, const char *src);
 /* Configuration section */
 #ifndef MAX_QUALS
 # if defined(MIPS)
-#  define MAX_QUALS	7000	/* maximum number of syscalls, signals, etc. */
+#  define MAX_QUALS 7000    /* maximum number of syscalls, signals, etc. */
 # else
-#  define MAX_QUALS	2048	/* maximum number of syscalls, signals, etc. */
+#  define MAX_QUALS 2048    /* maximum number of syscalls, signals, etc. */
 # endif
 #endif
 #ifndef DEFAULT_STRLEN
 /* default maximum # of bytes printed in `printstr', change with -s switch */
-# define DEFAULT_STRLEN	32
+# define DEFAULT_STRLEN 32
 #endif
 #ifndef DEFAULT_ACOLUMN
-# define DEFAULT_ACOLUMN	40	/* default alignment column for results */
+# define DEFAULT_ACOLUMN    40  /* default alignment column for results */
 #endif
 /*
  * Maximum number of args to a syscall.
@@ -117,7 +117,7 @@ extern char *stpcpy(char *dst, const char *src);
  * linux/<ARCH>/syscallent.h: all have nargs <= 6.
  */
 #ifndef MAX_ARGS
-# define MAX_ARGS	6
+# define MAX_ARGS   6
 #endif
 /* default sorting method for call profiling */
 #ifndef DEFAULT_SORTBY
@@ -258,54 +258,54 @@ extern long ptrace(int, int, char *, long);
 #endif
 
 #if !HAVE_DECL_PTRACE_SETOPTIONS
-# define PTRACE_SETOPTIONS	0x4200
+# define PTRACE_SETOPTIONS  0x4200
 #endif
 #if !HAVE_DECL_PTRACE_GETEVENTMSG
-# define PTRACE_GETEVENTMSG	0x4201
+# define PTRACE_GETEVENTMSG 0x4201
 #endif
 #if !HAVE_DECL_PTRACE_GETSIGINFO
-# define PTRACE_GETSIGINFO	0x4202
+# define PTRACE_GETSIGINFO  0x4202
 #endif
 
 #if !HAVE_DECL_PTRACE_O_TRACESYSGOOD
-# define PTRACE_O_TRACESYSGOOD	0x00000001
+# define PTRACE_O_TRACESYSGOOD  0x00000001
 #endif
 #if !HAVE_DECL_PTRACE_O_TRACEFORK
-# define PTRACE_O_TRACEFORK	0x00000002
+# define PTRACE_O_TRACEFORK 0x00000002
 #endif
 #if !HAVE_DECL_PTRACE_O_TRACEVFORK
-# define PTRACE_O_TRACEVFORK	0x00000004
+# define PTRACE_O_TRACEVFORK    0x00000004
 #endif
 #if !HAVE_DECL_PTRACE_O_TRACECLONE
-# define PTRACE_O_TRACECLONE	0x00000008
+# define PTRACE_O_TRACECLONE    0x00000008
 #endif
 #if !HAVE_DECL_PTRACE_O_TRACEEXEC
-# define PTRACE_O_TRACEEXEC	0x00000010
+# define PTRACE_O_TRACEEXEC 0x00000010
 #endif
 #if !HAVE_DECL_PTRACE_O_TRACEEXIT
-# define PTRACE_O_TRACEEXIT	0x00000040
+# define PTRACE_O_TRACEEXIT 0x00000040
 #endif
 #if !HAVE_DECL_PTRACE_O_TRACESECCOMP
 # define PTRACE_O_TRACESECCOMP 0x00000080
 #endif
 
 #if !HAVE_DECL_PTRACE_EVENT_FORK
-# define PTRACE_EVENT_FORK	1
+# define PTRACE_EVENT_FORK  1
 #endif
 #if !HAVE_DECL_PTRACE_EVENT_VFORK
-# define PTRACE_EVENT_VFORK	2
+# define PTRACE_EVENT_VFORK 2
 #endif
 #if !HAVE_DECL_PTRACE_EVENT_CLONE
-# define PTRACE_EVENT_CLONE	3
+# define PTRACE_EVENT_CLONE 3
 #endif
 #if !HAVE_DECL_PTRACE_EVENT_EXEC
-# define PTRACE_EVENT_EXEC	4
+# define PTRACE_EVENT_EXEC  4
 #endif
 #if !HAVE_DECL_PTRACE_EVENT_VFORK_DONE
-# define PTRACE_EVENT_VFORK_DONE	5
+# define PTRACE_EVENT_VFORK_DONE    5
 #endif
 #if !HAVE_DECL_PTRACE_EVENT_EXIT
-# define PTRACE_EVENT_EXIT	6
+# define PTRACE_EVENT_EXIT  6
 #endif
 #if !HAVE_DECL_PTRACE_EVENT_SECCOMP
 # define PTRACE_EVENT_SECCOMP 7
@@ -316,16 +316,16 @@ extern long ptrace(int, int, char *, long);
 
 #ifdef USE_SEIZE
 # undef PTRACE_SEIZE
-# define PTRACE_SEIZE		0x4206
+# define PTRACE_SEIZE       0x4206
 # undef PTRACE_INTERRUPT
-# define PTRACE_INTERRUPT	0x4207
+# define PTRACE_INTERRUPT   0x4207
 # undef PTRACE_LISTEN
-# define PTRACE_LISTEN		0x4208
+# define PTRACE_LISTEN      0x4208
 # undef PTRACE_SEIZE_DEVEL
-# define PTRACE_SEIZE_DEVEL	0x80000000
+# define PTRACE_SEIZE_DEVEL 0x80000000
 # undef PTRACE_EVENT_STOP
-# define PTRACE_EVENT_STOP	7
-# define PTRACE_EVENT_STOP1	128
+# define PTRACE_EVENT_STOP  7
+# define PTRACE_EVENT_STOP1 128
 #endif
 
 #if defined(I386)
@@ -337,42 +337,42 @@ extern long ia32;
 
 /* Trace Control Block */
 struct tcb {
-	int flags;		/* See below for TCB_ values */
-	int pid;		/* Process Id of this entry */
-	int u_nargs;		/* System call argument count */
-	int u_error;		/* Error code */
-	long scno;		/* System call number */
-	long u_arg[MAX_ARGS];	/* System call arguments */
+    int flags;                    /* See below for TCB_ values */
+    int pid;                      /* Process Id of this entry */
+    int u_nargs;                  /* System call argument count */
+    int u_error;                  /* Error code */
+    long scno;                    /* System call number */
+    long u_arg[MAX_ARGS];         /* System call arguments */
 #if defined(LINUX_MIPSN32) || defined(X32)
-	long long ext_arg[MAX_ARGS];	/* System call arguments */
+    long long ext_arg[MAX_ARGS];  /* System call arguments */
 #endif
-	long u_rval;		/* return value */
+    long u_rval;                  /* return value */
 #if defined(LINUX_MIPSN32) || defined(X32)
-	long long u_lrval;	/* long long return value */
+    long long u_lrval;            /* long long return value */
 #endif
 #if SUPPORTED_PERSONALITIES > 1
-	int currpers;		/* Personality at the time of scno update */
+    int currpers;                 /* Personality at the time of scno update */
 #endif
-	int curcol;		/* Output column for this process */
-	FILE *outf;		/* Output file for this process */
-	const char *auxstr;	/* Auxiliary info from syscall (see RVAL_STR) */
-	struct timeval stime;	/* System time usage as of last process wait */
-	struct timeval dtime;	/* Delta for system time usage */
-	struct timeval etime;	/* Syscall entry time */
-				/* Support for tracing forked processes: */
-	long inst[2];		/* Saved clone args (badly named) */
+    int curcol;                   /* Output column for this process */
+    FILE *outf;                   /* Output file for this process */
+    const char *auxstr;           /* Auxiliary info from syscall (see RVAL_STR) */
+    struct timeval stime;         /* System time usage as of last process wait */
+    struct timeval dtime;         /* Delta for system time usage */
+    struct timeval etime;         /* Syscall entry time */
+                                  /* Support for tracing forked processes: */
+    long inst[2];                 /* Saved clone args (badly named) */
 
-	struct user_regs_struct regs; /* Registers fetched when entering */
-	bool hijacked;		/* Wheither hijacked or not */
-	int hijacked_old_arg;	/* Hijacked old argument */
-	int hijacked_old_val;	/* Hijacked old value */
+    struct user_regs_struct regs; /* Registers fetched when entering */
+    bool hijacked;                /* Wheither hijacked or not */
+    int hijacked_old_arg;         /* Hijacked old argument */
+    int hijacked_old_val;         /* Hijacked old value */
 };
 
 /* TCB flags */
-#define TCB_INUSE		00001	/* This table entry is in use */
+#define TCB_INUSE       00001           /* This table entry is in use */
 /* We have attached to this process, but did not see it stopping yet */
-#define TCB_STARTUP		00002
-#define TCB_IGNORE_ONE_SIGSTOP	00004	/* Next SIGSTOP is to be ignored */
+#define TCB_STARTUP     00002
+#define TCB_IGNORE_ONE_SIGSTOP  00004   /* Next SIGSTOP is to be ignored */
 /*
  * Are we in system call entry or in syscall exit?
  *
@@ -391,13 +391,13 @@ struct tcb {
  *
  * Use entering(tcp) / exiting(tcp) to check this bit to make code more readable.
  */
-#define TCB_INSYSCALL	00010
-#define TCB_ATTACHED	00020   /* It is attached already */
+#define TCB_INSYSCALL   00010
+#define TCB_ATTACHED    00020   /* It is attached already */
 /* Are we PROG from "strace PROG [ARGS]" invocation? */
 #define TCB_STRACE_CHILD 0040
-#define TCB_BPTSET	00100	/* "Breakpoint" set after fork(2) */
-#define TCB_REPRINT	00200	/* We should reprint this syscall on exit */
-#define TCB_FILTERED	00400	/* This system call has been filtered out */
+#define TCB_BPTSET  00100   /* "Breakpoint" set after fork(2) */
+#define TCB_REPRINT 00200   /* We should reprint this syscall on exit */
+#define TCB_FILTERED    00400   /* This system call has been filtered out */
 /* x86 does not need TCB_WAITEXECVE.
  * It can detect SIGTRAP by looking at eax/rax.
  * See "not a syscall entry (eax = %ld)\n" message
@@ -410,29 +410,29 @@ struct tcb {
 /* This tracee has entered into execve syscall. Expect post-execve SIGTRAP
  * to happen. (When it is detected, tracee is continued and this bit is cleared.)
  */
-# define TCB_WAITEXECVE	01000
+# define TCB_WAITEXECVE 01000
 #endif
 
 /* qualifier flags */
-#define QUAL_TRACE	0001	/* this system call should be traced */
-#define QUAL_ABBREV	0002	/* abbreviate the structures of this syscall */
-#define QUAL_VERBOSE	0004	/* decode the structures of this syscall */
-#define QUAL_RAW	0010	/* print all args in hex for this syscall */
-#define QUAL_SIGNAL	0020	/* report events with this signal */
-#define QUAL_FAULT	0040	/* report events with this fault */
-#define QUAL_READ	0100	/* dump data read on this file descriptor */
-#define QUAL_WRITE	0200	/* dump data written to this file descriptor */
+#define QUAL_TRACE  0001    /* this system call should be traced */
+#define QUAL_ABBREV 0002    /* abbreviate the structures of this syscall */
+#define QUAL_VERBOSE    0004    /* decode the structures of this syscall */
+#define QUAL_RAW    0010    /* print all args in hex for this syscall */
+#define QUAL_SIGNAL 0020    /* report events with this signal */
+#define QUAL_FAULT  0040    /* report events with this fault */
+#define QUAL_READ   0100    /* dump data read on this file descriptor */
+#define QUAL_WRITE  0200    /* dump data written to this file descriptor */
 
-#define entering(tcp)	(!((tcp)->flags & TCB_INSYSCALL))
-#define exiting(tcp)	((tcp)->flags & TCB_INSYSCALL)
-#define syserror(tcp)	((tcp)->u_error != 0)
-#define verbose(tcp)	(qual_flags[(tcp)->scno] & QUAL_VERBOSE)
-#define abbrev(tcp)	(qual_flags[(tcp)->scno] & QUAL_ABBREV)
-#define filtered(tcp)	((tcp)->flags & TCB_FILTERED)
+#define entering(tcp)   (!((tcp)->flags & TCB_INSYSCALL))
+#define exiting(tcp)    ((tcp)->flags & TCB_INSYSCALL)
+#define syserror(tcp)   ((tcp)->u_error != 0)
+#define verbose(tcp)    (qual_flags[(tcp)->scno] & QUAL_VERBOSE)
+#define abbrev(tcp) (qual_flags[(tcp)->scno] & QUAL_ABBREV)
+#define filtered(tcp)   ((tcp)->flags & TCB_FILTERED)
 
 struct xlat {
-	int val;
-	const char *str;
+    int val;
+    const char *str;
 };
 
 extern const struct xlat open_mode_flags[];
@@ -441,36 +441,37 @@ extern const struct xlat struct_user_offsets[];
 extern const struct xlat open_access_modes[];
 
 /* Format of syscall return values */
-#define RVAL_DECIMAL	000	/* decimal format */
-#define RVAL_HEX	001	/* hex format */
-#define RVAL_OCTAL	002	/* octal format */
-#define RVAL_UDECIMAL	003	/* unsigned decimal format */
+#define RVAL_DECIMAL    000 /* decimal format */
+#define RVAL_HEX        001 /* hex format */
+#define RVAL_OCTAL      002 /* octal format */
+#define RVAL_UDECIMAL   003 /* unsigned decimal format */
 #if defined(LINUX_MIPSN32) || defined(X32)
 # if 0 /* unused so far */
-#  define RVAL_LDECIMAL	004	/* long decimal format */
-#  define RVAL_LHEX	005	/* long hex format */
-#  define RVAL_LOCTAL	006	/* long octal format */
+#  define RVAL_LDECIMAL 004 /* long decimal format */
+#  define RVAL_LHEX     005 /* long hex format */
+#  define RVAL_LOCTAL   006 /* long octal format */
 # endif
-# define RVAL_LUDECIMAL	007	/* long unsigned decimal format */
+# define RVAL_LUDECIMAL 007 /* long unsigned decimal format */
 #endif
-#define RVAL_MASK	007	/* mask for these values */
+#define RVAL_MASK       007 /* mask for these values */
 
-#define RVAL_STR	010	/* Print `auxstr' field after return val */
-#define RVAL_NONE	020	/* Print nothing */
+#define RVAL_STR        010 /* Print `auxstr' field after return val */
+#define RVAL_NONE       020 /* Print nothing */
 
-#define TRACE_FILE	001	/* Trace file-related syscalls. */
-#define TRACE_IPC	002	/* Trace IPC-related syscalls. */
-#define TRACE_NETWORK	004	/* Trace network-related syscalls. */
-#define TRACE_PROCESS	010	/* Trace process-related syscalls. */
-#define TRACE_SIGNAL	020	/* Trace signal-related syscalls. */
-#define TRACE_DESC	040	/* Trace file descriptor-related syscalls. */
-#define SYSCALL_NEVER_FAILS	0100	/* Syscall is always successful. */
+#define TRACE_FILE      001 /* Trace file-related syscalls. */
+#define TRACE_IPC       002 /* Trace IPC-related syscalls. */
+#define TRACE_NETWORK   004 /* Trace network-related syscalls. */
+#define TRACE_PROCESS   010 /* Trace process-related syscalls. */
+#define TRACE_SIGNAL    020 /* Trace signal-related syscalls. */
+#define TRACE_DESC      040 /* Trace file descriptor-related syscalls. */
+#define SYSCALL_NEVER_FAILS 0100    /* Syscall is always successful. */
 
 typedef enum {
-	CFLAG_NONE = 0,
-	CFLAG_ONLY_STATS,
-	CFLAG_BOTH
+    CFLAG_NONE = 0,
+    CFLAG_ONLY_STATS,
+    CFLAG_BOTH
 } cflag_t;
+
 extern cflag_t cflag;
 extern int *qual_flags;
 extern bool debug_flag;
@@ -521,8 +522,8 @@ extern void count_syscall(struct tcb *, struct timeval *);
 extern void call_summary(FILE *);
 
 extern int umoven(struct tcb *, long, int, char *);
-#define umove(pid, addr, objp)	\
-	umoven((pid), (addr), sizeof(*(objp)), (char *) (objp))
+#define umove(pid, addr, objp)  \
+    umoven((pid), (addr), sizeof(*(objp)), (char *) (objp))
 extern int umovestr(struct tcb *, long, int, char *);
 extern int upeek(struct tcb *, long, long *);
 #if defined(SPARC) || defined(SPARC64) || defined(IA64) || defined(SH)
@@ -557,10 +558,10 @@ extern int string_quote(const char *, char *, long, int);
  */
 # if HAVE_LITTLE_ENDIAN_LONG_LONG
 #  define LONG_LONG(_l,_h) \
-	((long long)((unsigned long long)(unsigned)(_l) | ((unsigned long long)(_h)<<32)))
+    ((long long)((unsigned long long)(unsigned)(_l) | ((unsigned long long)(_h)<<32)))
 # else
 #  define LONG_LONG(_l,_h) \
-	((long long)((unsigned long long)(unsigned)(_h) | ((unsigned long long)(_l)<<32)))
+    ((long long)((unsigned long long)(unsigned)(_h) | ((unsigned long long)(_l)<<32)))
 # endif
 extern int printllval(struct tcb *, const char *, int);
 #endif
@@ -581,10 +582,10 @@ extern void printpathn(struct tcb *, long, int);
 #define TIMESPEC_TEXT_BUFSIZE (sizeof(long)*3 * 2 + sizeof("{%u, %u}"))
 #define TIMEVAL_TEXT_BUFSIZE  TIMESPEC_TEXT_BUFSIZE
 extern void printtv_bitness(struct tcb *, long, enum bitness_t, int);
-#define printtv(tcp, addr)	\
-	printtv_bitness((tcp), (addr), BITNESS_CURRENT, 0)
-#define printtv_special(tcp, addr)	\
-	printtv_bitness((tcp), (addr), BITNESS_CURRENT, 1)
+#define printtv(tcp, addr)  \
+    printtv_bitness((tcp), (addr), BITNESS_CURRENT, 0)
+#define printtv_special(tcp, addr)  \
+    printtv_bitness((tcp), (addr), BITNESS_CURRENT, 1)
 extern char *sprinttv(char *, struct tcb *, long, enum bitness_t, int special);
 extern void print_timespec(struct tcb *, long);
 extern void sprint_timespec(char *, struct tcb *, long);
@@ -652,33 +653,33 @@ extern void __tabto(void);
 extern void __tprintf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 extern void __tprints(const char *str);
 
-#define tprintf(fmt, ...)					\
-	({							\
-		if (debug_flag) {				\
-			__tprintf(fmt, __VA_ARGS__);		\
-		}						\
-	})
+#define tprintf(fmt, ...)                \
+    ({                                   \
+        if (debug_flag) {                \
+            __tprintf(fmt, __VA_ARGS__); \
+        }                                \
+    })
 
-#define tprints(str)						\
-	({							\
-		if (debug_flag) {				\
-			__tprints(str);				\
-		}						\
-	})
+#define tprints(str)                     \
+    ({                                   \
+        if (debug_flag) {                \
+            __tprints(str);              \
+        }                                \
+    })
 
-#define line_ended()						\
-	({							\
-		if (debug_flag) {				\
-			__line_ended();				\
-		}						\
-	})
+#define line_ended()                     \
+    ({                                   \
+        if (debug_flag) {                \
+            __line_ended();              \
+        }                                \
+    })
 
-#define tabto()							\
-	({							\
-		if (debug_flag) {				\
-			__tabto();				\
-		}						\
-	})
+#define tabto()                          \
+    ({                                   \
+        if (debug_flag) {                \
+            __tabto();                   \
+        }                                \
+    })
 
 #if SUPPORTED_PERSONALITIES > 1
 extern void set_personality(int personality);
@@ -692,17 +693,17 @@ extern const int personality_wordsize[];
 #endif
 
 struct sysent {
-	unsigned nargs;
-	int	sys_flags;
-	int	(*sys_func)();
-	int	(*sbox_func)();
-	const char *sys_name;
+    unsigned nargs;
+    int sys_flags;
+    int (*sys_func)();
+    int (*sbox_func)();
+    const char *sys_name;
 };
 
 struct ioctlent {
-	const char *doth;
-	const char *symbol;
-	unsigned long code;
+    const char *doth;
+    const char *symbol;
+    unsigned long code;
 };
 
 extern const struct sysent *sysent;

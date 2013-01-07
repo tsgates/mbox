@@ -1,5 +1,9 @@
 #pragma once
 
+#define RW_NONE    0
+#define RW_WRITING 1
+#define RW_FORCE   2
+
 static inline
 int path_exists(char *path)
 {

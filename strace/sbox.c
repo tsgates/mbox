@@ -190,7 +190,7 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
 
 int sbox_open(struct tcb *tcp)
 {
-    if (!exiting(tcp)) {
+    if (entering(tcp)) {
         sbox_open_enter(tcp, AT_FDCWD, 0, tcp->u_arg[1]);
     }
     return 0;
@@ -198,8 +198,51 @@ int sbox_open(struct tcb *tcp)
 
 int sbox_openat(struct tcb *tcp) 
 {
-    if (!exiting(tcp)) {
+    if (entering(tcp)) {
         sbox_open_enter(tcp, tcp->u_arg[0], 1, tcp->u_arg[2]);
+    }
+    return 0;
+}
+
+int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
+{
+    char hpn[PATH_MAX];
+    char spn[PATH_MAX];
+
+    get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
+    get_spn_from_hpn(hpn, spn, PATH_MAX);
+
+    // XXX. or hpn is deleted
+    if (flag != RW_NONE || path_exists(spn)) {
+        // to be written to spn, so sync parent paths
+        if (flag != RW_NONE) {
+            sbox_sync_parent_dirs(hpn, spn);
+        }
+
+        // writing intent (not force)
+        if (flag == RW_WRITING) {
+            copyfile(hpn, spn);
+        }
+
+        // finally hijack path (arg)
+        sbox_hijack_str(tcp, arg, spn);
+    }
+
+    return 0;
+}
+
+int sbox_stat(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_NONE);
+    }
+    return 0;
+}
+
+int sbox_newfstatat(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_NONE);
     }
     return 0;
 }

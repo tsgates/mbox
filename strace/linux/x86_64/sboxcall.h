@@ -1,10 +1,10 @@
 { 3,    TD,     sys_read,                   NULL,	"read"                           },  /* 0 */
 { 3,    TD,     sys_write,                  NULL,	"write"                          },  /* 1 */
-{ 3,    TD|TF,  sys_open,               sbox_open,	"open"                           },  /* 2 */
+{ 3,    TD|TF,  sys_open,                   sbox_open,          "open"               },  /* 2 */
 { 1,    TD,     sys_close,                  NULL,	"close"                          },  /* 3 */
-{ 2,    TF,     sys_stat,                   NULL,	"stat"                           },  /* 4 */
+{ 2,    TF,     sys_stat,                   sbox_stat,          "stat"               },  /* 4 */
 { 2,    TD,     sys_fstat,                  NULL,	"fstat"                          },  /* 5 */
-{ 2,    TF,     sys_lstat,                  NULL,	"lstat"                          },  /* 6 */
+{ 2,    TF,     sys_lstat,                  sbox_stat,          "lstat"              },  /* 6 */
 { 3,    TD,     sys_poll,                   NULL,	"poll"                           },  /* 7 */
 { 3,    TD,     sys_lseek,                  NULL,	"lseek"                          },  /* 8 */
 { 6,    TD,     sys_mmap,                   NULL,	"mmap"                           },  /* 9 */
@@ -255,12 +255,12 @@
 { 3,    TD,     sys_inotify_add_watch,      NULL,   "inotify_add_watch"              },  /* 254 */
 { 2,    TD,     sys_inotify_rm_watch,       NULL,   "inotify_rm_watch"               },  /* 255 */
 { 4,    0,      sys_migrate_pages,          NULL,   "migrate_pages"                  },  /* 256 */
-{ 4,    TD|TF,  sys_openat,             sbox_openat,"openat"                         },  /* 257 */
+{ 4,    TD|TF,  sys_openat,                 sbox_openat,        "openat"             },  /* 257 */
 { 3,    TD|TF,  sys_mkdirat,                NULL,   "mkdirat"                        },  /* 258 */
 { 4,    TD|TF,  sys_mknodat,                NULL,   "mknodat"                        },  /* 259 */
 { 5,    TD|TF,  sys_fchownat,               NULL,   "fchownat"                       },  /* 260 */
 { 3,    TD|TF,  sys_futimesat,              NULL,   "futimesat"                      },  /* 261 */
-{ 4,    TD|TF,  sys_newfstatat,             NULL,   "newfstatat"                     },  /* 262 */
+{ 4,    TD|TF,  sys_newfstatat,             sbox_newfstatat,    "newfstatat"         },  /* 262 */
 { 3,    TD|TF,  sys_unlinkat,               NULL,   "unlinkat"                       },  /* 263 */
 { 4,    TD|TF,  sys_renameat,               NULL,   "renameat"                       },  /* 264 */
 { 5,    TD|TF,  sys_linkat,                 NULL,   "linkat"                         },  /* 265 */

@@ -379,3 +379,6 @@ int sys_lseek32();
 // list of sandbox calls
 int sbox_open();
 int sbox_openat();
+int sbox_stat();
+int sbox_lstat();
+int sbox_newfstatat();

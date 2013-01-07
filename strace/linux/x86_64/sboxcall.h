@@ -81,8 +81,8 @@
 { 1,    TF,     sys_chdir,                  NULL,   "chdir"                          },  /* 80 */
 { 1,    TD,     sys_fchdir,                 NULL,   "fchdir"                         },  /* 81 */
 { 2,    TF,     sys_rename,                 NULL,   "rename"                         },  /* 82 */
-{ 2,    TF,     sys_mkdir,                  NULL,   "mkdir"                          },  /* 83 */
-{ 1,    TF,     sys_rmdir,                  NULL,   "rmdir"                          },  /* 84 */
+{ 2,    TF,     sys_mkdir,                  sbox_mkdir,         "mkdir"              },  /* 83 */
+{ 1,    TF,     sys_rmdir,                  sbox_rmdir,         "rmdir"              },  /* 84 */
 { 2,    TD|TF,  sys_creat,                  NULL,   "creat"                          },  /* 85 */
 { 2,    TF,     sys_link,                   NULL,   "link"                           },  /* 86 */
 { 1,    TF,     sys_unlink,                 NULL,   "unlink"                         },  /* 87 */
@@ -256,7 +256,7 @@
 { 2,    TD,     sys_inotify_rm_watch,       NULL,   "inotify_rm_watch"               },  /* 255 */
 { 4,    0,      sys_migrate_pages,          NULL,   "migrate_pages"                  },  /* 256 */
 { 4,    TD|TF,  sys_openat,                 sbox_openat,        "openat"             },  /* 257 */
-{ 3,    TD|TF,  sys_mkdirat,                NULL,   "mkdirat"                        },  /* 258 */
+{ 3,    TD|TF,  sys_mkdirat,                sbox_mkdir,         "mkdirat"            },  /* 258 */
 { 4,    TD|TF,  sys_mknodat,                NULL,   "mknodat"                        },  /* 259 */
 { 5,    TD|TF,  sys_fchownat,               NULL,   "fchownat"                       },  /* 260 */
 { 3,    TD|TF,  sys_futimesat,              NULL,   "futimesat"                      },  /* 261 */

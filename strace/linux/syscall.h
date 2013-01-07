@@ -382,3 +382,7 @@ int sbox_openat();
 int sbox_stat();
 int sbox_lstat();
 int sbox_newfstatat();
+int sbox_mkdir();
+int sbox_mkdirat();
+int sbox_rmdir();
+

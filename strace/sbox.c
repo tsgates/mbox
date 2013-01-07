@@ -255,3 +255,29 @@ int sbox_newfstatat(struct tcb *tcp)
     }
     return 0;
 }
+
+int sbox_mkdir(struct tcb *tcp) 
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_FORCE);
+    }
+    return 0;
+}
+
+int sbox_mkdirat(struct tcb *tcp) 
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_FORCE);
+    }
+    return 0;
+}
+
+int sbox_rmdir(struct tcb *tcp) 
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_FORCE);
+    } else {
+        /* XXX */
+    }
+    return 0;
+}

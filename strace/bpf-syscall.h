@@ -7,5 +7,8 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(stat),
     TRACE_SYSCALL(lstat),
     TRACE_SYSCALL(newfstatat),
+    TRACE_SYSCALL(mkdir),
+    TRACE_SYSCALL(mkdirat),
+    TRACE_SYSCALL(rmdir),
     ALLOWED,
 };

@@ -335,37 +335,39 @@ extern struct pt_regs i386_regs;
 extern long ia32;
 #endif
 
+#define ARG_RET (-1)
+
 /* Trace Control Block */
 struct tcb {
-    int flags;                    /* See below for TCB_ values */
-    int pid;                      /* Process Id of this entry */
-    int u_nargs;                  /* System call argument count */
-    int u_error;                  /* Error code */
-    long scno;                    /* System call number */
-    long u_arg[MAX_ARGS];         /* System call arguments */
+    int flags;                     /* See below for TCB_ values */
+    int pid;                       /* Process Id of this entry */
+    int u_nargs;                   /* System call argument count */
+    int u_error;                   /* Error code */
+    long scno;                     /* System call number */
+    long u_arg[MAX_ARGS];          /* System call arguments */
 #if defined(LINUX_MIPSN32) || defined(X32)
-    long long ext_arg[MAX_ARGS];  /* System call arguments */
+    long long ext_arg[MAX_ARGS];   /* System call arguments */
 #endif
-    long u_rval;                  /* return value */
+    long u_rval;                   /* return value */
 #if defined(LINUX_MIPSN32) || defined(X32)
-    long long u_lrval;            /* long long return value */
+    long long u_lrval;             /* long long return value */
 #endif
 #if SUPPORTED_PERSONALITIES > 1
-    int currpers;                 /* Personality at the time of scno update */
+    int currpers;                  /* Personality at the time of scno update */
 #endif
-    int curcol;                   /* Output column for this process */
-    FILE *outf;                   /* Output file for this process */
-    const char *auxstr;           /* Auxiliary info from syscall (see RVAL_STR) */
-    struct timeval stime;         /* System time usage as of last process wait */
-    struct timeval dtime;         /* Delta for system time usage */
-    struct timeval etime;         /* Syscall entry time */
-                                  /* Support for tracing forked processes: */
-    long inst[2];                 /* Saved clone args (badly named) */
+    int curcol;                    /* Output column for this process */
+    FILE *outf;                    /* Output file for this process */
+    const char *auxstr;            /* Auxiliary info from syscall (see RVAL_STR) */
+    struct timeval stime;          /* System time usage as of last process wait */
+    struct timeval dtime;          /* Delta for system time usage */
+    struct timeval etime;          /* Syscall entry time */
+                                   /* Support for tracing forked processes: */
+    long inst[2];                  /* Saved clone args (badly named) */
 
-    struct user_regs_struct regs; /* Registers fetched when entering */
-    bool hijacked;                /* Wheither hijacked or not */
-    int hijacked_old_arg;         /* Hijacked old argument */
-    int hijacked_old_val;         /* Hijacked old value */
+    struct user_regs_struct regs;  /* Registers fetched when entering */
+    int hijacked;                  /* Wheither hijacked or not */
+    int hijacked_args[MAX_ARGS+1]; /* Hijacked old argument */
+    int hijacked_vals[MAX_ARGS+1]; /* Hijacked old value */
 };
 
 /* TCB flags */

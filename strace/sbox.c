@@ -18,7 +18,7 @@ void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int l
         }
         realpath(pn, path);
     } else {
-        
+
     }
 }
 
@@ -30,12 +30,13 @@ void get_spn_from_hpn(char *hpn, char *spn, int len)
 void set_regs_with_arg(struct user_regs_struct *regs, int arg, long val)
 {
     switch (arg) {
-    case 0: regs->rdi = val; break;
-    case 1: regs->rsi = val; break;
-    case 2: regs->rdx = val; break;
-    case 3: regs->r10 = val; break;
-    case 4: regs->r8  = val; break;
-    case 5: regs->r9  = val; break;
+    case  0: regs->rdi = val; break;
+    case  1: regs->rsi = val; break;
+    case  2: regs->rdx = val; break;
+    case  3: regs->r10 = val; break;
+    case  4: regs->r8  = val; break;
+    case  5: regs->r9  = val; break;
+    case -1: regs->rax = val; break;
     }
 }
 
@@ -64,9 +65,10 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
 {
     struct user_regs_struct regs = tcp->regs;
 
-    tcp->hijacked = 1;
-    tcp->hijacked_old_arg = arg;
-    tcp->hijacked_old_val = tcp->u_arg[arg];
+    int n = tcp->hijacked;
+    tcp->hijacked_args[n] = arg;
+    tcp->hijacked_vals[n] = tcp->u_arg[arg];
+    tcp->hijacked ++;
 
     /* XXX. need to find the readonly memory */
     long new_ptr = regs.rsp - PATH_MAX * (arg+1);
@@ -76,7 +78,14 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
 
 void sbox_restore_hijack(struct tcb *tcp)
 {
-    sbox_rewrite_arg(tcp, tcp->hijacked_old_arg, tcp->hijacked_old_val);
+    int i;
+    for (i = 0; i < tcp->hijacked; i ++) {
+        // ignore restoring rax
+        if (tcp->hijacked_args[i] == ARG_RET) {
+            continue;
+        }
+        sbox_rewrite_arg(tcp, tcp->hijacked_args[i], tcp->hijacked_vals[i]);
+    }
     tcp->hijacked = 0;
 }
 
@@ -93,7 +102,7 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
     }
 
     dbg(path, "sync path '%s'", hpn);
-    
+
     // find the last / and split for a while
     char *last = spn + strlen(spn);
     for (; *last != '/' && last >= spn; last --);
@@ -196,7 +205,7 @@ int sbox_open(struct tcb *tcp)
     return 0;
 }
 
-int sbox_openat(struct tcb *tcp) 
+int sbox_openat(struct tcb *tcp)
 {
     if (entering(tcp)) {
         sbox_open_enter(tcp, tcp->u_arg[0], 1, tcp->u_arg[2]);

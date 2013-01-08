@@ -19,7 +19,7 @@
 { 5,    TD,     sys_pwrite,                 NULL,	"pwrite"                         },  /* 18 */
 { 3,    TD,     sys_readv,                  NULL,	"readv"                          },  /* 19 */
 { 3,    TD,     sys_writev,                 NULL,	"writev"                         },  /* 20 */
-{ 2,    TF,     sys_access,                 NULL,	"access"                         },  /* 21 */
+{ 2,    TF,     sys_access,                 sbox_access,        "access"             },  /* 21 */
 { 1,    TD,     sys_pipe,                   NULL,	"pipe"                           },  /* 22 */
 { 5,    TD,     sys_select,                 NULL,	"select"                         },  /* 23 */
 { 0,    0,      sys_sched_yield,            NULL,	"sched_yield"                    },  /* 24 */
@@ -267,7 +267,7 @@
 { 3,    TD|TF,  sys_symlinkat,              NULL,   "symlinkat"                      },  /* 266 */
 { 4,    TD|TF,  sys_readlinkat,             NULL,   "readlinkat"                     },  /* 267 */
 { 3,    TD|TF,  sys_fchmodat,               NULL,   "fchmodat"                       },  /* 268 */
-{ 3,    TD|TF,  sys_faccessat,              NULL,   "faccessat"                      },  /* 269 */
+{ 3,    TD|TF,  sys_faccessat,              sbox_faccessat,     "faccessat"          },  /* 269 */
 { 6,    TD,     sys_pselect6,               NULL,   "pselect6"                       },  /* 270 */
 { 5,    TD,     sys_ppoll,                  NULL,   "ppoll"                          },  /* 271 */
 { 1,    TP,     sys_unshare,                NULL,   "unshare"                        },  /* 272 */

@@ -147,8 +147,6 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
 
 void sbox_hijack_arg(struct tcb *tcp, int arg, long new)
 {
-    struct user_regs_struct regs = tcp->regs;
-
     int n = tcp->hijacked;
     tcp->hijacked_args[n] = arg;
     tcp->hijacked_vals[n] = tcp->u_arg[arg];
@@ -316,6 +314,8 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
 
         // finally hijack path (arg)
         sbox_hijack_str(tcp, arg, spn);
+
+        dbg(path, "> rewrite to %s", spn);
     }
 
     return 0;
@@ -378,7 +378,7 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
             get_spn_from_hpn(hpn, spn, PATH_MAX);
 
             // emulate successful deletion
-            if (file_exists(hpn)) {
+            if (path_exists(hpn)) {
                 sbox_hijack_arg(tcp, ARG_RET, 0);
             }
         }
@@ -392,6 +392,24 @@ int sbox_unlink(struct tcb *tcp)
 }
 
 int sbox_unlinkat(struct tcb *tcp)
+{
+    return sbox_unlink_general(tcp, tcp->u_arg[0], 1);
+}
+
+int sbox_access_general(struct tcb *tcp, int fd, int arg) 
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, fd, arg, RW_NONE);
+    }
+    return 0;
+}
+
+int sbox_access(struct tcb *tcp)
+{
+    return sbox_access_general(tcp, AT_FDCWD, 0);
+}
+
+int sbox_faccessat(struct tcb *tcp) 
 {
     return sbox_unlink_general(tcp, tcp->u_arg[0], 1);
 }

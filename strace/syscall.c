@@ -1592,11 +1592,11 @@ trace_syscall_entering(struct tcb *tcp)
 
         if (fflush(tcp->outf) == EOF)
             return -1;
-    } else {
-        /* sbox */
-        if (sysent[tcp->scno].sbox_func) {
-            sysent[tcp->scno].sbox_func(tcp);
-        }
+    }
+    
+    /* sbox */
+    if (sysent[tcp->scno].sbox_func) {
+        sysent[tcp->scno].sbox_func(tcp);
     }
     
  ret:

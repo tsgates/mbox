@@ -96,6 +96,7 @@ static int opt_intr;
 
 char *opt_root = NULL;
 int opt_root_len = 0;
+char *opt_test = NULL;
 bool opt_seccomp = 0;
 bool opt_interactive = 0;
 
@@ -1267,7 +1268,7 @@ get_os_release(void)
  */
 static void __attribute__ ((noinline))
 init(int argc, char *argv[])
-{
+{    
     struct tcb *tcp;
     int c, i;
     struct sigaction sa;
@@ -1303,8 +1304,10 @@ init(int argc, char *argv[])
     qualify("abbrev=all");
     qualify("verbose=all");
     qualify("signal=all");
+
+    bool opt_test_flag = 0;
     while ((c = getopt(argc, argv,
-        "+bcdDhqvVxyzis"
+        "+bcdDhqvVxyzist"
         "e:o:O:S:E:I:C:r:")) != EOF) {
         switch (c) {
         case 'b':
@@ -1377,6 +1380,9 @@ init(int argc, char *argv[])
             break;
         case 'r':
             opt_root = strdup(optarg);
+            break;
+        case 't':
+            opt_test_flag = 1;
             break;
         default:
             usage(stderr, 1);
@@ -1459,6 +1465,11 @@ init(int argc, char *argv[])
     }
 
     dbg(welcome, "%s", opt_root);
+    if (opt_test_flag) {
+        opt_test = strdup(argv[0]);
+        dbg(welcome, "Test %s", opt_test);
+        sbox_check_test_cond(opt_test, "pre");
+    }
 
     opt_root_len = strlen(opt_root);
 
@@ -1964,7 +1975,7 @@ trace(void)
              */
             continue;
         }
-        
+
  restart_tracee_with_sig_0:
         sig = 0;
  restart_tracee:
@@ -1992,6 +2003,11 @@ main(int argc, char *argv[])
     /* Run main tracing loop */
     if (trace() < 0)
         return 1;
+
+    /* Check test post condition */
+    if (opt_test) {
+        sbox_check_test_cond(opt_test, "post");
+    }
 
     cleanup();
     fflush(NULL);

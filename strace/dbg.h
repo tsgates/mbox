@@ -12,6 +12,8 @@
 
  enum { dbg_welcome  = 1 };
  enum { dbg_path     = 1 };
+ enum { dbg_info     = 1 };
+ enum { dbg_test     = 1 };
 
 # define dbg( filter, msg, ... )                \
     do {                                        \

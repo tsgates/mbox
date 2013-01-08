@@ -385,4 +385,6 @@ int sbox_newfstatat();
 int sbox_mkdir();
 int sbox_mkdirat();
 int sbox_rmdir();
+int sbox_unlink();
+int sbox_unlinkat();
 

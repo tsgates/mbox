@@ -8,6 +8,34 @@
 #include <sys/uio.h>
 #include <sys/stat.h>
 
+void sbox_check_test_cond(char *pn, char *key)
+{
+    FILE *fp = fopen(pn , "r");
+    if (!fp) {
+        err(1, "fopen");
+    }
+
+    char m1[128];
+    char m2[128];
+    snprintf(m1, sizeof(m1), "# %s:", key);
+    snprintf(m2, sizeof(m2), "#%s:", key);
+
+    size_t len = 0;
+    char *line = NULL;
+    while (getline(&line, &len, fp) != -1) {
+        if (strncmp(line, m1, strlen(m1)) == 0 ||
+            strncmp(line, m2, strlen(m2)) == 0) {
+            char *cmd = strchr(line, ':');
+            cmd ++;
+            if (system(cmd) != 0) {
+                dbg(info, "Failed to check %s condition: %s", key, cmd);
+                exit(1);
+            }
+        }
+    }
+    fclose(fp);
+}
+
 void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int len)
 {
     char pn[PATH_MAX];
@@ -18,7 +46,7 @@ void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int l
         }
         realpath(pn, path);
     } else {
-
+        /* XXX */
     }
 }
 
@@ -74,6 +102,18 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
     long new_ptr = regs.rsp - PATH_MAX * (arg+1);
     sbox_remote_write(tcp, new_ptr, new, strlen(new)+1);
     sbox_rewrite_arg(tcp, arg, new_ptr);
+}
+
+void sbox_hijack_arg(struct tcb *tcp, int arg, long new)
+{
+    struct user_regs_struct regs = tcp->regs;
+
+    int n = tcp->hijacked;
+    tcp->hijacked_args[n] = arg;
+    tcp->hijacked_vals[n] = tcp->u_arg[arg];
+    tcp->hijacked ++;
+
+    sbox_rewrite_arg(tcp, arg, new);
 }
 
 void sbox_restore_hijack(struct tcb *tcp)
@@ -256,7 +296,7 @@ int sbox_newfstatat(struct tcb *tcp)
     return 0;
 }
 
-int sbox_mkdir(struct tcb *tcp) 
+int sbox_mkdir(struct tcb *tcp)
 {
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_FORCE);
@@ -264,7 +304,7 @@ int sbox_mkdir(struct tcb *tcp)
     return 0;
 }
 
-int sbox_mkdirat(struct tcb *tcp) 
+int sbox_mkdirat(struct tcb *tcp)
 {
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_FORCE);
@@ -272,7 +312,7 @@ int sbox_mkdirat(struct tcb *tcp)
     return 0;
 }
 
-int sbox_rmdir(struct tcb *tcp) 
+int sbox_rmdir(struct tcb *tcp)
 {
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_FORCE);
@@ -280,4 +320,37 @@ int sbox_rmdir(struct tcb *tcp)
         /* XXX */
     }
     return 0;
+}
+
+int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
+{
+    char hpn[PATH_MAX];
+    char spn[PATH_MAX];
+
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, fd, arg, RW_FORCE);
+    } else {
+        // failed on sandbox
+        if (tcp->regs.rax < 0) {
+            // get hpn/spn
+            get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
+            get_spn_from_hpn(hpn, spn, PATH_MAX);
+
+            // emulate successful deletion
+            if (file_exists(hpn)) {
+                sbox_hijack_arg(tcp, ARG_RET, 0);
+            }
+        }
+    }
+    return 0;
+}
+
+int sbox_unlink(struct tcb *tcp)
+{
+    return sbox_unlink_general(tcp, AT_FDCWD, 0);
+}
+
+int sbox_unlinkat(struct tcb *tcp)
+{
+    return sbox_unlink_general(tcp, tcp->u_arg[0], 1);
 }

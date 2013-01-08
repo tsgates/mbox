@@ -85,7 +85,7 @@
 { 1,    TF,     sys_rmdir,                  sbox_rmdir,         "rmdir"              },  /* 84 */
 { 2,    TD|TF,  sys_creat,                  NULL,   "creat"                          },  /* 85 */
 { 2,    TF,     sys_link,                   NULL,   "link"                           },  /* 86 */
-{ 1,    TF,     sys_unlink,                 NULL,   "unlink"                         },  /* 87 */
+{ 1,    TF,     sys_unlink,                 sbox_unlink,        "unlink"             },  /* 87 */
 { 2,    TF,     sys_symlink,                NULL,   "symlink"                        },  /* 88 */
 { 3,    TF,     sys_readlink,               NULL,   "readlink"                       },  /* 89 */
 { 2,    TF,     sys_chmod,                  NULL,   "chmod"                          },  /* 90 */
@@ -261,7 +261,7 @@
 { 5,    TD|TF,  sys_fchownat,               NULL,   "fchownat"                       },  /* 260 */
 { 3,    TD|TF,  sys_futimesat,              NULL,   "futimesat"                      },  /* 261 */
 { 4,    TD|TF,  sys_newfstatat,             sbox_newfstatat,    "newfstatat"         },  /* 262 */
-{ 3,    TD|TF,  sys_unlinkat,               NULL,   "unlinkat"                       },  /* 263 */
+{ 3,    TD|TF,  sys_unlinkat,               sbox_unlinkat,      "unlinkat"           },  /* 263 */
 { 4,    TD|TF,  sys_renameat,               NULL,   "renameat"                       },  /* 264 */
 { 5,    TD|TF,  sys_linkat,                 NULL,   "linkat"                         },  /* 265 */
 { 3,    TD|TF,  sys_symlinkat,              NULL,   "symlinkat"                      },  /* 266 */

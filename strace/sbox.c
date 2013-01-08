@@ -5,11 +5,33 @@
 #include <err.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <assert.h>
+#include <stdlib.h>
 #include <sys/uio.h>
 #include <sys/stat.h>
 
+static
+void sbox_setenv(void)
+{
+    char spwd[PATH_MAX];
+    char hpwd[PATH_MAX];
+
+    getcwd(hpwd, sizeof(hpwd));
+    
+    // setenvs for test scripts
+    if (!getenv("SPWD")) {
+        snprintf(spwd, sizeof(spwd), "%s/%s", opt_root, hpwd);
+        setenv("SPWD", spwd, 1);
+    }
+    if (!getenv("HPWD")) {
+        setenv("HPWD", hpwd, 1);
+    }
+}
+
 void sbox_check_test_cond(char *pn, char *key)
 {
+    sbox_setenv();
+
     FILE *fp = fopen(pn , "r");
     if (!fp) {
         err(1, "fopen");
@@ -33,20 +55,39 @@ void sbox_check_test_cond(char *pn, char *key)
             }
         }
     }
+
     fclose(fp);
 }
 
+//
+// return a path relative to fd from a syscall
+//
 void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int len)
 {
+    // ugly realpath requirement
+    assert(len == PATH_MAX);
+
     char pn[PATH_MAX];
+    const long ptr = tcp->u_arg[arg];
+    if (umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
+        pn[0] = '\0';
+    }
+
     if (fd == AT_FDCWD) {
-        const long ptr = tcp->u_arg[arg];
-        if (umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
-            pn[0] = '\0';
-        }
         realpath(pn, path);
     } else {
-        /* XXX */
+        char root[PATH_MAX];
+        char proc[PATH_MAX];
+        char fdpath[PATH_MAX];
+
+        snprintf(proc, sizeof(proc), "/proc/%d/fd/%d", tcp->pid, fd);
+        if (readlink(proc, root, sizeof(root)) < 0) {
+            /* fd doesn't exist*/
+            root[0] = '\0';
+        }
+        snprintf(fdpath, sizeof(fdpath), "%s/%s", root, pn);
+        realpath(fdpath, path);
+        dbg(test, "XXX %d/%s -> %s", fd, pn, fdpath);
     }
 }
 

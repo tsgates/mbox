@@ -1,0 +1,21 @@
+# NOTE
+
+ - tests-sbox/test-*.sh should be initiated in the fixed path
+
+    $ ./strace -t tests-sbox/test-vim.sh
+
+ - check pre/post conditions for the script (if -t is provided to sandbox.py)
+
+    #!/bin/bash -x
+    #
+    # pre: test -f README
+    # post: diff "$SPWD/README" "$HPWD/README" | grep -q Python
+    #
+
+    vim -c ":delete" -c ":wq" README
+
+   - # pre: [shell commands]
+   - # post: [shell commands]
+
+   - $SPWD: cwd of sandbox
+   - $HPWD: cwd of host

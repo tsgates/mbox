@@ -368,6 +368,7 @@ struct tcb {
     int hijacked;                  /* Wheither hijacked or not */
     int hijacked_args[MAX_ARGS+1]; /* Hijacked old argument */
     int hijacked_vals[MAX_ARGS+1]; /* Hijacked old value */
+    int dentfd;                    /* File descriptor for a getdent call on hostfs */
 };
 
 /* TCB flags */

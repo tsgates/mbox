@@ -389,4 +389,5 @@ int sbox_unlink();
 int sbox_unlinkat();
 int sbox_access();
 int sbox_faccessat();
+int sbox_getdents();
 

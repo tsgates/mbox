@@ -76,7 +76,7 @@
 { 1,    TD,     sys_fdatasync,              NULL,   "fdatasync"                      },  /* 75 */
 { 2,    TF,     sys_truncate,               NULL,   "truncate"                       },  /* 76 */
 { 2,    TD,     sys_ftruncate,              NULL,   "ftruncate"                      },  /* 77 */
-{ 3,    TD,     sys_getdents,               NULL,   "getdents"                       },  /* 78 */
+{ 3,    TD,     sys_getdents,               sbox_getdents,      "getdents"           },  /* 78 */
 { 2,    TF,     sys_getcwd,                 NULL,   "getcwd"                         },  /* 79 */
 { 1,    TF,     sys_chdir,                  NULL,   "chdir"                          },  /* 80 */
 { 1,    TD,     sys_fchdir,                 NULL,   "fchdir"                         },  /* 81 */

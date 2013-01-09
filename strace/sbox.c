@@ -9,6 +9,16 @@
 #include <stdlib.h>
 #include <sys/uio.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
+
+struct linux_dirent {
+    long           d_ino;
+    off_t          d_off;
+    unsigned short d_reclen;
+    char           d_name[];
+};
+
+#define min(a, b) ((a) < (b)? (a): (b))
 
 static
 void sbox_setenv(void)
@@ -17,7 +27,7 @@ void sbox_setenv(void)
     char hpwd[PATH_MAX];
 
     getcwd(hpwd, sizeof(hpwd));
-    
+
     // setenvs for test scripts
     if (!getenv("SPWD")) {
         snprintf(spwd, sizeof(spwd), "%s/%s", opt_root, hpwd);
@@ -59,6 +69,22 @@ void sbox_check_test_cond(char *pn, char *key)
     fclose(fp);
 }
 
+int get_fdpath(int pid, int fd, char *path, int len)
+{
+    ssize_t read;
+    char proc[PATH_MAX];
+
+    snprintf(proc, sizeof(proc), "/proc/%d/fd/%d", pid, fd);
+    if ((read = readlink(proc, path, len - 1)) < 0) {
+        /* fd doesn't exist*/
+        path[0] = '\0';
+        return 0;
+    }
+    path[read] = '\0';
+    dbg(test, "> %s", path);
+    return 1;
+}
+
 //
 // return a path relative to fd from a syscall
 //
@@ -77,16 +103,13 @@ void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int l
         realpath(pn, path);
     } else {
         char root[PATH_MAX];
-        char proc[PATH_MAX];
         char fdpath[PATH_MAX];
 
-        snprintf(proc, sizeof(proc), "/proc/%d/fd/%d", tcp->pid, fd);
-        if (readlink(proc, root, sizeof(root)) < 0) {
-            /* fd doesn't exist*/
-            root[0] = '\0';
-        }
+        get_fdpath(tcp->pid, fd, root, sizeof(root));
+
         snprintf(fdpath, sizeof(fdpath), "%s/%s", root, pn);
         realpath(fdpath, path);
+        
         dbg(test, "XXX %d/%s -> %s", fd, pn, fdpath);
     }
 }
@@ -396,7 +419,7 @@ int sbox_unlinkat(struct tcb *tcp)
     return sbox_unlink_general(tcp, tcp->u_arg[0], 1);
 }
 
-int sbox_access_general(struct tcb *tcp, int fd, int arg) 
+int sbox_access_general(struct tcb *tcp, int fd, int arg)
 {
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, fd, arg, RW_NONE);
@@ -409,7 +432,87 @@ int sbox_access(struct tcb *tcp)
     return sbox_access_general(tcp, AT_FDCWD, 0);
 }
 
-int sbox_faccessat(struct tcb *tcp) 
+int sbox_faccessat(struct tcb *tcp)
 {
     return sbox_unlink_general(tcp, tcp->u_arg[0], 1);
+}
+
+int sbox_getdents(struct tcb *tcp)
+{
+    static char buf[4096];
+    static char tmp[4096];
+
+    char spn[PATH_MAX];
+    char hpn[PATH_MAX];
+
+    ptrace(PTRACE_GETREGS, tcp->pid, NULL, (long) &tcp->regs);
+    
+    // after pumping files on sandboxfs
+    if (exiting(tcp) && tcp->regs.rax == 0) {
+        // just done with sandboxfs
+        if (tcp->dentfd == -1) {
+
+            // get hpn
+            if (!get_fdpath(tcp->pid, tcp->u_arg[0], spn, sizeof(spn))) {
+                // wrong fd anyway
+                return 0;
+            }
+
+            // check if calling to sandboxfs
+            if (strncmp(spn, opt_root, opt_root_len) != 0) {
+                // return if calls on hostfs
+                return 0;
+            }
+
+            strncpy(hpn, spn + opt_root_len, sizeof(hpn));
+            dbg(getdents, "spn:%s", hpn);
+            dbg(getdents, "hpn:%s", hpn);
+            
+            tcp->dentfd = open(hpn, O_RDONLY | O_DIRECTORY);
+            if (tcp->dentfd < 0) {
+                return 0;
+            }
+        }
+
+        // manually invoke getdents on hostfs.
+        // to overwrite less than the memory of tracee (dirp), we use
+        // buf with the size less that the given value (count).
+        int len = syscall(SYS_getdents, tcp->dentfd, buf,
+                          min(sizeof(buf), tcp->u_arg[2]));
+
+        // done with pumping dirs of sandboxfs
+        if (len == 0) {
+            close(tcp->dentfd);
+            tcp->dentfd = -1;
+            return 0;
+        }
+
+        // filter dir contents
+        int dst_iter = 0;
+        int src_iter = 0;
+        while (src_iter < len) {
+            struct linux_dirent *d = (struct dirent *)(buf + src_iter);
+            // ignore . and ..
+            if (d->d_name[0] == '.') {
+                if (d->d_name[1] == '\0' ||
+                    (d->d_name[1] == '.' && d->d_name[2] == '\0')) {
+                    src_iter += d->d_reclen;
+                    continue;
+                }
+            }
+
+            dbg(getdents, "[%3d] %s", src_iter, d->d_name);
+            
+            // copy to dest
+            memcpy(tmp + dst_iter, buf + src_iter, d->d_reclen);
+            src_iter += d->d_reclen;
+            dst_iter += d->d_reclen;
+        }
+
+        // copy buf/ret to tracee
+        sbox_hijack_arg(tcp, ARG_RET, dst_iter);
+        sbox_remote_write(tcp, tcp->u_arg[1], tmp, dst_iter);
+    }
+
+    return 0;
 }

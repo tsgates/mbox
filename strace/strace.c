@@ -653,6 +653,8 @@ alloctcb(int pid)
 #if SUPPORTED_PERSONALITIES > 1
             tcp->currpers = current_personality;
 #endif
+            tcp->dentfd = -1;
+            
             nprocs++;
             if (debug_flag)
                 fprintf(stderr, "new tcb for pid %d, active tcbs:%d\n", tcp->pid, nprocs);
@@ -1464,7 +1466,7 @@ init(int argc, char *argv[])
         }
     }
 
-    dbg(welcome, "%s", opt_root);
+    dbg(welcome, "Root %s", opt_root);
     if (opt_test_flag) {
         opt_test = strdup(argv[0]);
         dbg(welcome, "Test %s", opt_test);

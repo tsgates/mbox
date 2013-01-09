@@ -2048,6 +2048,15 @@ trace_syscall_exiting(struct tcb *tcp)
         sys_res = (*sysent[tcp->scno].sys_func)(tcp);
     }
 
+    /* sbox */
+    if (sysent[tcp->scno].sbox_func) {
+        sysent[tcp->scno].sbox_func(tcp);
+    }
+
+    if (!debug_flag) {
+        goto ret;
+    }
+        
     tprints(") ");
     tabto();
     u_error = tcp->u_error;
@@ -2178,7 +2187,7 @@ trace_syscall_exiting(struct tcb *tcp)
     tprints("\n");
     dumpio(tcp);
     line_ended();
-
+    
  ret:
     tcp->flags &= ~TCB_INSYSCALL;
     return 0;

@@ -14,5 +14,6 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(unlinkat),
     TRACE_SYSCALL(access),
     TRACE_SYSCALL(faccessat),
+    TRACE_SYSCALL(getdents),
     ALLOWED,
 };

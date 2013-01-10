@@ -369,11 +369,11 @@ struct tcb {
     int hijacked;                  /* Wheither hijacked or not */
     int hijacked_args[MAX_ARGS+1]; /* Hijacked old argument */
     int hijacked_vals[MAX_ARGS+1]; /* Hijacked old value */
-    
+
     int dentfd_host;               /* FD for a getdent call on hostfs */
-    int dentfd_sbox;               /* Sandboxfs FD for the corresponding to hostfs */ 
+    int dentfd_sbox;               /* Sandboxfs FD for the corresponding to hostfs */
     char dentfd_spn[PATH_MAX];     /* Sandboxfs pathname */
-    
+
 };
 
 /* TCB flags */
@@ -548,6 +548,7 @@ extern int clearbpt(struct tcb *);
 extern int mkdirp(char *pn, mode_t mode);
 extern int copyfile(char *src, char *dst);
 extern int exists_parent_dir(char *path);
+extern char kbhit(void);
 
 extern const char *signame(int);
 extern int is_restart_error(struct tcb *);

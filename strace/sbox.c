@@ -500,7 +500,7 @@ int sbox_getdents(struct tcb *tcp)
         int dst_iter = 0;
         int src_iter = 0;
         while (src_iter < len) {
-            struct linux_dirent *d = (struct dirent *)(buf + src_iter);
+            struct linux_dirent *d = (struct linux_dirent *)(buf + src_iter);
             // ignore . and ..
             if (d->d_name[0] == '.') {
                 if (d->d_name[1] == '\0' ||
@@ -572,14 +572,74 @@ void _sbox_walk(const char *root, const char *name,
     closedir(dir);
 }
 
+/* interactive mode */
 static
-int _sbox_interactive_menu(char *spn, char *hpn) 
+char prompt(const char *menu)
 {
+    char c;
+    printf(" %s ? > ", menu);
+    c = kbhit();
+    printf("\n");
+    return c;
+}
+
+static
+int _sh_diff(char *a, char *b)
+{
+    int pid = fork();
+    if (!pid) {
+        execlp("diff", "diff", "-urN", a, b, NULL);
+        err(1, "diff");
+    }
+    waitpid(pid, NULL, 0);
     return 0;
 }
 
 static
-int _sbox_diff_files(char *spn, char *hpn) 
+int _sh_commit(char *spn, char *hpn)
+{
+    printf("  > Commiting %s\n", hpn);
+    copyfile(spn, hpn);
+}
+
+static
+int _sbox_interactive_menu(char *spn, char *hpn)
+{
+    static int opt_commit_all = 0;
+
+    const char *menu \
+        = "[C]:commit all, [c]:commit, [i]:ignore, [d]:diff, [q]:quit";
+
+    if (opt_commit_all) {
+        _sh_commit(spn, hpn);
+        return;
+    }
+
+    while (1) {
+        printf("F:%s\n", hpn);
+        switch (prompt(menu)) {
+        case 'C':
+            opt_commit_all = 1;
+            /* fall-in */
+        case 'c':
+            _sh_commit(spn, hpn);
+            /* fall-in */
+        case 'i':
+            return 0;
+            break;
+        case 'd':
+            _sh_diff(spn, hpn);
+            break;
+        case 'q':
+            exit(0);
+            break;
+        }
+    }
+    return 0;
+}
+
+static
+int _sbox_diff_files(char *spn, char *hpn)
 {
     printf(" > F: %s\n", spn);
     return 0;

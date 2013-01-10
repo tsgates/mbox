@@ -36,6 +36,8 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
 
 #if HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -1604,7 +1606,6 @@ copyfile(char *src, char *dst)
     close(src_fd);
     close(dst_fd);
 
- out:
     return ret;
 }
 
@@ -1625,4 +1626,36 @@ exists_parent_dir(char *path)
     *iter = '/';
     
     return ret;
+}
+
+char
+kbhit(void) {
+    char c;
+    
+    struct termios oldt, newt;
+
+    /*tcgetattr gets the parameters of the current terminal
+      STDIN_FILENO will tell tcgetattr that it should write the settings
+      of stdin to oldt*/
+    tcgetattr(STDIN_FILENO, &oldt);
+    /*now the settings will be copied*/
+    newt = oldt;
+
+    /*ICANON normally takes care that one line at a time will be processed
+      that means it will return if it sees a "\n" or an EOF or an EOL*/
+    newt.c_lflag &= ~(ICANON);
+
+    /*Those new settings will be set to STDIN
+      TCSANOW tells tcsetattr to change attributes immediately. */
+    tcsetattr( STDIN_FILENO, TCSANOW, &newt);
+
+    /*This is your part:
+      I choose 'e' to end input. Notice that EOF is also turned off
+      in the non-canonical mode*/
+    c = getchar();
+
+    /*restore the old settings*/
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+
+    return c;
 }

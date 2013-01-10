@@ -653,7 +653,8 @@ alloctcb(int pid)
 #if SUPPORTED_PERSONALITIES > 1
             tcp->currpers = current_personality;
 #endif
-            tcp->dentfd = -1;
+            tcp->dentfd_sbox = -1;
+            tcp->dentfd_host = -1;
             
             nprocs++;
             if (debug_flag)

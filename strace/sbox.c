@@ -109,7 +109,7 @@ void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int l
 
         snprintf(fdpath, sizeof(fdpath), "%s/%s", root, pn);
         realpath(fdpath, path);
-        
+
         dbg(test, "XXX %d/%s -> %s", fd, pn, fdpath);
     }
 }
@@ -445,15 +445,14 @@ int sbox_getdents(struct tcb *tcp)
     char spn[PATH_MAX];
     char hpn[PATH_MAX];
 
-    ptrace(PTRACE_GETREGS, tcp->pid, NULL, (long) &tcp->regs);
-    
     // after pumping files on sandboxfs
     if (exiting(tcp) && tcp->regs.rax == 0) {
-        // just done with sandboxfs
-        if (tcp->dentfd == -1) {
+        int hostfd = tcp->u_arg[0];
 
+        // just done with sandboxfs
+        if (tcp->dentfd_sbox == -1) {
             // get hpn
-            if (!get_fdpath(tcp->pid, tcp->u_arg[0], spn, sizeof(spn))) {
+            if (!get_fdpath(tcp->pid, hostfd, spn, sizeof(spn))) {
                 // wrong fd anyway
                 return 0;
             }
@@ -467,23 +466,33 @@ int sbox_getdents(struct tcb *tcp)
             strncpy(hpn, spn + opt_root_len, sizeof(hpn));
             dbg(getdents, "spn:%s", hpn);
             dbg(getdents, "hpn:%s", hpn);
-            
-            tcp->dentfd = open(hpn, O_RDONLY | O_DIRECTORY);
-            if (tcp->dentfd < 0) {
+
+            strncpy(tcp->dentfd_spn, spn, sizeof(tcp->dentfd_spn));
+
+            tcp->dentfd_host = hostfd;
+            tcp->dentfd_sbox = open(hpn, O_RDONLY | O_DIRECTORY);
+            if (tcp->dentfd_sbox < 0) {
                 return 0;
             }
+        }
+
+        // NOTE. we only support, single contiguous getdent()
+        if (tcp->dentfd_host != hostfd) {
+            dbg(fatal, "we only support a single getdent() at a time");
+            exit(1);
         }
 
         // manually invoke getdents on hostfs.
         // to overwrite less than the memory of tracee (dirp), we use
         // buf with the size less that the given value (count).
-        int len = syscall(SYS_getdents, tcp->dentfd, buf,
+        int len = syscall(SYS_getdents, tcp->dentfd_sbox, buf,
                           min(sizeof(buf), tcp->u_arg[2]));
 
         // done with pumping dirs of sandboxfs
         if (len == 0) {
-            close(tcp->dentfd);
-            tcp->dentfd = -1;
+            close(tcp->dentfd_sbox);
+            tcp->dentfd_sbox = -1;
+            tcp->dentfd_host = -1;
             return 0;
         }
 
@@ -501,8 +510,14 @@ int sbox_getdents(struct tcb *tcp)
                 }
             }
 
-            dbg(getdents, "[%3d] %s", src_iter, d->d_name);
-            
+            // ignore dentry if exists in sandboxfs
+            snprintf(hpn, sizeof(hpn), "%s/%s", tcp->dentfd_spn, d->d_name);
+            if (path_exists(hpn)) {
+                dbg(getdents, "[%3d] found in sbox: %s", src_iter, hpn);
+                src_iter += d->d_reclen;
+                continue;
+            }
+
             // copy to dest
             memcpy(tmp + dst_iter, buf + src_iter, d->d_reclen);
             src_iter += d->d_reclen;

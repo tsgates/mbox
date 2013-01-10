@@ -15,6 +15,7 @@
  enum { dbg_info     = 1 };
  enum { dbg_test     = 1 };
  enum { dbg_getdents = 1 };
+ enum { dbg_fatal    = 1 };
 
 # define dbg( filter, msg, ... )                \
     do {                                        \

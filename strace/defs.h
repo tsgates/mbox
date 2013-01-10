@@ -56,6 +56,7 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
+#include <dirent.h>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
@@ -368,7 +369,11 @@ struct tcb {
     int hijacked;                  /* Wheither hijacked or not */
     int hijacked_args[MAX_ARGS+1]; /* Hijacked old argument */
     int hijacked_vals[MAX_ARGS+1]; /* Hijacked old value */
-    int dentfd;                    /* File descriptor for a getdent call on hostfs */
+    
+    int dentfd_host;               /* FD for a getdent call on hostfs */
+    int dentfd_sbox;               /* Sandboxfs FD for the corresponding to hostfs */ 
+    char dentfd_spn[PATH_MAX];     /* Sandboxfs pathname */
+    
 };
 
 /* TCB flags */

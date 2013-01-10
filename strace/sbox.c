@@ -531,3 +531,63 @@ int sbox_getdents(struct tcb *tcp)
 
     return 0;
 }
+
+static
+void _sbox_walk(const char *root, const char *name,
+                int (*handler)(char *spn, char *hpn))
+{
+    char pn[PATH_MAX];
+    if (name) {
+        snprintf(pn, sizeof(pn), "%s/%s", root, name);
+    } else {
+        strncpy(pn, root, sizeof(pn));
+    }
+
+    DIR *dir = opendir(pn);
+    if (!dir) {
+        err(1, "opendir");
+    }
+
+    struct dirent *d;
+    while ((d = readdir(dir)) != NULL) {
+        const char *n = d->d_name;
+        if (d->d_type & DT_DIR) {
+            if ((n[0] == '.' && n[1] == '\0') ||
+                (n[0] == '.' && n[1] == '.' && n[2] == '\0')) {
+                continue;
+            }
+            _sbox_walk(pn, n, handler);
+        } else {
+            char spn[PATH_MAX];
+            char hpn[PATH_MAX];
+            snprintf(spn, sizeof(spn), "%s/%s", pn, n);
+            strncpy(hpn, spn + opt_root_len, sizeof(hpn));
+
+            if (handler) {
+                handler(spn, hpn);
+            }
+        }
+    }
+
+    closedir(dir);
+}
+
+static
+int _sbox_interactive_menu(char *spn, char *hpn) 
+{
+    return 0;
+}
+
+static
+int _sbox_diff_files(char *spn, char *hpn) 
+{
+    printf(" > F: %s\n", spn);
+    return 0;
+}
+
+int sbox_interactive(void)
+{
+    printf("%s:\n", opt_root);
+    _sbox_walk(opt_root, NULL, _sbox_diff_files);
+    _sbox_walk(opt_root, NULL, _sbox_interactive_menu);
+}

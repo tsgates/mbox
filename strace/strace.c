@@ -2012,6 +2012,11 @@ main(int argc, char *argv[])
         sbox_check_test_cond(opt_test, "post");
     }
 
+    /* Interactive */
+    if (opt_interactive) {
+        sbox_interactive();
+    }
+    
     cleanup();
     fflush(NULL);
     if (exit_code > 0xff) {

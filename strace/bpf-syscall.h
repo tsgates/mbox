@@ -17,6 +17,5 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(getdents),
     TRACE_SYSCALL(getcwd),
     TRACE_SYSCALL(chdir),
-    TRACE_SYSCALL(fchdir),
     ALLOWED,
 };

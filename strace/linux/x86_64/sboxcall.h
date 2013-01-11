@@ -79,7 +79,7 @@
 { 3,    TD,     sys_getdents,               sbox_getdents,      "getdents"           },  /* 78 */
 { 2,    TF,     sys_getcwd,                 sbox_getcwd,        "getcwd"             },  /* 79 */
 { 1,    TF,     sys_chdir,                  sbox_chdir,         "chdir"              },  /* 80 */
-{ 1,    TD,     sys_fchdir,                 sbox_fchdir,        "fchdir"             },  /* 81 */
+{ 1,    TD,     sys_fchdir,                 NULL,   "fchdir"                         },  /* 81 */
 { 2,    TF,     sys_rename,                 NULL,   "rename"                         },  /* 82 */
 { 2,    TF,     sys_mkdir,                  sbox_mkdir,         "mkdir"              },  /* 83 */
 { 1,    TF,     sys_rmdir,                  sbox_rmdir,         "rmdir"              },  /* 84 */

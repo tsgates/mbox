@@ -565,19 +565,16 @@ int sbox_getdents(struct tcb *tcp)
 }
 
 /*
- *
+ * allows chdir into sboxfs or hostfs since we sanitize getcwd()
+ * 
+ * NOTE. fchdir() doesn't need to be handled because open() already
+ * rewrites the path if needed.
  */
 int sbox_chdir(struct tcb *tcp)
 {
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_NONE);
     }
-    return 0;
-}
-
-int sbox_fchdir(struct tcb *tcp)
-{
-    /* XXX */
     return 0;
 }
 

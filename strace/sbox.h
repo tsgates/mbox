@@ -17,3 +17,5 @@ extern void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len);
 extern void sbox_rewrite_arg(struct tcb *tcp, int arg, long val);
 extern void sbox_hijack_str(struct tcb *tcp, int arg, char *new);
 extern void sbox_restore_hijack(struct tcb *tcp);
+
+#define is_in_sboxfs(pn) (strncmp(pn, opt_root, opt_root_len) == 0)

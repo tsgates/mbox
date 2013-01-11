@@ -390,4 +390,6 @@ int sbox_unlinkat();
 int sbox_access();
 int sbox_faccessat();
 int sbox_getdents();
-
+int sbox_getcwd();
+int sbox_chdir();
+int sbox_fchdir();

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <sys/uio.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <sys/syscall.h>
 
 struct linux_dirent {
@@ -38,7 +39,7 @@ void sbox_setenv(void)
     }
 }
 
-void sbox_check_test_cond(char *pn, char *key)
+void sbox_check_test_cond(const char *pn, const char *key)
 {
     sbox_setenv();
 
@@ -69,7 +70,7 @@ void sbox_check_test_cond(char *pn, char *key)
     fclose(fp);
 }
 
-int get_fdpath(int pid, int fd, char *path, int len)
+int get_fd_path(int pid, int fd, char *path, int len)
 {
     ssize_t read;
     char proc[PATH_MAX];
@@ -82,6 +83,30 @@ int get_fdpath(int pid, int fd, char *path, int len)
     }
     path[read] = '\0';
     dbg(test, "> %s", path);
+    return 1;
+}
+
+int get_cwd_path(int pid, char *path, int len)
+{
+    ssize_t read;
+    char proc[PATH_MAX];
+
+    snprintf(proc, sizeof(proc), "/proc/%d/cwd", pid);
+    if ((read = readlink(proc, path, len - 1)) < 0) {
+        err(1, "proc/cwd");
+    }
+    path[read] = '\0';
+
+    // check if cwd is under sboxfs
+    if (is_in_sboxfs(path)) {
+        char *iter;
+        for (iter = path; *(iter + opt_root_len) != '\0'; iter ++) {
+            *iter = *(iter + opt_root_len);
+        }
+        *iter = '\0';
+        dbg(test, "cwd in sboxfs: %s", path);
+    }
+
     return 1;
 }
 
@@ -99,19 +124,27 @@ void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int l
         pn[0] = '\0';
     }
 
-    if (fd == AT_FDCWD) {
-        realpath(pn, path);
-    } else {
-        char root[PATH_MAX];
-        char fdpath[PATH_MAX];
-
-        get_fdpath(tcp->pid, fd, root, sizeof(root));
-
-        snprintf(fdpath, sizeof(fdpath), "%s/%s", root, pn);
-        realpath(fdpath, path);
-
-        dbg(test, "XXX %d/%s -> %s", fd, pn, fdpath);
+    // abspath
+    if (pn[0] == '/') {
+        strncpy(path, pn, len);
+        normalize_path(path);
+        return;
     }
+
+    // relpath, so resolve it
+    char root[PATH_MAX];
+    if (fd == AT_FDCWD) {
+        // read /proc/pid/cwd
+        get_cwd_path(tcp->pid, root, sizeof(root));
+    } else {
+        // read /proc/pid/fd/#
+        get_fd_path(tcp->pid, fd, root, sizeof(root));
+    }
+
+    snprintf(path, len, "%s/%s", root, pn);
+    normalize_path(path);
+    
+    // dbg(test, "XXX %s -> %s", pn, path);
 }
 
 void get_spn_from_hpn(char *hpn, char *spn, int len)
@@ -216,7 +249,6 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
     *last = '\0';
 
     int done = 0;
-    int ret = 0;
     char *iter = spn + opt_root_len;
 
     while (!done && *(++iter) != '\0') {
@@ -233,7 +265,7 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
         if (stat(spn + opt_root_len, &hpn_stat) < 0) {
             break;
         }
-        ret = mkdir(spn, hpn_stat.st_mode);
+        mkdir(spn, hpn_stat.st_mode);
         if (done) {
             break;
         }
@@ -338,7 +370,7 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
         // finally hijack path (arg)
         sbox_hijack_str(tcp, arg, spn);
 
-        dbg(path, "> rewrite to %s", spn);
+        dbg(path, "rewrite to %s", spn);
     }
 
     return 0;
@@ -452,7 +484,7 @@ int sbox_getdents(struct tcb *tcp)
         // just done with sandboxfs
         if (tcp->dentfd_sbox == -1) {
             // get hpn
-            if (!get_fdpath(tcp->pid, hostfd, spn, sizeof(spn))) {
+            if (!get_fd_path(tcp->pid, hostfd, spn, sizeof(spn))) {
                 // wrong fd anyway
                 return 0;
             }
@@ -532,6 +564,49 @@ int sbox_getdents(struct tcb *tcp)
     return 0;
 }
 
+/*
+ *
+ */
+int sbox_chdir(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_NONE);
+    }
+    return 0;
+}
+
+int sbox_fchdir(struct tcb *tcp)
+{
+    /* XXX */
+    return 0;
+}
+
+int sbox_getcwd(struct tcb *tcp)
+{
+    // ret = len(buf)
+    const long ret = tcp->regs.rax;
+
+    if (exiting(tcp) &&  ret > 0) {
+        char pn[PATH_MAX];
+        const long ptr = tcp->u_arg[0];
+
+        if (umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
+            err(1, "failed to copy string from getcwd buf");
+        }
+
+        if (is_in_sboxfs(pn)) {
+            char *hpn = pn + opt_root_len;
+            sbox_remote_write(tcp, ptr, hpn, strlen(hpn)+1);
+            sbox_rewrite_arg(tcp, ARG_RET, ret - opt_root_len);
+
+            dbg(test, "XXX: getcwd from sbox: %s", hpn);
+        }
+    }
+    return 0;
+}
+
+/* interactive mode */
+
 static
 void _sbox_walk(const char *root, const char *name,
                 int (*handler)(char *spn, char *hpn))
@@ -572,9 +647,8 @@ void _sbox_walk(const char *root, const char *name,
     closedir(dir);
 }
 
-/* interactive mode */
 static
-char prompt(const char *menu)
+char _prompt(const char *menu)
 {
     char c;
     printf(" %s ? > ", menu);
@@ -600,6 +674,7 @@ int _sh_commit(char *spn, char *hpn)
 {
     printf("  > Commiting %s\n", hpn);
     copyfile(spn, hpn);
+    return 0;
 }
 
 static
@@ -612,12 +687,12 @@ int _sbox_interactive_menu(char *spn, char *hpn)
 
     if (opt_commit_all) {
         _sh_commit(spn, hpn);
-        return;
+        return 0;
     }
 
     while (1) {
         printf("F:%s\n", hpn);
-        switch (prompt(menu)) {
+        switch (_prompt(menu)) {
         case 'C':
             opt_commit_all = 1;
             /* fall-in */
@@ -639,7 +714,7 @@ int _sbox_interactive_menu(char *spn, char *hpn)
 }
 
 static
-int _sbox_diff_files(char *spn, char *hpn)
+int _sbox_print_files(char *spn, char *hpn)
 {
     printf(" > F: %s\n", spn);
     return 0;
@@ -648,6 +723,8 @@ int _sbox_diff_files(char *spn, char *hpn)
 int sbox_interactive(void)
 {
     printf("%s:\n", opt_root);
-    _sbox_walk(opt_root, NULL, _sbox_diff_files);
+    _sbox_walk(opt_root, NULL, _sbox_print_files);
     _sbox_walk(opt_root, NULL, _sbox_interactive_menu);
+
+    return 0;
 }

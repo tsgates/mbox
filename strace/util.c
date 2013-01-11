@@ -1629,7 +1629,8 @@ exists_parent_dir(char *path)
 }
 
 char
-kbhit(void) {
+kbhit(void)
+{
     char c;
     
     struct termios oldt, newt;
@@ -1658,4 +1659,78 @@ kbhit(void) {
     tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
 
     return c;
+}
+
+// name is \0 ended and abspath.
+// name won't be overwritten longer than the given length.
+int
+normalize_path(char *name)
+{
+    char *iter = name;
+    char *head = name;
+
+    while (*iter != '\0') {
+        // skip duplicated /
+        while (*iter == '/') {
+           iter ++;
+        }
+
+        // reaches to the end
+        if (*iter == '\0') {
+            break;
+        }
+
+        // handles ./ and ../
+        if (*iter == '.') {
+            char *next1 = iter + 1;
+            char *next2 = iter + 2;
+
+            if (*next1 == '\0' || *next1 == '/') {
+                // ignore .
+                iter += 2;
+
+                // done
+                if (*next1 == '\0') {
+                    goto done;
+                }
+
+                // restart normalizing
+                continue;
+            } else if (*next1 == '.' && (*next2 == '\0' || *next2 == '/')) {
+                // adjust head
+                do {
+                    head --;
+                } while (*head != '/' && name != head);
+                
+                iter += 3;
+
+                // done
+                if (*next2 == '\0') {
+                    goto done;
+                }
+                
+                // restart normalizing
+                continue;
+            }
+        }
+
+        // single /
+        *head = '/';
+        head ++;
+
+        while (*iter && *iter != '/') {
+            *head = *iter;
+            head ++;
+            iter ++;
+        }
+    }
+
+ done:
+    // keep root
+    if (head == name) {
+        *head = '/';
+        head ++;
+    }
+
+    *head = '\0';
 }

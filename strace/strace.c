@@ -100,6 +100,9 @@ char *opt_test = NULL;
 bool opt_seccomp = 0;
 bool opt_interactive = 0;
 
+extern void sbox_check_test_cond(const char *pn, const char *key);
+extern int sbox_interactive(void);
+
 /*
  * daemonized_tracer supports -D option.
  * With this option, strace forks twice.

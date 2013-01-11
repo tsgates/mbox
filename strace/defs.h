@@ -549,6 +549,7 @@ extern int mkdirp(char *pn, mode_t mode);
 extern int copyfile(char *src, char *dst);
 extern int exists_parent_dir(char *path);
 extern char kbhit(void);
+extern int normalize_path(char *name);
 
 extern const char *signame(int);
 extern int is_restart_error(struct tcb *);

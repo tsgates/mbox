@@ -18,7 +18,7 @@ strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c sbox.c ipc.c \
 		 io.c ioctl.c mem.c net.c process.c bjm.c quota.c \
 		 resource.c signal.c sock.c system.c term.c time.c \
 		 scsi.c stream.c block.c pathtrace.c mtd.c vsprintf.c \
-		 loop.c
+		 loop.c fsmap.c
 noinst_HEADERS = defs.h sbox.h dbg.h
 
 EXTRA_DIST = $(man_MANS) errnoent.sh signalent.sh syscallent.sh ioctlsort.c \

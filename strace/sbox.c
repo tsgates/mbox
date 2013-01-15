@@ -26,20 +26,20 @@ struct linux_dirent {
 static struct fsmap* os_deleted_fs = NULL; /* deleted fs map */
 
 static inline
-int sbox_is_deleted(char *path) 
+int sbox_is_deleted(char *path)
 {
     return is_deleted(os_deleted_fs, path);
 }
 
 static inline
-int sbox_delete_file(char *path) 
+int sbox_delete_file(char *path)
 {
     add_path_to_fsmap(&os_deleted_fs, path, PATH_DELETED);
     return 1;
 }
 
 static inline
-int sbox_delete_dir(char *path) 
+int sbox_delete_dir(char *path)
 {
     const int path_len = strlen(path);
     struct fsmap *s;
@@ -186,9 +186,15 @@ void get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int l
         get_fd_path(tcp->pid, fd, root, sizeof(root));
     }
 
-    snprintf(path, len, "%s/%s", root, pn);
-    normalize_path(path);
+    // strip opt_root if root starts with
+    char *hpn_root = root;
+    if (strncmp(root, opt_root, opt_root_len) == 0) {
+        hpn_root = root + opt_root_len;
+    }
     
+    snprintf(path, len, "%s/%s", hpn_root, pn);
+    normalize_path(path);
+
     // dbg(test, "XXX %s -> %s", pn, path);
 }
 
@@ -234,7 +240,7 @@ void sbox_rewrite_arg(struct tcb *tcp, int arg, long val)
     ptrace(PTRACE_SETREGS, tcp->pid, 0, regs);
 }
 
-void sbox_rewrite_ret(struct tcb *tcp, long long ret) 
+void sbox_rewrite_ret(struct tcb *tcp, long long ret)
 {
     if (ret == 0) {
         tcp->u_error = 0;
@@ -411,7 +417,7 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
     if (flag != RW_NONE         \
         || sbox_is_deleted(hpn) \
         || path_exists(spn)) {
-        
+
         // to be written to spn, so sync parent paths
         if (flag != RW_NONE) {
             sbox_sync_parent_dirs(hpn, spn);
@@ -472,7 +478,7 @@ int sbox_rmdir(struct tcb *tcp)
         if (tcp->regs.rax == 0) {
             char hpn[PATH_MAX];
             get_hpn_from_fd_and_arg(tcp, AT_FDCWD, 0, hpn, PATH_MAX);
-            
+
             // clean up all files in the directory
             // NOTE. can be optimized if need
             sbox_delete_dir(hpn);
@@ -481,7 +487,7 @@ int sbox_rmdir(struct tcb *tcp)
     return 0;
 }
 
-int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
+int sbox_unlink_general(struct tcb *tcp, int fd, int arg, int flag)
 {
     char hpn[PATH_MAX];
     char spn[PATH_MAX];
@@ -492,7 +498,7 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
         // get hpn/spn
         get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
         get_spn_from_hpn(hpn, spn, PATH_MAX);
-        
+
         // failed on sandbox
         if ((long)tcp->regs.rax < 0) {
             // emulate successful deletion
@@ -504,7 +510,11 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
 
         // mark the file deleted
         if ((long)tcp->regs.rax == 0) {
-            sbox_delete_file(hpn);
+            if (flag == AT_REMOVEDIR) {
+                sbox_delete_dir(hpn);
+            } else {
+                sbox_delete_file(hpn);
+            }
         }
     }
     return 0;
@@ -512,12 +522,12 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
 
 int sbox_unlink(struct tcb *tcp)
 {
-    return sbox_unlink_general(tcp, AT_FDCWD, 0);
+    return sbox_unlink_general(tcp, AT_FDCWD, 0, 0);
 }
 
 int sbox_unlinkat(struct tcb *tcp)
 {
-    return sbox_unlink_general(tcp, tcp->u_arg[0], 1);
+    return sbox_unlink_general(tcp, tcp->u_arg[0], 1, tcp->u_arg[2]);
 }
 
 int sbox_access_general(struct tcb *tcp, int fd, int arg)
@@ -635,7 +645,7 @@ int sbox_getdents(struct tcb *tcp)
 
 /*
  * allows chdir into sboxfs or hostfs since we sanitize getcwd()
- * 
+ *
  * NOTE. fchdir() doesn't need to be handled because open() already
  * rewrites the path if needed.
  */

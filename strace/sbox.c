@@ -32,8 +32,27 @@ int sbox_is_deleted(char *path)
 }
 
 static inline
-int sbox_delete_path(char *path) 
+int sbox_delete_file(char *path) 
 {
+    add_path_to_fsmap(&os_deleted_fs, path, PATH_DELETED);
+    return 1;
+}
+
+static inline
+int sbox_delete_dir(char *path) 
+{
+    const int path_len = strlen(path);
+    struct fsmap *s;
+    struct fsmap *tmp;
+
+    HASH_ITER(hh, os_deleted_fs, s, tmp) {
+        if (strncmp(s->key, path, path_len) == 0) {
+            dbg(fsmap, "merging deleted file: %s", s->key);
+            HASH_DEL(os_deleted_fs, s);
+            free(s);
+        }
+    }
+
     add_path_to_fsmap(&os_deleted_fs, path, PATH_DELETED);
     return 1;
 }
@@ -389,7 +408,7 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
     // satisfying one of rewrite conditions
-    if (flag != RW_NONE                     \
+    if (flag != RW_NONE         \
         || sbox_is_deleted(hpn) \
         || path_exists(spn)) {
         
@@ -449,7 +468,15 @@ int sbox_rmdir(struct tcb *tcp)
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_FORCE);
     } else {
-        /* XXX */
+        // successfully delete a directory
+        if (tcp->regs.rax == 0) {
+            char hpn[PATH_MAX];
+            get_hpn_from_fd_and_arg(tcp, AT_FDCWD, 0, hpn, PATH_MAX);
+            
+            // clean up all files in the directory
+            // NOTE. can be optimized if need
+            sbox_delete_dir(hpn);
+        }
     }
     return 0;
 }
@@ -477,7 +504,7 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
 
         // mark the file deleted
         if ((long)tcp->regs.rax == 0) {
-            sbox_delete_path(hpn);
+            sbox_delete_file(hpn);
         }
     }
     return 0;

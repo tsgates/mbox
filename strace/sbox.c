@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "sbox.h"
 #include "dbg.h"
+#include "fsmap.h"
 
 #include <err.h>
 #include <dirent.h>
@@ -20,6 +21,29 @@ struct linux_dirent {
 };
 
 #define min(a, b) ((a) < (b)? (a): (b))
+
+/* os global structure */
+static struct fsmap* os_deleted_fs = NULL; /* deleted fs map */
+
+static inline
+int sbox_is_deleted(char *path) 
+{
+    return is_deleted(os_deleted_fs, path);
+}
+
+static inline
+int sbox_delete_path(char *path) 
+{
+    add_path_to_fsmap(&os_deleted_fs, path, PATH_DELETED);
+    return 1;
+}
+
+void sbox_cleanup(void)
+{
+    if (os_deleted_fs) {
+        free_fsmap(os_deleted_fs);
+    }
+}
 
 static
 void sbox_setenv(void)
@@ -306,15 +330,12 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
         return;
     }
 
-    /* XXX */
-    /*
-    if (strstr(hpn, "testme")) {
-        printf("hpn: %s\nspn: %s\n", hpn, spn);
-        sbox_hijack_str(tcp, arg, "/tmp/x");
+    // if the path is deleted
+    if (sbox_is_deleted(hpn)) {
+        sbox_sync_parent_dirs(hpn, spn);
+        sbox_hijack_str(tcp, arg, spn);
+        return;
     }
-    */
-
-    // TODO. deleted (or masked) file/dir
 
     // whenever path exists in the sandbox, go to there
     if (path_exists(spn)) {
@@ -367,8 +388,11 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
     get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
-    // XXX. or hpn is deleted
-    if (flag != RW_NONE || path_exists(spn)) {
+    // satisfying one of rewrite conditions
+    if (flag != RW_NONE                     \
+        || sbox_is_deleted(hpn) \
+        || path_exists(spn)) {
+        
         // to be written to spn, so sync parent paths
         if (flag != RW_NONE) {
             sbox_sync_parent_dirs(hpn, spn);
@@ -438,19 +462,22 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, fd, arg, RW_FORCE);
     } else {
+        // get hpn/spn
+        get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
+        get_spn_from_hpn(hpn, spn, PATH_MAX);
+        
         // failed on sandbox
         if ((long)tcp->regs.rax < 0) {
-            dbg(xxx, "RET: %ld", (long)tcp->regs.rax);
-            
-            // get hpn/spn
-            get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
-            get_spn_from_hpn(hpn, spn, PATH_MAX);
-
             // emulate successful deletion
-            if (path_exists(hpn)) {
+            if (!sbox_is_deleted(hpn) && path_exists(hpn)) {
                 dbg(path, "emulate successful unlink: %s", hpn);
                 sbox_rewrite_ret(tcp, 0);
             }
+        }
+
+        // mark the file deleted
+        if ((long)tcp->regs.rax == 0) {
+            sbox_delete_path(hpn);
         }
     }
     return 0;

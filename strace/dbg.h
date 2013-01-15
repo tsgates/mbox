@@ -11,13 +11,15 @@
 #ifdef DEBUG
 
  enum { dbg_welcome  = 1 };
+ enum { dbg_xxx      = 1 };
  enum { dbg_path     = 1 };
  enum { dbg_info     = 1 };
  enum { dbg_test     = 1 };
  enum { dbg_getdents = 1 };
  enum { dbg_fatal    = 1 };
  enum { dbg_testcond = 1 };
- enum { dbg_xxx      = 1 };
+ enum { dbg_fsmap    = 1 };
+ enum { dbg_fsmapv   = 0 };
 
 # define dbg( filter, msg, ... )                \
     do {                                        \

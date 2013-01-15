@@ -694,7 +694,7 @@ droptcb(struct tcb *tcp)
         current_tcp = NULL;
     if (printing_tcp == tcp)
         printing_tcp = NULL;
-
+    
     memset(tcp, 0, sizeof(*tcp));
 }
 
@@ -1571,6 +1571,7 @@ cleanup(void)
     }
     if (cflag)
         call_summary(shared_log);
+    sbox_cleanup();
 }
 
 static void

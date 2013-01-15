@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/bash -x
 #
 # pre: test ! -d no-such-a-dir
 # post: test -d $SPWD/no-such-a-dir

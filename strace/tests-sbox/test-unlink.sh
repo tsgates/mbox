@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/bash -x
 #
 # pre: test ! -f tests-sbox/newfile
 # pre: test -f tests-sbox/NOTE

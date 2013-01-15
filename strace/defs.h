@@ -336,7 +336,7 @@ extern struct pt_regs i386_regs;
 extern long ia32;
 #endif
 
-#define ARG_RET (-1)
+#define ARG_RET (6)
 
 /* Trace Control Block */
 struct tcb {

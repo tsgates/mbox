@@ -60,6 +60,8 @@ void sbox_check_test_cond(const char *pn, const char *key)
             strncmp(line, m2, strlen(m2)) == 0) {
             char *cmd = strchr(line, ':');
             cmd ++;
+            cmd[strlen(cmd)-1] = '\0';
+            dbg(testcond, "Check %s: %s", key, cmd);
             if (system(cmd) != 0) {
                 dbg(info, "Failed to check %s condition: %s", key, cmd);
                 exit(1);
@@ -155,13 +157,16 @@ void get_spn_from_hpn(char *hpn, char *spn, int len)
 void set_regs_with_arg(struct user_regs_struct *regs, int arg, long val)
 {
     switch (arg) {
-    case  0: regs->rdi = val; break;
-    case  1: regs->rsi = val; break;
-    case  2: regs->rdx = val; break;
-    case  3: regs->r10 = val; break;
-    case  4: regs->r8  = val; break;
-    case  5: regs->r9  = val; break;
-    case -1: regs->rax = val; break;
+    case 0: regs->rdi = val; break;
+    case 1: regs->rsi = val; break;
+    case 2: regs->rdx = val; break;
+    case 3: regs->r10 = val; break;
+    case 4: regs->r8  = val; break;
+    case 5: regs->r9  = val; break;
+    case 6: regs->rax = val; break;
+    default:
+        dbg(fatal, "Unknown argument: %d\n", arg);
+        exit(1);
     }
 }
 
@@ -181,14 +186,24 @@ void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
 
 void sbox_rewrite_arg(struct tcb *tcp, int arg, long val)
 {
-    struct user_regs_struct regs = tcp->regs;
-    set_regs_with_arg(&regs, arg, val);
-    ptrace(PTRACE_SETREGS, tcp->pid, 0, &regs);
+    struct user_regs_struct *regs = &tcp->regs;
+    set_regs_with_arg(regs, arg, val);
+    ptrace(PTRACE_SETREGS, tcp->pid, 0, regs);
+}
+
+void sbox_rewrite_ret(struct tcb *tcp, long long ret) 
+{
+    if (ret == 0) {
+        tcp->u_error = 0;
+    }
+
+    tcp->u_rval = ret;
+    sbox_rewrite_arg(tcp, ARG_RET, ret);
 }
 
 void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
 {
-    struct user_regs_struct regs = tcp->regs;
+    struct user_regs_struct *regs = &tcp->regs;
 
     int n = tcp->hijacked;
     tcp->hijacked_args[n] = arg;
@@ -196,10 +211,11 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
     tcp->hijacked ++;
 
     /* XXX. need to find the readonly memory */
-    long new_ptr = regs.rsp - PATH_MAX * (arg+1);
+    long new_ptr = regs->rsp - PATH_MAX * (arg+1);
     sbox_remote_write(tcp, new_ptr, new, strlen(new)+1);
     sbox_rewrite_arg(tcp, arg, new_ptr);
 }
+
 
 void sbox_hijack_arg(struct tcb *tcp, int arg, long new)
 {
@@ -215,10 +231,6 @@ void sbox_restore_hijack(struct tcb *tcp)
 {
     int i;
     for (i = 0; i < tcp->hijacked; i ++) {
-        // ignore restoring rax
-        if (tcp->hijacked_args[i] == ARG_RET) {
-            continue;
-        }
         sbox_rewrite_arg(tcp, tcp->hijacked_args[i], tcp->hijacked_vals[i]);
     }
     tcp->hijacked = 0;
@@ -427,14 +439,17 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg)
         sbox_rewrite_path(tcp, fd, arg, RW_FORCE);
     } else {
         // failed on sandbox
-        if (tcp->regs.rax < 0) {
+        if ((long)tcp->regs.rax < 0) {
+            dbg(xxx, "RET: %ld", (long)tcp->regs.rax);
+            
             // get hpn/spn
             get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
             get_spn_from_hpn(hpn, spn, PATH_MAX);
 
             // emulate successful deletion
             if (path_exists(hpn)) {
-                sbox_hijack_arg(tcp, ARG_RET, 0);
+                dbg(path, "emulate successful unlink: %s", hpn);
+                sbox_rewrite_ret(tcp, 0);
             }
         }
     }
@@ -466,7 +481,7 @@ int sbox_access(struct tcb *tcp)
 
 int sbox_faccessat(struct tcb *tcp)
 {
-    return sbox_unlink_general(tcp, tcp->u_arg[0], 1);
+    return sbox_access_general(tcp, tcp->u_arg[0], 1);
 }
 
 int sbox_getdents(struct tcb *tcp)
@@ -557,7 +572,7 @@ int sbox_getdents(struct tcb *tcp)
         }
 
         // copy buf/ret to tracee
-        sbox_hijack_arg(tcp, ARG_RET, dst_iter);
+        sbox_rewrite_ret(tcp, dst_iter);
         sbox_remote_write(tcp, tcp->u_arg[1], tmp, dst_iter);
     }
 
@@ -594,7 +609,7 @@ int sbox_getcwd(struct tcb *tcp)
         if (is_in_sboxfs(pn)) {
             char *hpn = pn + opt_root_len;
             sbox_remote_write(tcp, ptr, hpn, strlen(hpn)+1);
-            sbox_rewrite_arg(tcp, ARG_RET, ret - opt_root_len);
+            sbox_rewrite_ret(tcp, ret - opt_root_len);
 
             dbg(test, "XXX: getcwd from sbox: %s", hpn);
         }

@@ -1576,7 +1576,7 @@ copyfile(char *src, char *dst)
 
     int src_fd = open(src, O_RDONLY);
     if (src_fd < 0) {
-        perror("open:");
+        /* fine */
         return 0;
     }
 

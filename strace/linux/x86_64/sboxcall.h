@@ -83,7 +83,7 @@
 { 2,    TF,     sys_rename,                 NULL,   "rename"                         },  /* 82 */
 { 2,    TF,     sys_mkdir,                  sbox_mkdir,         "mkdir"              },  /* 83 */
 { 1,    TF,     sys_rmdir,                  sbox_rmdir,         "rmdir"              },  /* 84 */
-{ 2,    TD|TF,  sys_creat,                  NULL,   "creat"                          },  /* 85 */
+{ 2,    TD|TF,  sys_creat,                  sbox_creat,         "creat"              },  /* 85 */
 { 2,    TF,     sys_link,                   NULL,   "link"                           },  /* 86 */
 { 1,    TF,     sys_unlink,                 sbox_unlink,        "unlink"             },  /* 87 */
 { 2,    TF,     sys_symlink,                NULL,   "symlink"                        },  /* 88 */

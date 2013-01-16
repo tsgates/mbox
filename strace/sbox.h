@@ -1,8 +1,8 @@
 #pragma once
 
-#define RW_READ    0
-#define RW_WRITE   1
-#define RW_FORCE   2
+#define READWRITE_READ    0
+#define READWRITE_WRITE   1
+#define READWRITE_FORCE   2
 
 static inline
 int path_exists(char *path)

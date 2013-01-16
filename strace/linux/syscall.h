@@ -397,3 +397,7 @@ int sbox_utimensat();
 int sbox_utime();
 int sbox_chmod();
 int sbox_chown();
+int sbox_execve();
+int sbox_truncate();
+int sbox_rename();
+int sbox_renameat();

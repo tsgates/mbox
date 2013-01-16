@@ -57,7 +57,7 @@
 { 5,    TP,     sys_clone,                  NULL,	"clone"                          },  /* 56 */
 { 0,    TP,     sys_fork,                   NULL,	"fork"                           },  /* 57 */
 { 0,    TP,     sys_vfork,                  NULL,	"vfork"                          },  /* 58 */
-{ 3,    TF|TP,  sys_execve,                 NULL,	"execve"                         },  /* 59 */
+{ 3,    TF|TP,  sys_execve,                 sbox_execve,        "execve"             },  /* 59 */
 { 1,    TP,     sys_exit,                   NULL,	"_exit"                          },  /* 60 */
 { 4,    TP,     sys_wait4,                  NULL,	"wait4"                          },  /* 61 */
 { 2,    TS,     sys_kill,                   NULL,	"kill"                           },  /* 62 */
@@ -74,13 +74,13 @@
 { 2,    TD,     sys_flock,                  NULL,   "flock"                          },  /* 73 */
 { 1,    TD,     sys_fsync,                  NULL,   "fsync"                          },  /* 74 */
 { 1,    TD,     sys_fdatasync,              NULL,   "fdatasync"                      },  /* 75 */
-{ 2,    TF,     sys_truncate,               NULL,   "truncate"                       },  /* 76 */
+{ 2,    TF,     sys_truncate,               sbox_truncate,      "truncate"           },  /* 76 */
 { 2,    TD,     sys_ftruncate,              NULL,   "ftruncate"                      },  /* 77 */
 { 3,    TD,     sys_getdents,               sbox_getdents,      "getdents"           },  /* 78 */
 { 2,    TF,     sys_getcwd,                 sbox_getcwd,        "getcwd"             },  /* 79 */
 { 1,    TF,     sys_chdir,                  sbox_chdir,         "chdir"              },  /* 80 */
 { 1,    TD,     sys_fchdir,                 NULL,   "fchdir"                         },  /* 81 */
-{ 2,    TF,     sys_rename,                 NULL,   "rename"                         },  /* 82 */
+{ 2,    TF,     sys_rename,                 sbox_rename,        "rename"             },  /* 82 */
 { 2,    TF,     sys_mkdir,                  sbox_mkdir,         "mkdir"              },  /* 83 */
 { 1,    TF,     sys_rmdir,                  sbox_rmdir,         "rmdir"              },  /* 84 */
 { 2,    TD|TF,  sys_creat,                  sbox_creat,         "creat"              },  /* 85 */
@@ -262,7 +262,7 @@
 { 3,    TD|TF,  sys_futimesat,              NULL,   "futimesat"                      },  /* 261 */
 { 4,    TD|TF,  sys_newfstatat,             sbox_newfstatat,    "newfstatat"         },  /* 262 */
 { 3,    TD|TF,  sys_unlinkat,               sbox_unlinkat,      "unlinkat"           },  /* 263 */
-{ 4,    TD|TF,  sys_renameat,               NULL,   "renameat"                       },  /* 264 */
+{ 4,    TD|TF,  sys_renameat,               sbox_renameat,      "renameat"           },  /* 264 */
 { 5,    TD|TF,  sys_linkat,                 NULL,   "linkat"                         },  /* 265 */
 { 3,    TD|TF,  sys_symlinkat,              NULL,   "symlinkat"                      },  /* 266 */
 { 4,    TD|TF,  sys_readlinkat,             NULL,   "readlinkat"                     },  /* 267 */

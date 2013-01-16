@@ -1,7 +1,7 @@
 #pragma once
 
-#define RW_NONE    0
-#define RW_WRITING 1
+#define RW_READ    0
+#define RW_WRITE   1
 #define RW_FORCE   2
 
 static inline

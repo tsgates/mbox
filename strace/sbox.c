@@ -376,17 +376,17 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
     // satisfying one of rewrite conditions
-    if (flag != RW_NONE         \
+    if (flag != RW_READ         \
         || sbox_is_deleted(hpn) \
         || path_exists(spn)) {
 
         // to be written to spn, so sync parent paths
-        if (flag != RW_NONE) {
+        if (flag != RW_READ) {
             sbox_sync_parent_dirs(hpn, spn);
         }
 
         // writing intent (not force)
-        if (flag == RW_WRITING) {
+        if (flag == RW_WRITE) {
             copyfile(hpn, spn);
         }
 
@@ -488,7 +488,7 @@ int sbox_creat(struct tcb *tcp)
 int sbox_stat(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_NONE);
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_READ);
     }
     return 0;
 }
@@ -496,7 +496,7 @@ int sbox_stat(struct tcb *tcp)
 int sbox_newfstatat(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_NONE);
+        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_READ);
     }
     return 0;
 }
@@ -581,7 +581,7 @@ int sbox_unlinkat(struct tcb *tcp)
 int sbox_access_general(struct tcb *tcp, int fd, int arg)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, fd, arg, RW_NONE);
+        sbox_rewrite_path(tcp, fd, arg, RW_READ);
     }
     return 0;
 }
@@ -700,7 +700,7 @@ int sbox_getdents(struct tcb *tcp)
 int sbox_chdir(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_NONE);
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_READ);
     }
     return 0;
 }
@@ -727,18 +727,18 @@ int sbox_getcwd(struct tcb *tcp)
     return 0;
 }
 
-int sbox_utime(struct tcb *tcp) 
+int sbox_utime(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITING);
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITE);
     }
     return 0;
 }
 
-int sbox_utimensat(struct tcb *tcp) 
+int sbox_utimensat(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_WRITING);
+        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_WRITE);
     }
     return 0;
 }
@@ -746,7 +746,7 @@ int sbox_utimensat(struct tcb *tcp)
 int sbox_chmod(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITING);
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITE);
     }
     return 0;
 }
@@ -754,7 +754,41 @@ int sbox_chmod(struct tcb *tcp)
 int sbox_chown(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITING);
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITE);
+    }
+    return 0;
+}
+
+int sbox_execve(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_READ);
+    }
+    return 0;
+}
+
+int sbox_truncate(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITE);
+    }
+    return 0;
+}
+
+int sbox_rename(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_READ);
+        sbox_rewrite_path(tcp, AT_FDCWD, 1, RW_WRITE);
+    }
+    return 0;
+}
+
+int sbox_renameat(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_READ);
+        sbox_rewrite_path(tcp, tcp->u_arg[2], 3, RW_WRITE);
     }
     return 0;
 }

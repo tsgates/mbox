@@ -401,3 +401,6 @@ int sbox_execve();
 int sbox_truncate();
 int sbox_rename();
 int sbox_renameat();
+int sbox_link();
+int sbox_symlink();
+int sbox_readlink();

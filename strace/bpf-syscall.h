@@ -26,5 +26,8 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(truncate),
     TRACE_SYSCALL(rename),
     TRACE_SYSCALL(renameat),
+    TRACE_SYSCALL(link),
+    TRACE_SYSCALL(symlink),
+    TRACE_SYSCALL(readlink),
     ALLOWED,
 };

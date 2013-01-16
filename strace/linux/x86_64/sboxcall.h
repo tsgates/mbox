@@ -84,10 +84,10 @@
 { 2,    TF,     sys_mkdir,                  sbox_mkdir,         "mkdir"              },  /* 83 */
 { 1,    TF,     sys_rmdir,                  sbox_rmdir,         "rmdir"              },  /* 84 */
 { 2,    TD|TF,  sys_creat,                  sbox_creat,         "creat"              },  /* 85 */
-{ 2,    TF,     sys_link,                   NULL,   "link"                           },  /* 86 */
+{ 2,    TF,     sys_link,                   sbox_link,          "link"               },  /* 86 */
 { 1,    TF,     sys_unlink,                 sbox_unlink,        "unlink"             },  /* 87 */
-{ 2,    TF,     sys_symlink,                NULL,   "symlink"                        },  /* 88 */
-{ 3,    TF,     sys_readlink,               NULL,   "readlink"                       },  /* 89 */
+{ 2,    TF,     sys_symlink,                sbox_symlink,       "symlink"            },  /* 88 */
+{ 3,    TF,     sys_readlink,               sbox_readlink,      "readlink"           },  /* 89 */
 { 2,    TF,     sys_chmod,                  sbox_chmod,         "chmod"              },  /* 90 */
 { 2,    TD,     sys_fchmod,                 NULL,   "fchmod"                         },  /* 91 */
 { 3,    TF,     sys_chown,                  sbox_chown,         "chown"              },  /* 92 */

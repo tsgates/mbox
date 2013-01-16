@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <sys/uio.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -59,6 +60,7 @@ int sbox_delete_dir(char *path)
 
 void sbox_cleanup(void)
 {
+    /* XXX. dump into a permanent place */
     if (os_deleted_fs) {
         free_fsmap(os_deleted_fs);
     }
@@ -376,7 +378,7 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
     // satisfying one of rewrite conditions
-    if (flag != READWRITE_READ         \
+    if (flag != READWRITE_READ  \
         || sbox_is_deleted(hpn) \
         || path_exists(spn)) {
 
@@ -483,6 +485,7 @@ int sbox_creat(struct tcb *tcp)
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_FORCE);
     }
+    return 0;
 }
 
 int sbox_stat(struct tcb *tcp)
@@ -770,7 +773,7 @@ int sbox_execve(struct tcb *tcp)
 int sbox_truncate(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_FORCE);
     }
     return 0;
 }
@@ -793,8 +796,39 @@ int sbox_renameat(struct tcb *tcp)
     return 0;
 }
 
-/* interactive mode */
+int sbox_link(struct tcb *tcp) 
+{
+    // NOTE. consider src path is also written, so linked path
+    // doesn't escape out of sboxfs
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
+        sbox_rewrite_path(tcp, AT_FDCWD, 1, READWRITE_FORCE);
+    }
+    return 0;
+}
 
+int sbox_symlink(struct tcb *tcp)
+{
+    // TODO. we don't support relative symlink (.. or any) for
+    // now, but we can to resolve the 'path2' argument of symlink().
+    // for example, if relative -> just use
+    //              if absolute -> resolve the path
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
+        sbox_rewrite_path(tcp, AT_FDCWD, 1, READWRITE_FORCE);
+    }
+    return 0;
+}
+
+int sbox_readlink(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_READ);
+    }
+    return 0;
+}
+
+/* interactive mode */
 static
 void _sbox_walk(const char *root, const char *name,
                 int (*handler)(char *spn, char *hpn))
@@ -921,4 +955,22 @@ int sbox_interactive(void)
     _sbox_walk(opt_root, NULL, _sbox_interactive_menu);
 
     return 0;
+}
+
+/* stop on restricted activities */
+void sbox_stop(char *fmt, ...)
+{
+    va_list args;
+
+    fprintf(stderr, "Stop execution:");
+        
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+
+    // clean up & info to user
+    sbox_cleanup();
+    if (opt_interactive) {
+        sbox_interactive();
+    }
 }

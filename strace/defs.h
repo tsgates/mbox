@@ -495,6 +495,7 @@ extern unsigned int max_strlen;
 extern char *opt_root;
 extern int opt_root_len;
 extern bool opt_seccomp;
+extern bool opt_interactive;
 
 enum bitness_t { BITNESS_CURRENT = 0, BITNESS_32 };
 

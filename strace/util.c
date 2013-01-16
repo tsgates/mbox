@@ -1574,21 +1574,29 @@ copyfile(char *src, char *dst)
 {
     char buf[PAGE_SIZE];
 
-    int src_fd = open(src, O_RDONLY);
-    if (src_fd < 0) {
-        /* fine */
+    struct stat src_stat;
+    if (stat(src, &src_stat) < 0) {
+        // fine if not exist
         return 0;
     }
 
-    struct stat src_stat;
-    if (stat(src, &src_stat) < 0) {
-        perror("stat:");
-        return -1;
+    // NOTE. if src is symlink, we follow the link for now, but the correct
+    // semantic might be clone the link to the dst
+
+    // check if a regular file
+    if (!S_ISREG(src_stat.st_mode)) {
+        return 0;
+    }
+    
+    int src_fd = open(src, O_RDONLY);
+    if (src_fd < 0) {
+        perror("open src:");
+        return 0;
     }
 
     int dst_fd = open(dst, O_CREAT|O_WRONLY|O_TRUNC, src_stat.st_mode);
     if (dst_fd < 0) {
-        perror("open:");
+        perror("open dst:");
         close(src_fd);
         return 0;
     }

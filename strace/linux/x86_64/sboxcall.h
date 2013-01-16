@@ -88,9 +88,9 @@
 { 1,    TF,     sys_unlink,                 sbox_unlink,        "unlink"             },  /* 87 */
 { 2,    TF,     sys_symlink,                NULL,   "symlink"                        },  /* 88 */
 { 3,    TF,     sys_readlink,               NULL,   "readlink"                       },  /* 89 */
-{ 2,    TF,     sys_chmod,                  NULL,   "chmod"                          },  /* 90 */
+{ 2,    TF,     sys_chmod,                  sbox_chmod,         "chmod"              },  /* 90 */
 { 2,    TD,     sys_fchmod,                 NULL,   "fchmod"                         },  /* 91 */
-{ 3,    TF,     sys_chown,                  NULL,   "chown"                          },  /* 92 */
+{ 3,    TF,     sys_chown,                  sbox_chown,         "chown"              },  /* 92 */
 { 3,    TD,     sys_fchown,                 NULL,   "fchown"                         },  /* 93 */
 { 3,    TF,     sys_chown,                  NULL,   "lchown"                         },  /* 94 */
 { 1,    0,      sys_umask,                  NULL,   "umask"                          },  /* 95 */
@@ -130,7 +130,7 @@
 { 3,    TS,     sys_rt_sigqueueinfo,        NULL,   "rt_sigqueueinfo"                },  /* 129 */
 { 2,    TS,     sys_rt_sigsuspend,          NULL,   "rt_sigsuspend"                  },  /* 130 */
 { 2,    TS,     sys_sigaltstack,            NULL,   "sigaltstack"                    },  /* 131 */
-{ 2,    TF,     sys_utime,                  NULL,   "utime"                          },  /* 132 */
+{ 2,    TF,     sys_utime,                  sbox_utime,         "utime"              },  /* 132 */
 { 3,    TF,     sys_mknod,                  NULL,   "mknod"                          },  /* 133 */
 { 1,    TF,     sys_uselib,                 NULL,   "uselib"                         },  /* 134 */
 { 1,    0,      sys_personality,            NULL,   "personality"                    },  /* 135 */
@@ -278,7 +278,7 @@
 { 4,    TD,     sys_sync_file_range,        NULL,   "sync_file_range"                },  /* 277 */
 { 4,    TD,     sys_vmsplice,               NULL,   "vmsplice"                       },  /* 278 */
 { 6,    0,      sys_move_pages,             NULL,   "move_pages"                     },  /* 279 */
-{ 4,    TD|TF,  sys_utimensat,              NULL,   "utimensat"                      },  /* 280 */
+{ 4,    TD|TF,  sys_utimensat,              sbox_utimensat,     "utimensat"          },  /* 280 */
 { 6,    TD,     sys_epoll_pwait,            NULL,   "epoll_pwait"                    },  /* 281 */
 { 3,    TD|TS,  sys_signalfd,               NULL,   "signalfd"                       },  /* 282 */
 { 2,    TD,     sys_timerfd_create,         NULL,   "timerfd_create"                 },  /* 283 */

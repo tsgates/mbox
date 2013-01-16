@@ -393,3 +393,7 @@ int sbox_getdents();
 int sbox_getcwd();
 int sbox_chdir();
 int sbox_creat();
+int sbox_utimensat();
+int sbox_utime();
+int sbox_chmod();
+int sbox_chown();

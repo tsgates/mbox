@@ -18,5 +18,9 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(getcwd),
     TRACE_SYSCALL(chdir),
     TRACE_SYSCALL(creat),
+    TRACE_SYSCALL(utimensat),
+    TRACE_SYSCALL(utime),
+    TRACE_SYSCALL(chmod),
+    TRACE_SYSCALL(chown),
     ALLOWED,
 };

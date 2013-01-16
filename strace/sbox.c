@@ -67,20 +67,32 @@ void sbox_cleanup(void)
 static
 void sbox_setenv(void)
 {
+    // setenvs for test scripts
+    //  - $HOME
+    //  - $SHOME
+    //  - $SPWD
+    //  - $HPWD
+    char home[PATH_MAX];
     char spwd[PATH_MAX];
     char hpwd[PATH_MAX];
 
     getcwd(hpwd, sizeof(hpwd));
 
-    // setenvs for test scripts
     if (!getenv("SPWD")) {
         snprintf(spwd, sizeof(spwd), "%s%s", opt_root, hpwd);
         setenv("SPWD", spwd, 1);
         dbg(testcond, "setenv $SPWD=%s", spwd);
     }
+
     if (!getenv("HPWD")) {
         setenv("HPWD", hpwd, 1);
         dbg(testcond, "setenv $HPWD=%s", hpwd);
+    }
+
+    if (!getenv("SHOME") && getenv("HOME")) {
+        snprintf(home, sizeof(home), "%s%s", opt_root, getenv("HOME"));
+        setenv("SHOME", home, 1);
+        dbg(testcond, "setenv $SHOME=%s", home);
     }
 }
 
@@ -142,7 +154,7 @@ int get_fd_path(int pid, int fd, char *path, int len)
         *iter = '\0';
         fd_in_sbox = 1;
     }
-    
+
     return fd_in_sbox;
 }
 
@@ -355,6 +367,38 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
     *last = '/';
 }
 
+int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
+{
+    char hpn[PATH_MAX];
+    char spn[PATH_MAX];
+
+    get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
+    get_spn_from_hpn(hpn, spn, PATH_MAX);
+
+    // satisfying one of rewrite conditions
+    if (flag != RW_NONE         \
+        || sbox_is_deleted(hpn) \
+        || path_exists(spn)) {
+
+        // to be written to spn, so sync parent paths
+        if (flag != RW_NONE) {
+            sbox_sync_parent_dirs(hpn, spn);
+        }
+
+        // writing intent (not force)
+        if (flag == RW_WRITING) {
+            copyfile(hpn, spn);
+        }
+
+        // finally hijack path (arg)
+        sbox_hijack_str(tcp, arg, spn);
+
+        dbg(path, "rewrite to %s", spn);
+    }
+
+    return 0;
+}
+
 static
 void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
 {
@@ -433,44 +477,12 @@ int sbox_openat(struct tcb *tcp)
     return 0;
 }
 
-int sbox_creat(struct tcb *tcp) 
+int sbox_creat(struct tcb *tcp)
 {
     // creat(path, mode) == open(path, O_CREAT | O_TRUNC | O_WRONLY, mode);
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_FORCE);
     }
-}
-
-int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
-{
-    char hpn[PATH_MAX];
-    char spn[PATH_MAX];
-
-    get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
-    get_spn_from_hpn(hpn, spn, PATH_MAX);
-
-    // satisfying one of rewrite conditions
-    if (flag != RW_NONE         \
-        || sbox_is_deleted(hpn) \
-        || path_exists(spn)) {
-
-        // to be written to spn, so sync parent paths
-        if (flag != RW_NONE) {
-            sbox_sync_parent_dirs(hpn, spn);
-        }
-
-        // writing intent (not force)
-        if (flag == RW_WRITING) {
-            copyfile(hpn, spn);
-        }
-
-        // finally hijack path (arg)
-        sbox_hijack_str(tcp, arg, spn);
-
-        dbg(path, "rewrite to %s", spn);
-    }
-
-    return 0;
 }
 
 int sbox_stat(struct tcb *tcp)
@@ -711,6 +723,38 @@ int sbox_getcwd(struct tcb *tcp)
             sbox_remote_write(tcp, ptr, hpn, strlen(hpn)+1);
             sbox_rewrite_ret(tcp, ret - opt_root_len);
         }
+    }
+    return 0;
+}
+
+int sbox_utime(struct tcb *tcp) 
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITING);
+    }
+    return 0;
+}
+
+int sbox_utimensat(struct tcb *tcp) 
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, RW_WRITING);
+    }
+    return 0;
+}
+
+int sbox_chmod(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITING);
+    }
+    return 0;
+}
+
+int sbox_chown(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, RW_WRITING);
     }
     return 0;
 }

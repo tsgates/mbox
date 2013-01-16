@@ -1733,4 +1733,5 @@ normalize_path(char *name)
     }
 
     *head = '\0';
+    return 0;
 }

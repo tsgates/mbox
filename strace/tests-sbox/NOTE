@@ -17,5 +17,7 @@
    - # pre: [shell commands]
    - # post: [shell commands]
 
-   - $SPWD: cwd of sandbox
-   - $HPWD: cwd of host
+   - $SPWD:  cwd of sandbox
+   - $HPWD:  cwd of host
+   - $HOME:  home dir
+   - $SHOME: home dir of sandbox

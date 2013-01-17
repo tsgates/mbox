@@ -14,6 +14,10 @@ Getting started
     $ ./strace -s ls       : run ls with seccomp/bpf
     $ ./strace -i sh       : run sh (interactive mode after you kill the sh)
     $ ./testall.sh         : test all unit tests
+
+    # examples
+    $ ./strace -i -- wget google.com      : a simple use
+    $ ./strace -n -i -- wget google.com   : no network
     
 NOTE. Python: the orignal PoC
 -----------------------------

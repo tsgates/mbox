@@ -7,7 +7,7 @@
 //     dbg(unlink, "failed:%d", error)
 //
 
-#define DEBUG
+// #define DEBUG
 #ifdef DEBUG
 
  enum { dbg_welcome  = 1 };
@@ -22,37 +22,37 @@
  enum { dbg_fsmapv   = 0 };
  enum { dbg_open     = 1 };
 
-# define dbg( filter, msg, ... )                \
+# define dbg(filter, msg, ...)                  \
     do {                                        \
-        if ( dbg_##filter ) {                   \
-            fprintf(stderr, "%s@%d: " msg "\n",\
+        if (dbg_##filter) {                     \
+            fprintf(stderr, "%s@%d: " msg "\n", \
                     __FUNCTION__,               \
                     __LINE__,                   \
-                    ##__VA_ARGS__ );            \
+                    ##__VA_ARGS__);             \
         }                                       \
-    } while( 0 )
+    } while(0)
 
-# define ifdbg( filter, statements )            \
+# define ifdbg(filter, statements)              \
     do {                                        \
-        if ( dbg_##filter ) {                   \
+        if (dbg_##filter) {                     \
             (statements);                       \
         }                                       \
-    } while ( 0 )
+    } while (0)
 
-# define msg( filter, msg ) dbg( filter, "%s", msg )
+# define msg(filter, msg) dbg(filter, "%s", msg)
 
 #else
 
-# define dbg( filter, msg, ... )                \
+# define dbg(filter, msg, ...)                  \
     do {                                        \
-    } while( 0 )
+    } while(0)
 
-# define ifdbg( filter, statements )            \
+# define ifdbg(filter, statements)              \
     do {                                        \
-    } while ( 0 )
+    } while (0)
 
-# define msg( filter, msg )                     \
+# define msg(filter, msg)                       \
     do {                                        \
-    } while ( 0 )
-    
+    } while (0)
+
 #endif

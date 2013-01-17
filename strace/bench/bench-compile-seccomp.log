@@ -1,0 +1,24 @@
+Run: make -C /tmp/libseccomp src
+
+real    0m0.809s
+user    0m0.500s
+sys     0m0.187s
+--------
+Run: ./bench/../strace -C /tmp/libseccomp make src
+
+real    0m3.045s
+user    0m1.577s
+sys     0m1.567s
+--------
+Run: ./bench/../strace -s -C /tmp/libseccomp make src
+
+real    0m2.501s
+user    0m1.387s
+sys     0m1.100s
+--------
+Run: strace -f -o /dev/null make -C /tmp/libseccomp src
+
+real    0m3.206s
+user    0m1.780s
+sys     0m1.510s
+--------

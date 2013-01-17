@@ -12,6 +12,7 @@ Getting started
     $ ./strace -h          : help
     $ ./strace ls          : run ls with ptrace
     $ ./strace -s ls       : run ls with seccomp/bpf
+    $ ./strace -i sh       : run sh (interactive mode after you kill the sh)
     $ ./testall.sh         : test all unit tests
     
 NOTE. Python: the orignal PoC

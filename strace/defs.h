@@ -373,7 +373,7 @@ struct tcb {
     int dentfd_host;               /* FD for a getdent call on hostfs */
     int dentfd_sbox;               /* Sandboxfs FD for the corresponding to hostfs */
     char dentfd_spn[PATH_MAX];     /* Sandboxfs pathname */
-    
+
     long readonly_ptr;             /* Readonly memory ptr */
 };
 
@@ -498,6 +498,9 @@ extern char *opt_root;
 extern int opt_root_len;
 extern bool opt_seccomp;
 extern bool opt_interactive;
+extern bool opt_no_nw;
+
+extern void kill_all(struct tcb *tcp);
 
 enum bitness_t { BITNESS_CURRENT = 0, BITNESS_32 };
 

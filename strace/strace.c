@@ -100,6 +100,7 @@ int opt_root_len = 0;
 char *opt_test = NULL;
 bool opt_seccomp = 0;
 bool opt_interactive = 0;
+bool opt_no_nw = 0;
 
 /*
  * daemonized_tracer supports -D option.
@@ -220,6 +221,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -d      : enable syscall trace to stderr\n\
         -D      : enable debug\n\
         -t      : run as unit tester (check pre/post condition, see tests-sbox/NOTE)\n\
+        -n      : no network\n\
         -i      : interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
         -C path : change directory\n\
@@ -660,7 +662,7 @@ alloctcb(int pid)
             tcp->readonly_ptr = -1;
 
             sbox_get_readonly_ptr(tcp);
-            
+
             nprocs++;
             if (debug_flag)
                 fprintf(stderr, "new tcb for pid %d, active tcbs:%d\n", tcp->pid, nprocs);
@@ -1315,7 +1317,7 @@ init(int argc, char *argv[])
 
     bool opt_test_flag = 0;
     while ((c = getopt(argc, argv,
-        "+bcdDhqvVxyzist"
+        "+bcdDhqvVxyzistn"
         "e:o:O:S:E:I:C:r:")) != EOF) {
         switch (c) {
         case 'b':
@@ -1391,6 +1393,9 @@ init(int argc, char *argv[])
             break;
         case 't':
             opt_test_flag = 1;
+            break;
+        case 'n':
+            opt_no_nw = 1;
             break;
         default:
             usage(stderr, 1);
@@ -2002,6 +2007,24 @@ trace(void)
         }
     }
     return 0;
+}
+
+void kill_all(struct tcb *me)
+{
+    int i;
+    struct tcb *tcp;
+
+    // kill child first, not to be detached
+    for (i = 0; i < tcbtabsize; i++) {
+        tcp = tcbtab[i];
+        if (tcp->flags & TCB_INUSE && !(me->pid != tcp->pid)) {
+            kill(tcp->pid, SIGTERM);
+        }
+    }
+
+    if (me) {
+        kill(me->pid, SIGTERM);
+    }
 }
 
 int

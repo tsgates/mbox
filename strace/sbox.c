@@ -886,7 +886,7 @@ DEF_SBOX_SC_PATH(mknod        , 0 , WRITE);
 
 int sbox_not_allowed(struct tcb *tcp)
 {
-    sbox_stop("%s is not allowed", sysent[tcp->scno].sys_name);
+    sbox_stop(tcp, "%s is not allowed", sysent[tcp->scno].sys_name);
     return 0;
 }
 
@@ -1020,21 +1020,28 @@ int sbox_interactive(void)
 }
 
 /* stop on restricted activities */
-void sbox_stop(const char *fmt, ...)
+void sbox_stop(struct tcb *tcp, const char *fmt, ...)
 {
     va_list args;
 
-    fprintf(stderr, "Stop execution:");
+    fprintf(stderr, "\nStop executing pid=%d: ", tcp->pid);
 
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
 
+    fprintf(stderr, "\n");
+    fflush(stderr);
+
+    kill_all(tcp);
+    
     // clean up & info to user
     sbox_cleanup();
     if (opt_interactive) {
         sbox_interactive();
     }
+
+    exit(0);
 }
 
 /* fetch readlony memory address */

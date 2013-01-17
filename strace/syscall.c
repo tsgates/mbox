@@ -101,6 +101,8 @@
 #define NF SYSCALL_NEVER_FAILS
 #define MA MAX_ARGS
 
+extern int sbox_not_allowed();
+
 static const struct sysent sysent0[] = {
 #include "sboxcall.h"
 };

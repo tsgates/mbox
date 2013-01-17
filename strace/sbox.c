@@ -730,54 +730,6 @@ int sbox_getcwd(struct tcb *tcp)
     return 0;
 }
 
-int sbox_utime(struct tcb *tcp)
-{
-    if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
-    }
-    return 0;
-}
-
-int sbox_utimensat(struct tcb *tcp)
-{
-    if (entering(tcp)) {
-        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, READWRITE_WRITE);
-    }
-    return 0;
-}
-
-int sbox_chmod(struct tcb *tcp)
-{
-    if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
-    }
-    return 0;
-}
-
-int sbox_chown(struct tcb *tcp)
-{
-    if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
-    }
-    return 0;
-}
-
-int sbox_execve(struct tcb *tcp)
-{
-    if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_READ);
-    }
-    return 0;
-}
-
-int sbox_truncate(struct tcb *tcp)
-{
-    if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_FORCE);
-    }
-    return 0;
-}
-
 int sbox_rename(struct tcb *tcp)
 {
     if (entering(tcp)) {
@@ -796,13 +748,24 @@ int sbox_renameat(struct tcb *tcp)
     return 0;
 }
 
-int sbox_link(struct tcb *tcp) 
+int sbox_link(struct tcb *tcp)
 {
     // NOTE. consider src path is also written, so linked path
     // doesn't escape out of sboxfs
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
         sbox_rewrite_path(tcp, AT_FDCWD, 1, READWRITE_FORCE);
+    }
+    return 0;
+}
+
+int sbox_linkat(struct tcb *tcp)
+{
+    // see. sbox_link()
+    // doesn't escape out of sboxfs
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, tcp->u_arg[0], 1, READWRITE_WRITE);
+        sbox_rewrite_path(tcp, tcp->u_arg[2], 3, READWRITE_FORCE);
     }
     return 0;
 }
@@ -820,11 +783,50 @@ int sbox_symlink(struct tcb *tcp)
     return 0;
 }
 
-int sbox_readlink(struct tcb *tcp)
+int sbox_symlinkat(struct tcb *tcp)
+{
+    // see. sbox_symblink()
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
+        sbox_rewrite_path(tcp, tcp->u_arg[1], 2, READWRITE_FORCE);
+    }
+    return 0;
+}
+
+int sbox_acct(struct tcb *tcp) 
 {
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_READ);
+        if (tcp->u_arg[0] == 0) {
+            return 0;
+        } else {
+            sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
+        }
     }
+    return 0;
+}
+
+DEF_SBOX_SC_PATH_AT(utimensat , 0, 1, WRITE);
+DEF_SBOX_SC_PATH_AT(readlinkat, 0, 1, READ );
+DEF_SBOX_SC_PATH_AT(fchmodat  , 0, 1, WRITE);
+DEF_SBOX_SC_PATH_AT(mknodat   , 0, 1, WRITE);
+DEF_SBOX_SC_PATH_AT(futimesat , 0, 1, WRITE);
+DEF_SBOX_SC_PATH_AT(fchownat  , 0, 1, WRITE);
+
+DEF_SBOX_SC_PATH(statfs   , 0 , READ );
+DEF_SBOX_SC_PATH(uselib   , 0 , READ );
+DEF_SBOX_SC_PATH(utimes   , 0 , WRITE);
+DEF_SBOX_SC_PATH(utime    , 0 , WRITE);
+DEF_SBOX_SC_PATH(chmod    , 0 , WRITE);
+DEF_SBOX_SC_PATH(chown    , 0 , WRITE);
+DEF_SBOX_SC_PATH(lchown   , 0 , WRITE);
+DEF_SBOX_SC_PATH(execve   , 0 , READ );
+DEF_SBOX_SC_PATH(truncate , 0 , FORCE);
+DEF_SBOX_SC_PATH(readlink , 0 , READ );
+DEF_SBOX_SC_PATH(mknod    , 0 , WRITE);
+
+int sbox_not_allowed(struct tcb *tcp)
+{
+    sbox_stop("%s is not allowed", sysent[tcp->scno].sys_name);
     return 0;
 }
 
@@ -958,12 +960,12 @@ int sbox_interactive(void)
 }
 
 /* stop on restricted activities */
-void sbox_stop(char *fmt, ...)
+void sbox_stop(const char *fmt, ...)
 {
     va_list args;
 
     fprintf(stderr, "Stop execution:");
-        
+
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);

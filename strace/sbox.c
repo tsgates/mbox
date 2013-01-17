@@ -250,19 +250,59 @@ void set_regs_with_arg(struct user_regs_struct *regs, int arg, long val)
     }
 }
 
+#ifdef SBOX_USE_WRITEV
 void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
 {
     struct iovec local[1], remote[1];
 
-    local[0].iov_base = (void*)buf;
-    local[0].iov_len = len;
+    local[0].iov_base  = (void*)buf;
+    local[0].iov_len   = len;
     remote[0].iov_base = (void*)ptr;
-    remote[0].iov_len = len;
+    remote[0].iov_len  = len;
 
     if (process_vm_writev(tcp->pid, local, 1, remote, 1, 0) < 0) {
         err(1, "writev failed: pid=%d", tcp->pid);
     }
 }
+#else
+void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
+{
+    // off
+    // [..bb]...[ee..]
+    //    ^        ^
+    //    +-- ptr  |
+    // [byte]      |
+    //             rear
+    //             
+    
+    long off = ptr % 8;
+    if (off) {
+        int i;
+        long read = ptrace(PTRACE_PEEKDATA, tcp->pid, ptr - off, 0, 0);
+        for (i = off; i < 8 - off; i ++) {
+            *((char *)&read + i) = buf[i - off];
+        }
+        ptrace(PTRACE_POKEDATA, tcp->pid, ptr - off, read, 0);
+
+        len -= 8 - off;
+        ptr += 8 - off;
+        buf += 8 - off;
+    }
+
+    for (; len > 0; len -= 8, buf += 8, ptr += 8) {
+        ptrace(PTRACE_POKEDATA, tcp->pid, ptr, *(long *)(buf), 0);
+    }
+
+    if (len > 0) {
+        int i;
+        long read = ptrace(PTRACE_PEEKDATA, tcp->pid, ptr, 0, 0);
+        for (i = 0; i < len; i ++) {
+            *((char *)&read + i) = buf[i];
+        }
+        ptrace(PTRACE_POKEDATA, tcp->pid, ptr, read, 0);
+    }
+}
+#endif
 
 void sbox_rewrite_arg(struct tcb *tcp, int arg, long val)
 {
@@ -292,12 +332,18 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
 
     /* write to the readonly memory to avoid race */
     long new_ptr;
-    if (tcp->arg == -1) {
+    if (tcp->readonly_ptr == -1) {
         new_ptr = regs->rsp - PATH_MAX * (arg+1);
     } else {
-        new_tpr = tcp->readonly_ptr + PATH_MAX * arg;
+        //
+        // FIXME. PATH_MAX is the correct value, but it is
+        // big enough to overwrite important things in the
+        // elf header. so use 256 for now, in fact, there
+        // are just few syscalls hijacking multiple args.
+        // 
+        new_ptr = tcp->readonly_ptr + 256 * arg;
     }
-    
+
     sbox_remote_write(tcp, new_ptr, new, strlen(new)+1);
     sbox_rewrite_arg(tcp, arg, new_ptr);
 }

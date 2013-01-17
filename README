@@ -1,7 +1,22 @@
 
 Getting started
 ===============
+
+    $ cd strace
+    $ make
+
+     - src/tests-sbox      : test codes
+          /sbox.{c,h}      : system call hooks
+          /strace.c        : main
+
+    $ ./strace -h          : help
+    $ ./strace ls          : run ls with ptrace
+    $ ./strace -s ls       : run ls with seccomp/bpf
+    $ ./testall.sh         : test all unit tests
     
+NOTE. Python: the orignal PoC
+-----------------------------
+
     $ cd src
     $ make libseccomp.so
 

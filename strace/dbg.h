@@ -7,8 +7,9 @@
 //     dbg(unlink, "failed:%d", error)
 //
 
-#define DEBUG
-#ifdef DEBUG
+#include "configsbox.h"
+
+#ifdef SBOX_DEBUG
 
  enum { dbg_welcome  = 1 };
  enum { dbg_xxx      = 1 };

@@ -219,6 +219,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -c      : count time, calls, and errors for each syscall and report summary\n\
         -d      : enable syscall trace to stderr\n\
         -D      : enable debug\n\
+        -t      : run as unit tester (check pre/post condition, see tests-sbox/NOTE)\n\
         -i      : interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
         -C path : change directory\n\

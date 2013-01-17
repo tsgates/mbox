@@ -290,8 +290,14 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
     tcp->hijacked_vals[n] = tcp->u_arg[arg];
     tcp->hijacked ++;
 
-    /* XXX. need to find the readonly memory */
-    long new_ptr = regs->rsp - PATH_MAX * (arg+1);
+    /* write to the readonly memory to avoid race */
+    long new_ptr;
+    if (tcp->arg == -1) {
+        new_ptr = regs->rsp - PATH_MAX * (arg+1);
+    } else {
+        new_tpr = tcp->readonly_ptr + PATH_MAX * arg;
+    }
+    
     sbox_remote_write(tcp, new_ptr, new, strlen(new)+1);
     sbox_rewrite_arg(tcp, arg, new_ptr);
 }
@@ -448,7 +454,7 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
 
     // trunc
     if (oflag & O_TRUNC) {
-        dbg(open, "truc: %s", spn);
+        dbg(open, "open(%s, TRUNC)", spn);
         sbox_sync_parent_dirs(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
         return;
@@ -456,7 +462,7 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
 
     // write or read/write
     if (accmode == O_RDWR || accmode == O_RDWR) {
-        dbg(open, "rw: %s", spn);
+        dbg(open, "open(%s, RW)", spn);
         sbox_sync_parent_dirs(hpn, spn);
         copyfile(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
@@ -793,7 +799,7 @@ int sbox_symlinkat(struct tcb *tcp)
     return 0;
 }
 
-int sbox_acct(struct tcb *tcp) 
+int sbox_acct(struct tcb *tcp)
 {
     if (entering(tcp)) {
         if (tcp->u_arg[0] == 0) {
@@ -983,4 +989,57 @@ void sbox_stop(const char *fmt, ...)
     if (opt_interactive) {
         sbox_interactive();
     }
+}
+
+/* fetch readlony memory address */
+void sbox_get_readonly_ptr(struct tcb *tcp)
+{
+    char proc[256];
+    snprintf(proc, sizeof(proc), "/proc/%d/maps", tcp->pid);
+
+    FILE *fp = fopen(proc, "r");
+    if (!fp) {
+        err(1, "fopen");
+    }
+
+    long ptr = -1;
+    size_t len = 0;
+    char *line = NULL;
+
+    while (getline(&line, &len, fp) != -1) {
+        // find the very first non-writable area
+        if (strstr(line, "r-xp")) {
+            // mem ptr upto '-'
+            char *del = strstr(line, "-");
+            if (del) {
+                sscanf(line, "%lx-", &ptr);
+                break;
+            }
+        }
+    }
+    fclose(fp);
+
+    if (line) {
+        free(line);
+    }
+
+    // can't find one, just use $rsp
+    if (ptr == -1) {
+        dbg(info, "Can't find the readonly ptr, use $rsp");
+    } else {
+        dbg(info, "Found readonly memory: 0x%lx", ptr);
+    }
+
+    // verify if it is writable on debug
+    if (debug_flag) {
+        int dummy = 0xdeadbeef;
+        sbox_remote_write(tcp, ptr, (char *)&dummy, 4);
+
+        long read = ptrace(PTRACE_PEEKDATA, tcp->pid, (char *)ptr, 0);
+        if (read != dummy) {
+            dbg(info, "0x%lx is not writable", ptr);
+        }
+    }
+
+    tcp->readonly_ptr = ptr;
 }

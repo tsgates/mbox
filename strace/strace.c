@@ -656,6 +656,9 @@ alloctcb(int pid)
 #endif
             tcp->dentfd_sbox = -1;
             tcp->dentfd_host = -1;
+            tcp->readonly_ptr = -1;
+
+            sbox_get_readonly_ptr(tcp);
             
             nprocs++;
             if (debug_flag)
@@ -692,7 +695,7 @@ droptcb(struct tcb *tcp)
         current_tcp = NULL;
     if (printing_tcp == tcp)
         printing_tcp = NULL;
-    
+
     memset(tcp, 0, sizeof(*tcp));
 }
 
@@ -1272,7 +1275,7 @@ get_os_release(void)
  */
 static void __attribute__ ((noinline))
 init(int argc, char *argv[])
-{    
+{
     struct tcb *tcp;
     int c, i;
     struct sigaction sa;
@@ -2018,7 +2021,7 @@ main(int argc, char *argv[])
     if (opt_interactive) {
         sbox_interactive();
     }
-    
+
     cleanup();
     fflush(NULL);
     if (exit_code > 0xff) {

@@ -373,6 +373,8 @@ struct tcb {
     int dentfd_host;               /* FD for a getdent call on hostfs */
     int dentfd_sbox;               /* Sandboxfs FD for the corresponding to hostfs */
     char dentfd_spn[PATH_MAX];     /* Sandboxfs pathname */
+    
+    long readonly_ptr;             /* Readonly memory ptr */
 };
 
 /* TCB flags */

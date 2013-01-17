@@ -18,6 +18,7 @@ extern void sbox_check_test_cond(const char *pn, const char *key);
 extern void sbox_cleanup(void);
 extern int sbox_interactive(void);
 extern void sbox_stop(const char *fmt, ...);
+extern void sbox_get_readonly_ptr(struct tcb *tcp);
 
 #define is_in_sboxfs(pn) (strncmp(pn, opt_root, opt_root_len) == 0)
 

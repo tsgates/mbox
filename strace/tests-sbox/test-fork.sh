@@ -6,3 +6,4 @@
 #
 
 ls | grep test | grep t | grep e | grep s | grep t > out
+exit 0

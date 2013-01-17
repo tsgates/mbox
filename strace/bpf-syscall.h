@@ -42,5 +42,13 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(uselib),
     TRACE_SYSCALL(statfs),
     TRACE_SYSCALL(acct),
+    TRACE_SYSCALL(setxattr),
+    TRACE_SYSCALL(lsetxattr),
+    TRACE_SYSCALL(getxattr),
+    TRACE_SYSCALL(lgetxattr),
+    TRACE_SYSCALL(removexattr),
+    TRACE_SYSCALL(lremovexattr),
+    TRACE_SYSCALL(listxattr),
+    TRACE_SYSCALL(llistxattr),
     ALLOWED,
 };

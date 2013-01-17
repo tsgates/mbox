@@ -812,17 +812,25 @@ DEF_SBOX_SC_PATH_AT(mknodat   , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(futimesat , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(fchownat  , 0, 1, WRITE);
 
-DEF_SBOX_SC_PATH(statfs   , 0 , READ );
-DEF_SBOX_SC_PATH(uselib   , 0 , READ );
-DEF_SBOX_SC_PATH(utimes   , 0 , WRITE);
-DEF_SBOX_SC_PATH(utime    , 0 , WRITE);
-DEF_SBOX_SC_PATH(chmod    , 0 , WRITE);
-DEF_SBOX_SC_PATH(chown    , 0 , WRITE);
-DEF_SBOX_SC_PATH(lchown   , 0 , WRITE);
-DEF_SBOX_SC_PATH(execve   , 0 , READ );
-DEF_SBOX_SC_PATH(truncate , 0 , FORCE);
-DEF_SBOX_SC_PATH(readlink , 0 , READ );
-DEF_SBOX_SC_PATH(mknod    , 0 , WRITE);
+DEF_SBOX_SC_PATH(setxattr     , 0 , WRITE);
+DEF_SBOX_SC_PATH(lsetxattr    , 0 , WRITE);
+DEF_SBOX_SC_PATH(removexattr  , 0 , WRITE);
+DEF_SBOX_SC_PATH(lremovexattr , 0 , WRITE);
+DEF_SBOX_SC_PATH(getxattr     , 0 , READ );
+DEF_SBOX_SC_PATH(lgetxattr    , 0 , READ );
+DEF_SBOX_SC_PATH(listxattr    , 0 , READ );
+DEF_SBOX_SC_PATH(llistxattr   , 0 , READ );
+DEF_SBOX_SC_PATH(statfs       , 0 , READ );
+DEF_SBOX_SC_PATH(uselib       , 0 , READ );
+DEF_SBOX_SC_PATH(utimes       , 0 , WRITE);
+DEF_SBOX_SC_PATH(utime        , 0 , WRITE);
+DEF_SBOX_SC_PATH(chmod        , 0 , WRITE);
+DEF_SBOX_SC_PATH(chown        , 0 , WRITE);
+DEF_SBOX_SC_PATH(lchown       , 0 , WRITE);
+DEF_SBOX_SC_PATH(execve       , 0 , READ );
+DEF_SBOX_SC_PATH(truncate     , 0 , FORCE);
+DEF_SBOX_SC_PATH(readlink     , 0 , READ );
+DEF_SBOX_SC_PATH(mknod        , 0 , WRITE);
 
 int sbox_not_allowed(struct tcb *tcp)
 {

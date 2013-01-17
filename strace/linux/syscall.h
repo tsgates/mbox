@@ -376,7 +376,10 @@ int sys_shmsys();
 int sys_lseek32();
 #endif
 
+//
 // list of sandbox calls
+//  => used to generate seccomp filter
+//  
 int sbox_open();
 int sbox_openat();
 int sbox_stat();
@@ -417,3 +420,11 @@ int sbox_utimes();
 int sbox_uselib();
 int sbox_statfs();
 int sbox_acct();
+int sbox_setxattr();
+int sbox_lsetxattr();
+int sbox_getxattr();
+int sbox_lgetxattr();
+int sbox_removexattr();
+int sbox_lremovexattr();
+int sbox_listxattr();
+int sbox_llistxattr();

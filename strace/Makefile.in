@@ -350,7 +350,7 @@ strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c sbox.c ipc.c \
 		 scsi.c stream.c block.c pathtrace.c mtd.c vsprintf.c \
 		 loop.c fsmap.c
 
-noinst_HEADERS = defs.h sbox.h dbg.h
+noinst_HEADERS = defs.h sbox.h dbg.h configsbox.h
 EXTRA_DIST = $(man_MANS) errnoent.sh signalent.sh syscallent.sh ioctlsort.c \
 	     debian/changelog debian/compat debian/control debian/copyright \
 	     debian/rules debian/source/format debian/watch \
@@ -1133,6 +1133,9 @@ $(ioctlent_h): $(top_builddir)/config.status $(ioctlent_h_deps)
 
 bpf-syscall.h: bpf-gen.sh linux/syscall.h
 	./bpf-gen.sh > $@
+
+configsbox.h: .configsbox.h
+	cp -f $^ $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

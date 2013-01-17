@@ -19,7 +19,7 @@ strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c sbox.c ipc.c \
 		 resource.c signal.c sock.c system.c term.c time.c \
 		 scsi.c stream.c block.c pathtrace.c mtd.c vsprintf.c \
 		 loop.c fsmap.c
-noinst_HEADERS = defs.h sbox.h dbg.h
+noinst_HEADERS = defs.h sbox.h dbg.h configsbox.h
 
 EXTRA_DIST = $(man_MANS) errnoent.sh signalent.sh syscallent.sh ioctlsort.c \
 	     debian/changelog debian/compat debian/control debian/copyright \
@@ -155,3 +155,6 @@ $(ioctlent_h): $(top_builddir)/config.status $(ioctlent_h_deps)
 
 bpf-syscall.h: bpf-gen.sh linux/syscall.h
 	./bpf-gen.sh > $@
+
+configsbox.h: .configsbox.h
+	cp -f $^ $@

@@ -241,7 +241,7 @@ int get_fd_hpn(int pid, int fd, char *path, int len)
 
     // XXX. ugly
     if (!get_fd_path(pid, fd, path, len)) {
-        return 0; 
+        return 0;
     }
 
     // check if cwd is under sboxfs
@@ -289,7 +289,7 @@ int get_cwd_hpn(int pid, char *path, int len)
 // return 1 if cwd is on the sboxfs
 //
 // XXX. need to check if fd doesn't exist
-// 
+//
 static
 int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int len)
 {
@@ -533,7 +533,7 @@ int sbox_rewrite_path_dir(struct tcb *tcp, int fd, int arg)
         sbox_hijack_str(tcp, 0, spn);
         return 0;
     }
-        
+
     // stick to hpn
     if (path_exists(hpn)) {
         return 0;
@@ -595,16 +595,6 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
         return;
     }
 
-    // only handle when opening a directory
-    if (oflag & O_DIRECTORY) {
-        dbg(open, "open directory: %s", hpn);
-        if (!sbox_is_deleted(hpn)) {
-            sbox_sync_parent_dirs(hpn, spn); 
-        }
-        sbox_hijack_str(tcp, arg, spn);
-        return;
-    }
-        
     // if the path is deleted
     if (sbox_is_deleted(hpn)) {
         dbg(open, "open deleted file: %s", hpn);
@@ -864,7 +854,7 @@ int sbox_getdents(struct tcb *tcp)
                 src_iter += d->d_reclen;
                 continue;
             }
-            
+
             // ignore dentry if exists in sandboxfs
             if (path_exists(spn)) {
                 dbg(getdents, "[%3d] found in sbox: %s", src_iter, spn);

@@ -39,7 +39,7 @@
 { 3,    0,      sys_setitimer,              NULL,	"setitimer"                      },  /* 38 */
 { 0,    0,      sys_getpid,                 NULL,	"getpid"                         },  /* 39 */
 { 4,    TD|TN,  sys_sendfile,               NULL,	"sendfile"                       },  /* 40 */
-{ 3,    TN,     sys_socket,                 NULL,	"socket"                         },  /* 41 */
+{ 3,    TN,     sys_socket,                 sbox_socket,        "socket"             },  /* 41 */
 { 3,    TN,     sys_connect,                NULL,	"connect"                        },  /* 42 */
 { 3,    TN,     sys_accept,                 NULL,	"accept"                         },  /* 43 */
 { 6,    TN,     sys_sendto,                 NULL,	"sendto"                         },  /* 44 */

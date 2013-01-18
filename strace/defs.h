@@ -338,6 +338,21 @@ extern long ia32;
 
 #define ARG_RET (6)
 
+// uni-directional list of per-process log
+struct auditlog {
+    char log[128];
+    struct auditlog *prev;
+};
+
+// uni-directional log of system-wide log
+struct systemlog {
+    int pid;
+    struct auditlog *logs;
+    struct systemlog *next;
+};
+
+extern struct systemlog *systemlog;
+
 /* Trace Control Block */
 struct tcb {
     int flags;                     /* See below for TCB_ values */
@@ -375,6 +390,8 @@ struct tcb {
     char dentfd_spn[PATH_MAX];     /* Sandboxfs pathname */
 
     long readonly_ptr;             /* Readonly memory ptr */
+
+    struct auditlog *logs;         /* Auditing logs */
 };
 
 /* TCB flags */

@@ -1,0 +1,4 @@
+# socket semantics
+
+ - socket(domain={AF_FILE,AF_LOCAL}, ...)
+ - 

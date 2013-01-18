@@ -428,3 +428,4 @@ int sbox_removexattr();
 int sbox_lremovexattr();
 int sbox_listxattr();
 int sbox_llistxattr();
+int sbox_socket();

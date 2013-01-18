@@ -74,6 +74,7 @@ unsigned int xflag = 0;
 bool debug_flag = 0;
 bool Tflag = 0;
 bool qflag = 0;
+struct systemlog *systemlog = NULL;
 
 /* Which WSTOPSIG(status) value marks syscall traps? */
 static unsigned int syscall_trap_sig = SIGTRAP;
@@ -660,6 +661,7 @@ alloctcb(int pid)
             tcp->dentfd_sbox = -1;
             tcp->dentfd_host = -1;
             tcp->readonly_ptr = -1;
+            tcp->logs = NULL;
 
             sbox_get_readonly_ptr(tcp);
 
@@ -699,6 +701,18 @@ droptcb(struct tcb *tcp)
     if (printing_tcp == tcp)
         printing_tcp = NULL;
 
+    // pass it to the systemlog
+    if (tcp->logs) {
+        struct systemlog *log = \
+            (struct systemlog *) malloc(sizeof(struct systemlog));
+        log->pid = tcp->pid;
+        log->next = systemlog;
+        log->logs = tcp->logs;
+        
+        // bump
+        systemlog = log;
+    }
+    
     memset(tcp, 0, sizeof(*tcp));
 }
 

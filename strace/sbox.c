@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/syscall.h>
+#include <sys/socket.h>
 
 struct linux_dirent {
     long           d_ino;
@@ -60,6 +61,19 @@ int sbox_delete_dir(char *path)
 
 void sbox_cleanup(void)
 {
+    // dump system-wide logs
+    if (systemlog) {
+        fprintf(stderr, "Summary:\n");
+        // per each process
+        struct systemlog *logs;
+        for (logs = systemlog; logs != NULL; logs = logs->next) {
+            struct auditlog *iter;
+            for (iter = logs->logs; iter != NULL; iter = iter->prev) {
+                fprintf(stderr, "> [%d] %s\n", logs->pid, iter->log);
+            }
+        }
+    }
+    
     /* XXX. dump into a permanent place */
     if (os_deleted_fs) {
         free_fsmap(os_deleted_fs);
@@ -273,8 +287,8 @@ void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
     //    +-- ptr  |
     // [byte]      |
     //             rear
-    //             
-    
+    //
+
     long off = ptr % 8;
     if (off) {
         int i;
@@ -340,7 +354,7 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
         // big enough to overwrite important things in the
         // elf header. so use 256 for now, in fact, there
         // are just few syscalls hijacking multiple args.
-        // 
+        //
         new_ptr = tcp->readonly_ptr + 256 * arg;
     }
 
@@ -857,6 +871,38 @@ int sbox_acct(struct tcb *tcp)
     return 0;
 }
 
+int sbox_socket(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        if (opt_no_nw && tcp->u_arg[0] != PF_LOCAL) {
+            sbox_stop(tcp, "Access to the netowrk (socket:%d)", tcp->u_arg[0]);
+        }
+        if (tcp->u_arg[0] == PF_INET \
+            || tcp->u_arg[0] == PF_INET6 \
+            || tcp->u_arg[0] == PF_NETLINK) {
+
+            const char *flag;
+            switch (tcp->u_arg[0]) {
+            case PF_INET:
+                flag = "PF_INET";
+                break;
+            case PF_INET6:
+                flag = "PF_INET6";
+                break;
+            case PF_NETLINK:
+                flag = "PF_NETLINK";
+                break;
+            default:
+                flag = "PF_??";
+                break;
+            }
+            sbox_add_log(tcp, "socket(%s,...)", flag);
+            return 0;
+        }
+    }
+    return 0;
+}
+
 DEF_SBOX_SC_PATH_AT(utimensat , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(readlinkat, 0, 1, READ );
 DEF_SBOX_SC_PATH_AT(fchmodat  , 0, 1, WRITE);
@@ -1034,7 +1080,7 @@ void sbox_stop(struct tcb *tcp, const char *fmt, ...)
     fflush(stderr);
 
     kill_all(tcp);
-    
+
     // clean up & info to user
     sbox_cleanup();
     if (opt_interactive) {
@@ -1095,4 +1141,19 @@ void sbox_get_readonly_ptr(struct tcb *tcp)
     }
 
     tcp->readonly_ptr = ptr;
+}
+
+void sbox_add_log(struct tcb *tcp, const char *fmt, ...)
+{
+    struct auditlog *entry \
+        = (struct auditlog *)malloc(sizeof(struct auditlog));
+
+    va_list args;
+
+    va_start(args, fmt);
+    vsnprintf(entry->log, sizeof(entry->log), fmt, args);
+    va_end(args);
+
+    entry->prev = tcp->logs;
+    tcp->logs = entry;
 }

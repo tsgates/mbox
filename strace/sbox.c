@@ -871,32 +871,31 @@ int sbox_acct(struct tcb *tcp)
     return 0;
 }
 
+static
+const char *__pf_domain(int flag) 
+{
+    switch (flag) {
+    case PF_INET:
+        return "PF_INET";
+    case PF_INET6:
+        return "PF_INET6";
+    case PF_NETLINK:
+        return "PF_NETLINK";
+    }
+    return "PF_??";
+}
+
 int sbox_socket(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        if (opt_no_nw && tcp->u_arg[0] != PF_LOCAL) {
-            sbox_stop(tcp, "Access to the netowrk (socket:%d)", tcp->u_arg[0]);
+        long domain = tcp->u_arg[0];
+        if (opt_no_nw && domain != PF_LOCAL) {
+            sbox_stop(tcp, "Access to the netowrk (socket:%x)", domain);
         }
-        if (tcp->u_arg[0] == PF_INET \
-            || tcp->u_arg[0] == PF_INET6 \
-            || tcp->u_arg[0] == PF_NETLINK) {
-
-            const char *flag;
-            switch (tcp->u_arg[0]) {
-            case PF_INET:
-                flag = "PF_INET";
-                break;
-            case PF_INET6:
-                flag = "PF_INET6";
-                break;
-            case PF_NETLINK:
-                flag = "PF_NETLINK";
-                break;
-            default:
-                flag = "PF_??";
-                break;
-            }
-            sbox_add_log(tcp, "socket(%s,...)", flag);
+        if (domain == PF_INET \
+            || domain == PF_INET6 \
+            || domain == PF_NETLINK) {
+            sbox_add_log(tcp, "socket(%s,...)", __pf_domain(domain));
             return 0;
         }
     }

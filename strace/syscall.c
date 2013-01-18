@@ -2051,11 +2051,6 @@ trace_syscall_exiting(struct tcb *tcp)
     }
 
     /* sbox */
-    // check network-related function
-    if (opt_no_nw && (sysent[tcp->scno].sys_flags & TRACE_NETWORK)) {
-        sbox_stop(tcp, "Access network-related syscall");
-    }
-    
     if (sysent[tcp->scno].sbox_func) {
         sysent[tcp->scno].sbox_func(tcp);
     }

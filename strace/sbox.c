@@ -89,7 +89,7 @@ void sbox_flush_meta(void)
 
     fprintf(stderr, "Deleted Files:\n");
     HASH_ITER(hh, os_deleted_fs, s, tmp) {
-        fprintf(stderr, "> %s (%x)\n", s->key, s->val);
+        fprintf(stderr, " > %s (%x)\n", s->key, s->val);
         fprintf(fp, "%s:%d\n", s->key, s->val);
     }
 
@@ -138,7 +138,7 @@ void sbox_cleanup(void)
         for (logs = systemlog; logs != NULL; logs = logs->next) {
             struct auditlog *iter;
             for (iter = logs->logs; iter != NULL; iter = iter->prev) {
-                fprintf(stderr, "> [%d] %s\n", logs->pid, iter->log);
+                fprintf(stderr, " > [%d] %s\n", logs->pid, iter->log);
             }
         }
     }
@@ -518,31 +518,6 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
 
     // restore
     *last = '/';
-}
-
-int sbox_rewrite_path_dir(struct tcb *tcp, int fd, int arg)
-{
-    char hpn[PATH_MAX];
-    char spn[PATH_MAX];
-
-    get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
-    get_spn_from_hpn(hpn, spn, PATH_MAX);
-
-    // if deleted dir
-    if (sbox_is_deleted(hpn)) {
-        sbox_hijack_str(tcp, 0, spn);
-        return 0;
-    }
-
-    // stick to hpn
-    if (path_exists(hpn)) {
-        return 0;
-    }
-
-    // this is only movable branch, go there
-    if (path_exists(spn)) {
-        sbox_hijack_str(tcp, 0, spn);
-    }
 }
 
 int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
@@ -1207,7 +1182,7 @@ int _sbox_print_file(char *spn, char *hpn)
 static
 void _sbox_dump_sboxfs(void)
 {
-    printf("%s:\n", opt_root);
+    printf("Sandbox Root:\n > %s\n", opt_root);
     _sbox_walk(opt_root, NULL, _sbox_print_file);
 }
 

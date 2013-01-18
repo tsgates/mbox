@@ -23,6 +23,16 @@ extern void sbox_add_log(struct tcb *tcp, const char *fmt, ...);
 
 #define is_in_sboxfs(pn) (strncmp(pn, opt_root, opt_root_len) == 0)
 
+static inline
+void *safe_malloc(size_t size)
+{
+    void *ptr = (void *) malloc(size);
+    if (!ptr) {
+        die_out_of_memory();
+    }
+    return ptr;
+}
+
 // define a syscall to interpose, if syscall gets a just path arg
 #define DEF_SBOX_SC_PATH(sc, arg, opt)                              \
     int sbox_##sc(struct tcb *tcp)                                  \

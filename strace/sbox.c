@@ -14,6 +14,8 @@
 #include <sys/wait.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 struct linux_dirent {
     long           d_ino;
@@ -63,7 +65,7 @@ void sbox_cleanup(void)
 {
     // dump system-wide logs
     if (systemlog) {
-        fprintf(stderr, "Summary:\n");
+        fprintf(stderr, "Network Summary:\n");
         // per each process
         struct systemlog *logs;
         for (logs = systemlog; logs != NULL; logs = logs->next) {
@@ -73,7 +75,7 @@ void sbox_cleanup(void)
             }
         }
     }
-    
+
     /* XXX. dump into a permanent place */
     if (os_deleted_fs) {
         free_fsmap(os_deleted_fs);
@@ -872,7 +874,7 @@ int sbox_acct(struct tcb *tcp)
 }
 
 static
-const char *__pf_domain(int flag) 
+const char *__pf_domain(int flag)
 {
     switch (flag) {
     case PF_INET:
@@ -885,17 +887,57 @@ const char *__pf_domain(int flag)
     return "PF_??";
 }
 
+int sbox_bind(struct tcb *tcp)
+{
+    return 0;
+}
+
+int sbox_connect(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        struct sockaddr *sa \
+            = (struct sockaddr *) safe_malloc(tcp->u_arg[2]);
+        // sbox_add_log(tcp, "XXX: %d vs %d", sizeof(struct sockaddr_in), tcp->u_arg[2]);
+        if (umoven(tcp, tcp->u_arg[1], tcp->u_arg[2], (char *)sa) < 0) {
+            // can't access to sockaddr*, but ok
+            free(sa);
+            return 0;
+        }
+        // interpret af_inet
+        switch (sa->sa_family) {
+        case AF_INET: {
+            struct sockaddr_in *addr = (struct sockaddr_in *)sa;
+            sbox_add_log(tcp, "-> %s:%d",
+                         inet_ntoa(addr->sin_addr),
+                         ntohs(addr->sin_port));
+            break;
+        }
+
+        case AF_INET6: {
+            char ip[32];
+            struct sockaddr_in6 *addr = (struct sockaddr_in6 *)sa;
+            sbox_add_log(tcp, "-> %s:%d",
+                         inet_ntop(sa->sa_family, sa, ip, tcp->u_arg[2]),
+                         ntohs(addr->sin6_port));
+            break;
+        }
+        }
+        free(sa);
+    }
+    return 0;
+}
+
 int sbox_socket(struct tcb *tcp)
 {
     if (entering(tcp)) {
-        long domain = tcp->u_arg[0];
-        if (opt_no_nw && domain != PF_LOCAL) {
-            sbox_stop(tcp, "Access to the netowrk (socket:%x)", domain);
+        long pf = tcp->u_arg[0];
+        if (opt_no_nw && pf != PF_LOCAL) {
+            sbox_stop(tcp, "Access to the netowrk (socket:%s)", __pf_domain(pf));
         }
-        if (domain == PF_INET \
-            || domain == PF_INET6 \
-            || domain == PF_NETLINK) {
-            sbox_add_log(tcp, "socket(%s,...)", __pf_domain(domain));
+        if (pf == PF_INET     \
+            || pf == PF_INET6 \
+            || pf == PF_NETLINK) {
+            sbox_add_log(tcp, "Create socket(%s,...)", __pf_domain(pf));
             return 0;
         }
     }
@@ -1145,7 +1187,7 @@ void sbox_get_readonly_ptr(struct tcb *tcp)
 void sbox_add_log(struct tcb *tcp, const char *fmt, ...)
 {
     struct auditlog *entry \
-        = (struct auditlog *)malloc(sizeof(struct auditlog));
+        = (struct auditlog *) safe_malloc(sizeof(struct auditlog));
 
     va_list args;
 

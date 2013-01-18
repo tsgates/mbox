@@ -40,14 +40,14 @@
 { 0,    0,      sys_getpid,                 NULL,	"getpid"                         },  /* 39 */
 { 4,    TD|TN,  sys_sendfile,               NULL,	"sendfile"                       },  /* 40 */
 { 3,    TN,     sys_socket,                 sbox_socket,        "socket"             },  /* 41 */
-{ 3,    TN,     sys_connect,                NULL,	"connect"                        },  /* 42 */
+{ 3,    TN,     sys_connect,                sbox_connect,       "connect"            },  /* 42 */
 { 3,    TN,     sys_accept,                 NULL,	"accept"                         },  /* 43 */
 { 6,    TN,     sys_sendto,                 NULL,	"sendto"                         },  /* 44 */
 { 6,    TN,     sys_recvfrom,               NULL,	"recvfrom"                       },  /* 45 */
 { 3,    TN,     sys_sendmsg,                NULL,	"sendmsg"                        },  /* 46 */
 { 5,    TN,     sys_recvmsg,                NULL,	"recvmsg"                        },  /* 47 */
 { 2,    TN,     sys_shutdown,               NULL,	"shutdown"                       },  /* 48 */
-{ 3,    TN,     sys_bind,                   NULL,	"bind"                           },  /* 49 */
+{ 3,    TN,     sys_bind,                   sbox_bind,          "bind"               },  /* 49 */
 { 2,    TN,     sys_listen,                 NULL,	"listen"                         },  /* 50 */
 { 3,    TN,     sys_getsockname,            NULL,	"getsockname"                    },  /* 51 */
 { 3,    TN,     sys_getpeername,            NULL,	"getpeername"                    },  /* 52 */

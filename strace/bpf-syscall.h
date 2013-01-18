@@ -51,5 +51,7 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(listxattr),
     TRACE_SYSCALL(llistxattr),
     TRACE_SYSCALL(socket),
+    TRACE_SYSCALL(bind),
+    TRACE_SYSCALL(connect),
     ALLOWED,
 };

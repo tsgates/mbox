@@ -21,7 +21,7 @@
  enum { dbg_testcond = 1 };
  enum { dbg_fsmap    = 1 };
  enum { dbg_fsmapv   = 0 };
- enum { dbg_open     = 0 };
+ enum { dbg_open     = 1 };
 
 # define dbg(filter, msg, ...)                  \
     do {                                        \

@@ -15,6 +15,7 @@ extern void sbox_rewrite_arg(struct tcb *tcp, int arg, long val);
 extern void sbox_hijack_str(struct tcb *tcp, int arg, char *new);
 extern void sbox_restore_hijack(struct tcb *tcp);
 extern void sbox_check_test_cond(const char *pn, const char *key);
+extern void sbox_init(void);
 extern void sbox_cleanup(void);
 extern int sbox_interactive(void);
 extern void sbox_stop(struct tcb *tcp, const char *fmt, ...);

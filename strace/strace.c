@@ -1491,7 +1491,10 @@ init(int argc, char *argv[])
         }
     }
 
+    // init sbox routines
     dbg(welcome, "Root %s", opt_root);
+    sbox_init();
+    
     if (opt_test_flag) {
         opt_test = strdup(argv[0]);
         dbg(welcome, "Test %s", opt_test);

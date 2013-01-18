@@ -29,21 +29,20 @@ struct linux_dirent {
 /* os global structure */
 static struct fsmap* os_deleted_fs = NULL; /* deleted fs map */
 
-static inline
 int sbox_is_deleted(char *path)
 {
     return is_deleted(os_deleted_fs, path);
 }
 
 static inline
-int sbox_delete_file(char *path)
+int __sbox_delete_file(char *path)
 {
     add_path_to_fsmap(&os_deleted_fs, path, PATH_DELETED);
     return 1;
 }
 
-static inline
-int sbox_delete_dir(char *path)
+static
+int __sbox_delete_dir(char *path)
 {
     const int path_len = strlen(path);
     struct fsmap *s;
@@ -61,6 +60,74 @@ int sbox_delete_dir(char *path)
     return 1;
 }
 
+static
+char *__sbox_meta_file(void)
+{
+    static char *path = NULL;
+    if (!path) {
+        path = (char *)safe_malloc(PATH_MAX);
+        snprintf(path, PATH_MAX, "%s.meta", opt_root);
+    }
+    return path;
+}
+
+
+void sbox_flush_meta(void)
+{
+    // only if we have something to flush
+    if (!os_deleted_fs) {
+        return;
+    }
+
+    FILE *fp = fopen(__sbox_meta_file(), "w+");
+    if (!fp) {
+        err(1, "fopen");
+    }
+
+    struct fsmap *s;
+    struct fsmap *tmp;
+
+    fprintf(stderr, "Deleted Files:\n");
+    HASH_ITER(hh, os_deleted_fs, s, tmp) {
+        fprintf(stderr, "> %s (%x)\n", s->key, s->val);
+        fprintf(fp, "%s:%d\n", s->key, s->val);
+    }
+
+    fclose(fp);
+}
+
+void sbox_load_meta(void)
+{
+    FILE *fp = fopen(__sbox_meta_file() , "r");
+    if (!fp) {
+        /* okay */
+        return;
+    }
+
+    size_t len = 0;
+    char *line = NULL;
+    while (getline(&line, &len, fp) != -1) {
+        char *del = strstr(line, ":");
+        if (!del) {
+            errx(1, "Malformed %s file", __sbox_meta_file());
+        }
+
+        *del = '\0';
+        del ++;
+
+        int val;
+        sscanf(del, "%d", &val);
+        add_path_to_fsmap(&os_deleted_fs, line, val);
+    }
+
+    fclose(fp);
+}
+
+void sbox_init(void)
+{
+    sbox_load_meta();
+}
+
 void sbox_cleanup(void)
 {
     // dump system-wide logs
@@ -76,10 +143,12 @@ void sbox_cleanup(void)
         }
     }
 
-    /* XXX. dump into a permanent place */
-    if (os_deleted_fs) {
-        free_fsmap(os_deleted_fs);
-    }
+    // dump into a permanent place
+    sbox_flush_meta();
+
+    // NOTE. we are going to die anyway.
+    // free_fsmap(os_deleted_fs);
+    // free_systemlog(systemlog);
 }
 
 static
@@ -150,7 +219,6 @@ void sbox_check_test_cond(const char *pn, const char *key)
 static
 int get_fd_path(int pid, int fd, char *path, int len)
 {
-    int fd_in_sbox = 0;
     ssize_t read;
     char proc[PATH_MAX];
 
@@ -162,6 +230,19 @@ int get_fd_path(int pid, int fd, char *path, int len)
     }
     path[read] = '\0';
     dbg(test, "> %s", path);
+
+    return 1;
+}
+
+static
+int get_fd_hpn(int pid, int fd, char *path, int len)
+{
+    int fd_in_sbox = 0;
+
+    // XXX. ugly
+    if (!get_fd_path(pid, fd, path, len)) {
+        return 0; 
+    }
 
     // check if cwd is under sboxfs
     if (is_in_sboxfs(path)) {
@@ -177,7 +258,7 @@ int get_fd_path(int pid, int fd, char *path, int len)
 }
 
 static
-int get_cwd_path(int pid, char *path, int len)
+int get_cwd_hpn(int pid, char *path, int len)
 {
     int cwd_in_sbox = 0;
     ssize_t read;
@@ -207,6 +288,8 @@ int get_cwd_path(int pid, char *path, int len)
 // get a path relative to fd from a syscall
 // return 1 if cwd is on the sboxfs
 //
+// XXX. need to check if fd doesn't exist
+// 
 static
 int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int len)
 {
@@ -231,10 +314,10 @@ int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int le
     char root[PATH_MAX];
     if (fd == AT_FDCWD) {
         // read /proc/pid/cwd
-        cwd_in_sbox = get_cwd_path(tcp->pid, root, sizeof(root));
+        cwd_in_sbox = get_cwd_hpn(tcp->pid, root, sizeof(root));
     } else {
         // read /proc/pid/fd/#
-        cwd_in_sbox = get_fd_path(tcp->pid, fd, root, sizeof(root));
+        cwd_in_sbox = get_fd_hpn(tcp->pid, fd, root, sizeof(root));
     }
 
     snprintf(path, len, "%s/%s", root, pn);
@@ -437,6 +520,31 @@ void sbox_sync_parent_dirs(char *hpn, char *spn)
     *last = '/';
 }
 
+int sbox_rewrite_path_dir(struct tcb *tcp, int fd, int arg)
+{
+    char hpn[PATH_MAX];
+    char spn[PATH_MAX];
+
+    get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
+    get_spn_from_hpn(hpn, spn, PATH_MAX);
+
+    // if deleted dir
+    if (sbox_is_deleted(hpn)) {
+        sbox_hijack_str(tcp, 0, spn);
+        return 0;
+    }
+        
+    // stick to hpn
+    if (path_exists(hpn)) {
+        return 0;
+    }
+
+    // this is only movable branch, go there
+    if (path_exists(spn)) {
+        sbox_hijack_str(tcp, 0, spn);
+    }
+}
+
 int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
 {
     char hpn[PATH_MAX];
@@ -487,6 +595,16 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
         return;
     }
 
+    // only handle when opening a directory
+    if (oflag & O_DIRECTORY) {
+        dbg(open, "open directory: %s", hpn);
+        if (!sbox_is_deleted(hpn)) {
+            sbox_sync_parent_dirs(hpn, spn); 
+        }
+        sbox_hijack_str(tcp, arg, spn);
+        return;
+    }
+        
     // if the path is deleted
     if (sbox_is_deleted(hpn)) {
         dbg(open, "open deleted file: %s", hpn);
@@ -600,7 +718,7 @@ int sbox_rmdir(struct tcb *tcp)
 
             // clean up all files in the directory
             // NOTE. can be optimized if need
-            sbox_delete_dir(hpn);
+            __sbox_delete_dir(hpn);
         }
     }
     return 0;
@@ -630,9 +748,9 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg, int flag)
         // mark the file deleted
         if ((long)tcp->regs.rax == 0) {
             if (flag == AT_REMOVEDIR) {
-                sbox_delete_dir(hpn);
+                __sbox_delete_dir(hpn);
             } else {
-                sbox_delete_file(hpn);
+                __sbox_delete_file(hpn);
             }
         }
     }
@@ -740,10 +858,16 @@ int sbox_getdents(struct tcb *tcp)
                 }
             }
 
+            snprintf(spn, sizeof(spn), "%s/%s", tcp->dentfd_spn, d->d_name);
+            // ignore if it is a deleted entry
+            if (sbox_is_deleted(spn + opt_root_len)) {
+                src_iter += d->d_reclen;
+                continue;
+            }
+            
             // ignore dentry if exists in sandboxfs
-            snprintf(hpn, sizeof(hpn), "%s/%s", tcp->dentfd_spn, d->d_name);
-            if (path_exists(hpn)) {
-                dbg(getdents, "[%3d] found in sbox: %s", src_iter, hpn);
+            if (path_exists(spn)) {
+                dbg(getdents, "[%3d] found in sbox: %s", src_iter, spn);
                 src_iter += d->d_reclen;
                 continue;
             }
@@ -1101,6 +1225,8 @@ int sbox_interactive(void)
 {
     _sbox_dump_sboxfs();
     _sbox_walk(opt_root, NULL, _sbox_interactive_menu);
+
+    // XXX. need to walk over deleted files too
 
     return 0;
 }

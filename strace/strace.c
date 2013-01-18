@@ -704,7 +704,7 @@ droptcb(struct tcb *tcp)
     // pass it to the systemlog
     if (tcp->logs) {
         struct systemlog *log = \
-            (struct systemlog *) malloc(sizeof(struct systemlog));
+            (struct systemlog *) safe_malloc(sizeof(struct systemlog));
         log->pid = tcp->pid;
         log->next = systemlog;
         log->logs = tcp->logs;

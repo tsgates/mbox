@@ -897,7 +897,6 @@ int sbox_connect(struct tcb *tcp)
     if (entering(tcp)) {
         struct sockaddr *sa \
             = (struct sockaddr *) safe_malloc(tcp->u_arg[2]);
-        // sbox_add_log(tcp, "XXX: %d vs %d", sizeof(struct sockaddr_in), tcp->u_arg[2]);
         if (umoven(tcp, tcp->u_arg[1], tcp->u_arg[2], (char *)sa) < 0) {
             // can't access to sockaddr*, but ok
             free(sa);

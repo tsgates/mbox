@@ -156,5 +156,6 @@ $(ioctlent_h): $(top_builddir)/config.status $(ioctlent_h_deps)
 bpf-syscall.h: bpf-gen.sh linux/syscall.h
 	./bpf-gen.sh > $@
 
+dbg.h: configsbox.h
 configsbox.h: .configsbox.h
 	cp -f $^ $@

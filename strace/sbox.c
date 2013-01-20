@@ -1136,41 +1136,6 @@ int _sh_commit(char *spn, char *hpn)
     return 0;
 }
 
-static
-int _sbox_interactive_menu(char *spn, char *hpn)
-{
-    static int opt_commit_all = 0;
-
-    const char *menu \
-        = "[C]:commit all, [c]:commit, [i]:ignore, [d]:diff, [q]:quit";
-
-    if (opt_commit_all) {
-        _sh_commit(spn, hpn);
-        return 0;
-    }
-
-    while (1) {
-        printf("F:%s\n", hpn);
-        switch (_prompt(menu)) {
-        case 'C':
-            opt_commit_all = 1;
-            /* fall-in */
-        case 'c':
-            _sh_commit(spn, hpn);
-            /* fall-in */
-        case 'i':
-            return 0;
-            break;
-        case 'd':
-            _sh_diff(spn, hpn);
-            break;
-        case 'q':
-            exit(0);
-            break;
-        }
-    }
-    return 0;
-}
 
 static
 int _sbox_print_file(char *spn, char *hpn)
@@ -1184,6 +1149,46 @@ void _sbox_dump_sboxfs(void)
 {
     printf("Sandbox Root:\n > %s\n", opt_root);
     _sbox_walk(opt_root, NULL, _sbox_print_file);
+}
+
+static
+int _sbox_interactive_menu(char *spn, char *hpn)
+{
+    static int opt_commit_all = 0;
+
+    const char *menu \
+        = "[C]:commit all, [c]:commit, [i]:ignore, [d]:diff, [l]:list tree, [q]:quit";
+
+    if (opt_commit_all) {
+        _sh_commit(spn, hpn);
+        return 0;
+    }
+
+    while (1) {
+        printf("F:%s\n", hpn);
+        switch (_prompt(menu)) {
+        case 'C':
+            /* XXX. locked all files and commit at the same time */
+            opt_commit_all = 1;
+            /* fall-in */
+        case 'c':
+            _sh_commit(spn, hpn);
+            /* fall-in */
+        case 'i':
+            return 0;
+            break;
+        case 'd':
+            _sh_diff(spn, hpn);
+            break;
+        case 'l':
+            _sbox_dump_sboxfs();
+            break;
+        case 'q':
+            exit(0);
+            break;
+        }
+    }
+    return 0;
 }
 
 int sbox_interactive(void)

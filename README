@@ -3,6 +3,7 @@ Getting started
 ===============
 
     $ cd strace
+    $ autoconf
     $ make
 
      - src/tests-sbox      : test codes

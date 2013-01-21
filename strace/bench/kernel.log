@@ -1,0 +1,20 @@
+# old bench with python impl
+
+make kernel                                        60.16s user  7.45s system 103% cpu  1:05.61 total
+strace -o /dev/null -f make kernel                166.44s user 74.58s system 113% cpu  3:32.08 total
+./sandbox.py -j ptrace -C /tmp/linux make kernel  650.09s user 94.20s system 108% cpu 11:28.67 total
+./sandbox.py -j seccomp -C /tmp/linux make kernel 566.25s user 83.31s system 106% cpu 10:08.13 total
+./strace -s -C /tmp/linux make kernel             131.75s user 59.06s system 110% cpu  2:52.34 total
+
+# new bench with c impl
+
+make -C /tmp/linux-git kernel                      60.06s user  6.96s system 102% cpu 1:05.24 total
+./strace -- make -C /tmp/linux-git kernel         154.21s user 72.20s system 113% cpu 3:20.32 total
+./strace -s -- make -C /tmp/linux-git kernel      129.99s user 41.91s system 108% cpu 2:38.33 total
+
+time make -C /tmp/linux-git -j4 kernel             96.96s user  7.47s system 356% cpu  29.274 total
+./strace -- make -C /tmp/linux-git -j4 kernel     106.38s user 35.20s system 223% cpu 1:03.48 total
+./strace -s -- make -C /tmp/linux-git -j4 kernel   95.42s user 18.91s system 279% cpu  40.905 total
+
+=> make kernel:         x2.4 slower
+=> make -j4 kernel:     x1.4 slower

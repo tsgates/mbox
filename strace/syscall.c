@@ -2058,7 +2058,7 @@ trace_syscall_exiting(struct tcb *tcp)
     if (!debug_flag) {
         goto ret;
     }
-        
+    
     tprints(") ");
     tabto();
     u_error = tcp->u_error;

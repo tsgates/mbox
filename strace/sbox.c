@@ -762,8 +762,17 @@ int sbox_getdents(struct tcb *tcp)
     if (exiting(tcp) && tcp->regs.rax == 0) {
         int hostfd = tcp->u_arg[0];
 
+        // NOTE. we only support, a single contiguous getdent()
+        if (!(tcp->dentfd_sbox < 0) && tcp->dentfd_host != hostfd) {
+            dbg(getdents, "optimistically close(host:%d)", tcp->dentfd_host);
+            close(tcp->dentfd_sbox);
+            tcp->dentfd_sbox = -1;
+            tcp->dentfd_host = -1;
+            // should fall into the below if statement
+        }
+        
         // just done with sandboxfs
-        if (tcp->dentfd_sbox == -1) {
+        if (tcp->dentfd_sbox < 0) {
             // get hpn
             if (!get_fd_path(tcp->pid, hostfd, spn, sizeof(spn))) {
                 // wrong fd anyway
@@ -772,14 +781,24 @@ int sbox_getdents(struct tcb *tcp)
 
             // check if calling to sandboxfs
             if (strncmp(spn, opt_root, opt_root_len) != 0) {
+
+                // XXX. meanwhile, it can modify the same dir in sboxfs, so
+                // the getdents(hostfs) might be even wrong. we can handle
+                // this situation later.
+                ifdbg(getdents, {
+                        char xxx[PATH_MAX];
+                        snprintf(xxx, sizeof(PATH_MAX), "%s%s", opt_root, spn);
+                        if (access(xxx, F_OK) == 0) {
+                            dbg(getdents, "XXX. %s exists", xxx);
+                        }
+                    }
+                );
+                
                 // return if calls on hostfs
                 return 0;
             }
 
             strncpy(hpn, spn + opt_root_len, sizeof(hpn));
-            dbg(getdents, "spn:%s", hpn);
-            dbg(getdents, "hpn:%s", hpn);
-
             strncpy(tcp->dentfd_spn, spn, sizeof(tcp->dentfd_spn));
 
             tcp->dentfd_host = hostfd;
@@ -788,13 +807,9 @@ int sbox_getdents(struct tcb *tcp)
                 return 0;
             }
         }
-
-        // NOTE. we only support, single contiguous getdent()
-        if (tcp->dentfd_host != hostfd) {
-            dbg(fatal, "we only support a single getdent() at a time");
-            exit(1);
-        }
-
+        
+        dbg(getdents, "handle files on sboxfs (host:%d)", tcp->dentfd_host);
+        
         // manually invoke getdents on hostfs.
         // to overwrite less than the memory of tracee (dirp), we use
         // buf with the size less that the given value (count).
@@ -803,6 +818,8 @@ int sbox_getdents(struct tcb *tcp)
 
         // done with pumping dirs of sandboxfs
         if (len == 0) {
+            dbg(getdents, "No more files in sbox, cloes host:%d", tcp->dentfd_host);
+            
             close(tcp->dentfd_sbox);
             tcp->dentfd_sbox = -1;
             tcp->dentfd_host = -1;
@@ -844,6 +861,7 @@ int sbox_getdents(struct tcb *tcp)
         }
 
         // copy buf/ret to tracee
+        dbg(getdents, "return: %d", dst_iter);
         sbox_rewrite_ret(tcp, dst_iter);
         sbox_remote_write(tcp, tcp->u_arg[1], tmp, dst_iter);
     }

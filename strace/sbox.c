@@ -1183,6 +1183,10 @@ int _sbox_interactive_menu(char *spn, char *hpn)
     }
 
     while (1) {
+        // TODO. append insteresting flag instead of 'F'
+        // N: new file
+        // M: modified file
+        // D: deleted file
         printf("F:%s\n", hpn);
         switch (_prompt(menu)) {
         case 'C':

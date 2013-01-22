@@ -1128,7 +1128,7 @@ static
 char _prompt(const char *menu)
 {
     char c;
-    printf(" %s ? > ", menu);
+    printf(" %s ?> ", menu);
     c = kbhit();
     printf("\n");
     return c;
@@ -1175,7 +1175,7 @@ int _sbox_interactive_menu(char *spn, char *hpn)
     static int opt_commit_all = 0;
 
     const char *menu \
-        = "[C]:commit all, [c]:commit, [i]:ignore, [d]:diff, [l]:list tree, [q]:quit";
+        = "[C]ommit all, [c]ommit, [i]gnore, [d]iff, [l]ist tree, [q]uit";
 
     if (opt_commit_all) {
         _sh_commit(spn, hpn);

@@ -288,8 +288,6 @@ int get_cwd_hpn(int pid, char *path, int len)
 // get a path relative to fd from a syscall
 // return 1 if cwd is on the sboxfs
 //
-// XXX. need to check if fd doesn't exist
-//
 static
 int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int len)
 {
@@ -298,10 +296,13 @@ int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int le
 
     char pn[PATH_MAX];
     const long ptr = tcp->u_arg[arg];
-    if (umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
+    // fprintf(stderr, "XXX: read %x (pid=%d)\n", ptr, tcp->pid);
+    if (ptr == 0 || umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
         pn[0] = '\0';
     }
 
+    // fprintf(stderr, "XXX: %s\n", pn);
+    
     // abspath
     if (pn[0] == '/') {
         strncpy(path, pn, len);
@@ -549,7 +550,7 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
         dbg(path, "rewrite to %s", spn);
     }
 
-    return 0;
+    return 1;
 }
 
 static
@@ -597,8 +598,8 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
         return;
     }
 
-    // trunc
-    if (oflag & O_TRUNC) {
+    // trunc or write only
+    if (oflag & O_TRUNC || accmode == O_WRONLY) {
         dbg(open, "open(%s, TRUNC)", spn);
         sbox_sync_parent_dirs(hpn, spn);
         sbox_hijack_str(tcp, arg, spn);
@@ -770,7 +771,7 @@ int sbox_getdents(struct tcb *tcp)
             tcp->dentfd_host = -1;
             // should fall into the below if statement
         }
-        
+
         // just done with sandboxfs
         if (tcp->dentfd_sbox < 0) {
             // get hpn
@@ -793,7 +794,7 @@ int sbox_getdents(struct tcb *tcp)
                         }
                     }
                 );
-                
+
                 // return if calls on hostfs
                 return 0;
             }
@@ -807,9 +808,9 @@ int sbox_getdents(struct tcb *tcp)
                 return 0;
             }
         }
-        
+
         dbg(getdents, "handle files on sboxfs (host:%d)", tcp->dentfd_host);
-        
+
         // manually invoke getdents on hostfs.
         // to overwrite less than the memory of tracee (dirp), we use
         // buf with the size less that the given value (count).
@@ -819,7 +820,7 @@ int sbox_getdents(struct tcb *tcp)
         // done with pumping dirs of sandboxfs
         if (len == 0) {
             dbg(getdents, "No more files in sbox, cloes host:%d", tcp->dentfd_host);
-            
+
             close(tcp->dentfd_sbox);
             tcp->dentfd_sbox = -1;
             tcp->dentfd_host = -1;

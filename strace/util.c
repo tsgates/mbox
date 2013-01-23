@@ -899,11 +899,13 @@ umovestr(struct tcb *tcp, long addr, int len, char *laddr)
                     /*flags:*/ 0
             );
             if (r < 0) {
-                if (errno == ENOSYS)
+                if (errno == ENOSYS) {
                     process_vm_readv_not_supported = 1;
-                else if (errno != EINVAL) /* EINVAL is seen if process is gone */
+                }
+                else if (errno != EINVAL) /* EINVAL is seen if process is gone */ {
                     /* strange... */
                     perror("process_vm_readv");
+                }
                 goto vm_readv_didnt_work;
             }
             if (memchr(local[0].iov_base, '\0', r))

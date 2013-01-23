@@ -256,7 +256,7 @@
 { 2,    TD,     sys_inotify_rm_watch,       NULL,   "inotify_rm_watch"               },  /* 255 */
 { 4,    0,      sys_migrate_pages,          NULL,   "migrate_pages"                  },  /* 256 */
 { 4,    TD|TF,  sys_openat,                 sbox_openat,        "openat"             },  /* 257 */
-{ 3,    TD|TF,  sys_mkdirat,                sbox_mkdir,         "mkdirat"            },  /* 258 */
+{ 3,    TD|TF,  sys_mkdirat,                sbox_mkdirat,       "mkdirat"            },  /* 258 */
 { 4,    TD|TF,  sys_mknodat,                sbox_mknodat,       "mknodat"            },  /* 259 */
 { 5,    TD|TF,  sys_fchownat,               sbox_fchownat,      "fchownat"           },  /* 260 */
 { 3,    TD|TF,  sys_futimesat,              sbox_futimesat,     "futimesat"          },  /* 261 */

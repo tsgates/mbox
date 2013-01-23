@@ -101,7 +101,7 @@ int opt_root_len = 0;
 char *opt_test = NULL;
 bool opt_seccomp = 0;
 bool opt_interactive = 0;
-bool opt_no_nw = 0;
+bool opt_no_nw = 1;
 
 /*
  * daemonized_tracer supports -D option.
@@ -222,7 +222,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -d      : enable syscall trace to stderr\n\
         -D      : enable debug\n\
         -t      : run as unit tester (check pre/post condition, see tests-sbox/NOTE)\n\
-        -n      : no network\n\
+        -n      : enable network accesses\n\
         -i      : interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
         -C path : change directory\n\
@@ -1409,7 +1409,7 @@ init(int argc, char *argv[])
             opt_test_flag = 1;
             break;
         case 'n':
-            opt_no_nw = 1;
+            opt_no_nw = 0;
             break;
         default:
             usage(stderr, 1);

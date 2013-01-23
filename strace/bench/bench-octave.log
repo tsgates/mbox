@@ -1,0 +1,129 @@
+   Octave Benchmark 2
+   ==================
+Number of times each test is run__________________________: 3
+ 
+   I. Matrix calculation
+   ---------------------
+Creation, transp., deformation of a 1500x1500 matrix (sec): 0.085308
+800x800 normal distributed random matrix ^1000______ (sec): 0.010427
+Sorting of 2,000,000 random values__________________ (sec): 0.23831
+700x700 cross-product matrix (b = a' * a)___________ (sec): 0.15682
+Linear regression over a 600x600 matrix (c = a \\ b') (sec): 0.056443
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.091061
+ 
+   II. Matrix functions
+   --------------------
+FFT over 800,000 random values______________________ (sec): 0.052324
+Eigenvalues of a 320x320 random matrix______________ (sec): 0.14619
+Determinant of a 650x650 random matrix______________ (sec): 0.06978
+Cholesky decomposition of a 900x900 matrix__________ (sec): 0.10994
+Inverse of a 400x400 random matrix__________________ (sec): 0.047527
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.073767
+ 
+   III. Programmation
+   ------------------
+750,000 Fibonacci numbers calculation (vector calc)_ (sec): 0.12756
+Creation of a 2250x2250 Hilbert matrix (matrix calc) (sec): 0.08127
+Grand common divisors of 70,000 pairs (recursion)___ (sec): 0.0056679
+Creation of a 220x220 Toeplitz matrix (loops)_______ (sec): 0.37914
+warning: corrcoef is not equivalent to Matlab and will be removed from a future version of Octave; for similar functionality see corr
+Escoufier's method on a 37x37 matrix (mixed)________ (sec): 0.52755
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.15782
+ 
+ 
+Total time for all 15 tests_________________________ (sec): 2.0943
+Overall mean (sum of I, II and III trimmed means/3)_ (sec): 0.10196
+                      --- End of test ---
+
+real	0m7.938s
+user	0m7.786s
+sys	0m0.123s
+   Octave Benchmark 2
+   ==================
+Number of times each test is run__________________________: 3
+ 
+   I. Matrix calculation
+   ---------------------
+Creation, transp., deformation of a 1500x1500 matrix (sec): 0.091982
+800x800 normal distributed random matrix ^1000______ (sec): 0.010751
+Sorting of 2,000,000 random values__________________ (sec): 0.24037
+700x700 cross-product matrix (b = a' * a)___________ (sec): 0.15605
+Linear regression over a 600x600 matrix (c = a \\ b') (sec): 0.056251
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.093118
+ 
+   II. Matrix functions
+   --------------------
+FFT over 800,000 random values______________________ (sec): 0.055597
+Eigenvalues of a 320x320 random matrix______________ (sec): 0.15001
+Determinant of a 650x650 random matrix______________ (sec): 0.070988
+Cholesky decomposition of a 900x900 matrix__________ (sec): 0.11076
+Inverse of a 400x400 random matrix__________________ (sec): 0.048124
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.075894
+ 
+   III. Programmation
+   ------------------
+750,000 Fibonacci numbers calculation (vector calc)_ (sec): 0.12764
+Creation of a 2250x2250 Hilbert matrix (matrix calc) (sec): 0.08339
+Grand common divisors of 70,000 pairs (recursion)___ (sec): 0.0058973
+Creation of a 220x220 Toeplitz matrix (loops)_______ (sec): 0.38264
+warning: corrcoef is not equivalent to Matlab and will be removed from a future version of Octave; for similar functionality see corr
+Escoufier's method on a 37x37 matrix (mixed)________ (sec): 0.5277
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.1597
+ 
+ 
+Total time for all 15 tests_________________________ (sec): 2.1181
+Overall mean (sum of I, II and III trimmed means/3)_ (sec): 0.10411
+                      --- End of test ---
+
+real	0m8.478s
+user	0m8.146s
+sys	0m0.333s
+   Octave Benchmark 2
+   ==================
+Number of times each test is run__________________________: 3
+ 
+   I. Matrix calculation
+   ---------------------
+Creation, transp., deformation of a 1500x1500 matrix (sec): 0.087343
+800x800 normal distributed random matrix ^1000______ (sec): 0.010857
+Sorting of 2,000,000 random values__________________ (sec): 0.23784
+700x700 cross-product matrix (b = a' * a)___________ (sec): 0.15795
+Linear regression over a 600x600 matrix (c = a \\ b') (sec): 0.057076
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.092342
+ 
+   II. Matrix functions
+   --------------------
+FFT over 800,000 random values______________________ (sec): 0.054608
+Eigenvalues of a 320x320 random matrix______________ (sec): 0.14436
+Determinant of a 650x650 random matrix______________ (sec): 0.071111
+Cholesky decomposition of a 900x900 matrix__________ (sec): 0.11028
+Inverse of a 400x400 random matrix__________________ (sec): 0.049021
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.075375
+ 
+   III. Programmation
+   ------------------
+750,000 Fibonacci numbers calculation (vector calc)_ (sec): 0.12755
+Creation of a 2250x2250 Hilbert matrix (matrix calc) (sec): 0.081403
+Grand common divisors of 70,000 pairs (recursion)___ (sec): 0.0060483
+Creation of a 220x220 Toeplitz matrix (loops)_______ (sec): 0.37984
+warning: corrcoef is not equivalent to Matlab and will be removed from a future version of Octave; for similar functionality see corr
+Escoufier's method on a 37x37 matrix (mixed)________ (sec): 0.53283
+                  ------------------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated): 0.158
+ 
+ 
+Total time for all 15 tests_________________________ (sec): 2.1081
+Overall mean (sum of I, II and III trimmed means/3)_ (sec): 0.10322
+                      --- End of test ---
+
+real	0m8.326s
+user	0m7.986s
+sys	0m0.340s

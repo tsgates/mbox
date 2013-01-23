@@ -1,8 +1,8 @@
 # TODO
- - persistent meta data
- - intercepting/preventing network
+ - UI: display deleted files & files in sandboxfs together with N/D flag?
  
 # DONE
  - write arguments to the readonly memory
  - handle deleted path / pruned path for profile
- 
+ - persistent meta data
+ - intercepting/preventing network

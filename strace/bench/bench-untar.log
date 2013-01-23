@@ -1,0 +1,22 @@
+Run: tar jxf /tmp/linux-3.7.tar.bz2 -C /tmp/linux-3.7 (see /tmp/untar-Owhfm)
+
+real	0m13.312s
+user	0m13.296s
+sys	0m1.053s
+--------
+Run: ./bench/../strace -- tar jxf /tmp/linux-3.7.tar.bz2 -C /tmp/linux-3.7 (see /tmp/untar-OANOs)
+Deleted Files:
+ > /tmp/linux-3.7/linux-3.7/arch/microblaze/boot/dts/system.dts (1)
+
+real	0m29.804s
+user	0m26.262s
+sys	0m16.259s
+--------
+Run: ./bench/../strace -s -- tar jxf /tmp/linux-3.7.tar.bz2 -C /tmp/linux-3.7 (see /tmp/untar-LFj8R)
+Deleted Files:
+ > /tmp/linux-3.7/linux-3.7/arch/microblaze/boot/dts/system.dts (1)
+
+real	0m16.458s
+user	0m15.856s
+sys	0m5.523s
+--------

@@ -271,6 +271,10 @@ update_personality(struct tcb *tcp, int personality)
             tcp->pid, names[personality]);
     }
 # elif defined(X86_64)
+    if (personality != 0) {
+        sbox_stop(tcp, "Don't support 32bit binary yet");
+    }
+
     if (!qflag) {
         static const char *const names[] = {"64 bit", "32 bit", "x32"};
         fprintf(stderr, "[ Process PID=%d runs in %s mode. ]\n",

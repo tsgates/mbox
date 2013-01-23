@@ -1,0 +1,21 @@
+Run: tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-OzItR)
+tar: Removing leading `/' from member names
+
+real	0m57.175s
+user	0m56.283s
+sys	0m2.410s
+--------
+Run: ./bench/../strace -- tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-jQitp)
+tar: Removing leading `/' from member names
+
+real	1m5.452s
+user	1m4.429s
+sys	0m12.429s
+--------
+Run: ./bench/../strace -s -- tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-i46ie)
+tar: Removing leading `/' from member names
+
+real	0m58.287s
+user	0m57.570s
+sys	0m5.640s
+--------

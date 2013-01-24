@@ -742,7 +742,7 @@ int sbox_access_general(struct tcb *tcp, int fd, int arg)
         sbox_rewrite_path(tcp, fd, arg, READWRITE_READ);
     } else {
         // exiting and fakeroot enabled
-        if (opt_fakeroot) {
+        if (opt_fakeroot && tcp->regs.rax != 0) {
             get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
             get_spn_from_hpn(hpn, spn, PATH_MAX);
             
@@ -1074,12 +1074,49 @@ int sbox_getroot(struct tcb *tcp)
     }
 }
 
+int sbox_chown_general(struct tcb *tcp, int fd, int arg)
+{ 
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, fd, arg, READWRITE_WRITE);
+    } else {
+        // exiting and fakeroot enabled
+        if (opt_fakeroot && tcp->regs.rax == -EPERM) {
+            dbg(fakeroot, "chown(%s) = 0", hpn);
+            sbox_rewrite_ret(tcp, 0);
+        }
+    }
+    return 0;
+}
+
+int sbox_chown(struct tcb *tcp) 
+{
+    return sbox_chown_general(tcp, AT_FDCWD, 0);
+}
+
+int sbox_lchown(struct tcb *tcp) 
+{
+    return sbox_chown_general(tcp, AT_FDCWD, 0);
+}
+
+int sbox_fchownat(struct tcb *tcp) 
+{
+    return sbox_chown_general(tcp, tcp->u_arg[0], 1);
+}
+
+int sbox_fchown(struct tcb *tcp) 
+{
+    // exiting and fakeroot enabled
+    if (opt_fakeroot && exiting(tcp) && tcp->regs.rax == -EPERM) {
+        dbg(fakeroot, "fchown(%ld) = 0", tcp->u_arg[0]);
+        sbox_rewrite_ret(tcp, 0);
+    }
+}
+
 DEF_SBOX_SC_PATH_AT(utimensat , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(readlinkat, 0, 1, READ );
 DEF_SBOX_SC_PATH_AT(fchmodat  , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(mknodat   , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(futimesat , 0, 1, WRITE);
-DEF_SBOX_SC_PATH_AT(fchownat  , 0, 1, WRITE);
 
 DEF_SBOX_SC_PATH(setxattr     , 0 , WRITE);
 DEF_SBOX_SC_PATH(lsetxattr    , 0 , WRITE);
@@ -1094,8 +1131,6 @@ DEF_SBOX_SC_PATH(uselib       , 0 , READ );
 DEF_SBOX_SC_PATH(utimes       , 0 , WRITE);
 DEF_SBOX_SC_PATH(utime        , 0 , WRITE);
 DEF_SBOX_SC_PATH(chmod        , 0 , WRITE);
-DEF_SBOX_SC_PATH(chown        , 0 , WRITE);
-DEF_SBOX_SC_PATH(lchown       , 0 , WRITE);
 DEF_SBOX_SC_PATH(execve       , 0 , READ );
 DEF_SBOX_SC_PATH(truncate     , 0 , FORCE);
 DEF_SBOX_SC_PATH(readlink     , 0 , READ );

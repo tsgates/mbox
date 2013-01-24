@@ -91,7 +91,7 @@
 { 2,    TF,     sys_chmod,                  sbox_chmod,         "chmod"              },  /* 90 */
 { 2,    TD,     sys_fchmod,                 NULL,   "fchmod"                         },  /* 91 */
 { 3,    TF,     sys_chown,                  sbox_chown,         "chown"              },  /* 92 */
-{ 3,    TD,     sys_fchown,                 NULL,   "fchown"                         },  /* 93 */
+{ 3,    TD,     sys_fchown,                 sbox_fchown,        "fchown"             },  /* 93 */
 { 3,    TF,     sys_chown,                  sbox_lchown,        "lchown"             },  /* 94 */
 { 1,    0,      sys_umask,                  NULL,   "umask"                          },  /* 95 */
 { 2,    0,      sys_gettimeofday,           NULL,   "gettimeofday"                   },  /* 96 */

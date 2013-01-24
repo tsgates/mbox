@@ -436,3 +436,4 @@ int sbox_getuid();
 int sbox_getgid();
 int sbox_geteuid();
 int sbox_getegid();
+int sbox_fchown();

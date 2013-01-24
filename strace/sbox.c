@@ -1051,6 +1051,14 @@ int sbox_socket(struct tcb *tcp)
     return 0;
 }
 
+int sbox_getroot(struct tcb *tcp)
+{
+    if (opt_fakeroot && exiting(tcp)) {
+        dbg(uid, "%s() = 0", sysent[tcp->scno].sys_name);
+        sbox_rewrite_ret(tcp, 0);
+    }
+}
+
 DEF_SBOX_SC_PATH_AT(utimensat , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(readlinkat, 0, 1, READ );
 DEF_SBOX_SC_PATH_AT(fchmodat  , 0, 1, WRITE);

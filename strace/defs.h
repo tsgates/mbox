@@ -516,6 +516,7 @@ extern int opt_root_len;
 extern bool opt_seccomp;
 extern bool opt_interactive;
 extern bool opt_no_nw;
+extern bool opt_fakeroot;
 
 extern void kill_all(struct tcb *tcp);
 

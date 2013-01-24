@@ -100,13 +100,13 @@
 { 1,    0,      sys_sysinfo,                NULL,   "sysinfo"                        },  /* 99 */
 { 1,    0,      sys_times,                  NULL,   "times"                          },  /* 100 */
 { 4,    0,      sys_ptrace,                 NULL,   "ptrace"                         },  /* 101 */
-{ 0,    NF,     sys_getuid,                 NULL,   "getuid"                         },  /* 102 */
+{ 0,    NF,     sys_getuid,                 sbox_getroot,       "getuid"             },  /* 102 */
 { 3,    0,      sys_syslog,                 NULL,   "syslog"                         },  /* 103 */
-{ 0,    NF,     sys_getgid,                 NULL,   "getgid"                         },  /* 104 */
+{ 0,    NF,     sys_getgid,                 sbox_getroot,       "getgid"             },  /* 104 */
 { 1,    0,      sys_setuid,                 NULL,   "setuid"                         },  /* 105 */
 { 1,    0,      sys_setgid,                 NULL,   "setgid"                         },  /* 106 */
-{ 0,    NF,     sys_geteuid,                NULL,   "geteuid"                        },  /* 107 */
-{ 0,    NF,     sys_getegid,                NULL,   "getegid"                        },  /* 108 */
+{ 0,    NF,     sys_geteuid,                sbox_getroot,       "geteuid"            },  /* 107 */
+{ 0,    NF,     sys_getegid,                sbox_getroot,       "getegid"            },  /* 108 */
 { 2,    0,      sys_setpgid,                NULL,   "setpgid"                        },  /* 109 */
 { 0,    0,      sys_getppid,                NULL,   "getppid"                        },  /* 110 */
 { 0,    0,      sys_getpgrp,                NULL,   "getpgrp"                        },  /* 111 */

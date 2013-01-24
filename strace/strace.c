@@ -99,9 +99,10 @@ static int opt_intr;
 char *opt_root = NULL;
 int opt_root_len = 0;
 char *opt_test = NULL;
-bool opt_seccomp = 0;
+bool opt_seccomp     = 0;
 bool opt_interactive = 0;
-bool opt_no_nw = 1;
+bool opt_no_nw       = 1;
+bool opt_fakeroot    = 0;
 
 /*
  * daemonized_tracer supports -D option.
@@ -225,6 +226,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -n      : enable network accesses\n\
         -i      : interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
+        -R      : fakeroot\n\
         -C path : change directory\n\
         -r path : sandbox root (default:%s)\n",
         DEFAULT_SORTBY, DEFAULT_ROOT);
@@ -1331,7 +1333,7 @@ init(int argc, char *argv[])
 
     bool opt_test_flag = 0;
     while ((c = getopt(argc, argv,
-        "+bcdDhqvVxyzistn"
+        "+bcdDhqvVxyzistnR"
         "e:o:O:S:E:I:C:r:")) != EOF) {
         switch (c) {
         case 'b':
@@ -1410,6 +1412,9 @@ init(int argc, char *argv[])
             break;
         case 'n':
             opt_no_nw = 0;
+            break;
+        case 'R':
+            opt_fakeroot = 1;
             break;
         default:
             usage(stderr, 1);

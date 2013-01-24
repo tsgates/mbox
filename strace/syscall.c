@@ -102,6 +102,7 @@
 #define MA MAX_ARGS
 
 extern int sbox_not_allowed();
+extern int sbox_getroot();
 
 static const struct sysent sysent0[] = {
 #include "sboxcall.h"

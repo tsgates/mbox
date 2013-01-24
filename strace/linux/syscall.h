@@ -379,7 +379,7 @@ int sys_lseek32();
 //
 // list of sandbox calls
 //  => used to generate seccomp filter
-//  
+//
 int sbox_open();
 int sbox_openat();
 int sbox_stat();
@@ -431,3 +431,8 @@ int sbox_llistxattr();
 int sbox_socket();
 int sbox_bind();
 int sbox_connect();
+// to support fake root
+int sbox_getuid();
+int sbox_getgid();
+int sbox_geteuid();
+int sbox_getegid();

@@ -1072,6 +1072,7 @@ int sbox_getroot(struct tcb *tcp)
         dbg(fakeroot, "%s() = 0", sysent[tcp->scno].sys_name);
         sbox_rewrite_ret(tcp, 0);
     }
+    return 0;
 }
 
 int sbox_chown_general(struct tcb *tcp, int fd, int arg)
@@ -1081,7 +1082,7 @@ int sbox_chown_general(struct tcb *tcp, int fd, int arg)
     } else {
         // exiting and fakeroot enabled
         if (opt_fakeroot && tcp->regs.rax == -EPERM) {
-            dbg(fakeroot, "chown(%s) = 0", hpn);
+            dbg(fakeroot, "chown(fd:%d) = 0", fd);
             sbox_rewrite_ret(tcp, 0);
         }
     }
@@ -1110,6 +1111,7 @@ int sbox_fchown(struct tcb *tcp)
         dbg(fakeroot, "fchown(%ld) = 0", tcp->u_arg[0]);
         sbox_rewrite_ret(tcp, 0);
     }
+    return 0;
 }
 
 DEF_SBOX_SC_PATH_AT(utimensat , 0, 1, WRITE);

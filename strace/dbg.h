@@ -22,7 +22,7 @@
  enum { dbg_fsmap    = 1 };
  enum { dbg_fsmapv   = 0 };
  enum { dbg_open     = 1 };
- enum { dbg_uid      = 1 };
+ enum { dbg_fakeroot = 1 };
 
 # define dbg(filter, msg, ...)                  \
     do {                                        \

@@ -734,9 +734,24 @@ int sbox_unlinkat(struct tcb *tcp)
 }
 
 int sbox_access_general(struct tcb *tcp, int fd, int arg)
-{
+{ 
+    char hpn[PATH_MAX];
+    char spn[PATH_MAX];
+   
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, fd, arg, READWRITE_READ);
+    } else {
+        // exiting and fakeroot enabled
+        if (opt_fakeroot) {
+            get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
+            get_spn_from_hpn(hpn, spn, PATH_MAX);
+            
+            // if exists in host fs, return ok
+            if (path_exists(hpn)) {
+                dbg(fakeroot, "allow access(%s) = 0", hpn);
+                sbox_rewrite_ret(tcp, 0);
+            }
+        }
     }
     return 0;
 }
@@ -1054,7 +1069,7 @@ int sbox_socket(struct tcb *tcp)
 int sbox_getroot(struct tcb *tcp)
 {
     if (opt_fakeroot && exiting(tcp)) {
-        dbg(uid, "%s() = 0", sysent[tcp->scno].sys_name);
+        dbg(fakeroot, "%s() = 0", sysent[tcp->scno].sys_name);
         sbox_rewrite_ret(tcp, 0);
     }
 }

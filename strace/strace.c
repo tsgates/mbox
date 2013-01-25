@@ -1393,7 +1393,7 @@ init(int argc, char *argv[])
             break;
         /* sandbox opts */
         case 'i':
-            opt_interactive = 1;
+            opt_interactive = 0;
             break;
         case 's':
             opt_seccomp = 1;

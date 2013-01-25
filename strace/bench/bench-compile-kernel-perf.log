@@ -30,3 +30,53 @@
      2,247,998,564 branch-misses             #    4.00% of all branches        
 
       46.711043787 seconds time elapsed
+
+
+======= NEW
+ Performance counter stats for 'make -C /tmp/linux-git -j4 kernel':
+
+     111289.082496 task-clock                #    3.615 CPUs utilized          
+            91,679 context-switches          #    0.824 K/sec                  
+             2,593 cpu-migrations            #    0.023 K/sec                  
+         3,581,079 page-faults               #    0.032 M/sec                  
+   363,825,569,145 cycles                    #    3.269 GHz                    
+   261,117,030,931 stalled-cycles-frontend   #   71.77% frontend cycles idle   
+   189,399,880,761 stalled-cycles-backend    #   52.06% backend  cycles idle   
+   243,119,195,954 instructions              #    0.67  insns per cycle        
+                                             #    1.07  stalled cycles per insn
+    52,210,149,509 branches                  #  469.140 M/sec                  
+     2,204,958,476 branch-misses             #    4.22% of all branches        
+
+      30.788670702 seconds time elapsed
+
+ Performance counter stats for './strace -i -- make -C /tmp/linux-git -j4 kernel':
+
+     163084.075828 task-clock                #    1.973 CPUs utilized          
+         3,975,332 context-switches          #    0.024 M/sec                  
+           232,989 cpu-migrations            #    0.001 M/sec                  
+         3,440,160 page-faults               #    0.021 M/sec                  
+   388,293,667,727 cycles                    #    2.381 GHz                    
+   263,397,025,795 stalled-cycles-frontend   #   67.83% frontend cycles idle   
+   196,231,162,806 stalled-cycles-backend    #   50.54% backend  cycles idle   
+   274,342,992,432 instructions              #    0.71  insns per cycle        
+                                             #    0.96  stalled cycles per insn
+    59,892,930,907 branches                  #  367.252 M/sec                  
+     2,297,916,778 branch-misses             #    3.84% of all branches        
+
+      82.643781295 seconds time elapsed
+
+ Performance counter stats for './strace -i -s -- make -C /tmp/linux-git -j4 kernel':
+
+     122838.048811 task-clock                #    2.541 CPUs utilized          
+         1,972,798 context-switches          #    0.016 M/sec                  
+            95,291 cpu-migrations            #    0.776 K/sec                  
+         3,440,413 page-faults               #    0.028 M/sec                  
+   366,610,490,599 cycles                    #    2.985 GHz                    
+   252,554,404,562 stalled-cycles-frontend   #   68.89% frontend cycles idle   
+   187,500,181,062 stalled-cycles-backend    #   51.14% backend  cycles idle   
+   256,343,941,376 instructions              #    0.70  insns per cycle        
+                                             #    0.99  stalled cycles per insn
+    56,329,857,921 branches                  #  458.570 M/sec                  
+     2,250,405,047 branch-misses             #    4.00% of all branches        
+
+      48.342712376 seconds time elapsed

@@ -6,7 +6,7 @@ DST=${DST:-/tmp/linux-3.7}
 
 if [ ! -e $KER ]; then
   echo "Downloading $KER"
-  wget http://www.kernel.org/pub/linux/kernel/v3.0/linux-3.7.tar.bz2 -O $KERN
+  wget http://www.kernel.org/pub/linux/kernel/v3.0/linux-3.7.tar.bz2 -O $KER
 fi
 
 run() {
@@ -23,6 +23,6 @@ run() {
   echo "--------"
 }
 
-run tar jxf $KER -C $DST
-run $DIR/strace -- tar jxf $KER -C $DST
-run $DIR/strace -s -- tar jxf $KER -C $DST
+#run tar jxf $KER -C $DST
+run $DIR/strace $@ -- tar jxf $KER -C $DST
+run $DIR/strace $@ -s -- tar jxf $KER -C $DST

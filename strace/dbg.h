@@ -27,7 +27,8 @@
 # define dbg(filter, msg, ...)                  \
     do {                                        \
         if (dbg_##filter) {                     \
-            fprintf(stderr, " %s@%d: " msg "\n", \
+            fprintf(stderr, "  %s@%d: "         \
+                    msg "\n",                   \
                     __FUNCTION__,               \
                     __LINE__,                   \
                     ##__VA_ARGS__);             \

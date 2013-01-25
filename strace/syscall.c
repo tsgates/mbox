@@ -2030,9 +2030,9 @@ trace_syscall_exiting(struct tcb *tcp)
 
     if (res != 1) {
         /* There was error in one of prior ptrace ops */
-        tprints(") ");
+        tprints("< ) ");
         tabto();
-        tprints("= ? <unavailable>\n");
+        tprints("< = ? <unavailable>\n");
         line_ended();
         tcp->flags &= ~TCB_INSYSCALL;
         return res;
@@ -2065,7 +2065,7 @@ trace_syscall_exiting(struct tcb *tcp)
         goto ret;
     }
     
-    tprints(") ");
+    tprints("< ) ");
     tabto();
     u_error = tcp->u_error;
     if (!SCNO_IN_RANGE(tcp->scno) ||

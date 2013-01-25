@@ -595,10 +595,7 @@ printleader(struct tcb *tcp)
     current_tcp = tcp;
     current_tcp->curcol = 0;
 
-    if (print_pid_pfx)
-        tprintf("%-5d ", tcp->pid);
-    else if (nprocs > 1 && !outfname)
-        tprintf("[pid %5u] ", tcp->pid);
+    tprintf("> [%5u] ", tcp->pid);
 }
 
 void

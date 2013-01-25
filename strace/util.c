@@ -1609,14 +1609,14 @@ copyfile(char *src, char *dst)
             dbg(fakeroot, "touch %s (src is root only access)", dst);
             touch(dst, src_stat.st_mode);
         } else {
-            dbg(info, "open src: %s (%s)", src, strerr(errno));
+            dbg(info, "open src: %s (%s)", src, strerror(errno));
         }
         return 0;
     }
 
     int dst_fd = open(dst, O_CREAT|O_WRONLY|O_TRUNC, src_stat.st_mode);
     if (dst_fd < 0) {
-        perror("open dst:");
+        perror("open dst");
         close(src_fd);
         return 0;
     }

@@ -299,6 +299,7 @@ int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int le
     // fprintf(stderr, "XXX: read %x (pid=%d)\n", ptr, tcp->pid);
     if (ptr == 0 || umovestr(tcp, ptr, PATH_MAX, pn) <= 0) {
         pn[0] = '\0';
+        return -1;
     }
 
     // fprintf(stderr, "XXX: %s\n", pn);
@@ -526,7 +527,9 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
     char hpn[PATH_MAX];
     char spn[PATH_MAX];
 
-    get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
+    if (get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX) == -1) {
+        return -1;
+    }
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
     // satisfying one of rewrite conditions

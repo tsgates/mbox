@@ -21,6 +21,7 @@ extern int sbox_interactive(void);
 extern void sbox_stop(struct tcb *tcp, const char *fmt, ...);
 extern void sbox_get_readonly_ptr(struct tcb *tcp);
 extern void sbox_add_log(struct tcb *tcp, const char *fmt, ...);
+extern void sbox_load_profile(char *profile);
 
 #define is_in_sboxfs(pn) (strncmp(pn, opt_root, opt_root_len) == 0)
 

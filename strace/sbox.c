@@ -63,6 +63,13 @@ int __sbox_delete_dir(char *path)
 }
 
 static
+int __sbox_allow_path(char *path)
+{
+    add_path_to_fsmap(&os_deleted_fs, path, PATH_ALLOWED);
+    return 1;
+}
+
+static
 char *__sbox_meta_file(void)
 {
     static char *path = NULL;
@@ -1003,7 +1010,7 @@ int sbox_symlink(struct tcb *tcp)
         if (strncmp(old_hpn, "..", 2) != 0) {
             sbox_stop(tcp, "XXX");
         }
-        
+
         sbox_rewrite_path(tcp, AT_FDCWD, 1, READWRITE_FORCE);
     }
     return 0;
@@ -1424,4 +1431,108 @@ void sbox_add_log(struct tcb *tcp, const char *fmt, ...)
 
     entry->prev = tcp->logs;
     tcp->logs = entry;
+}
+
+/* load profile */
+static
+char *__parse_path_line(char *line)
+{
+    int last = strlen(line) - 1;
+    if (last > 0 && line[last] == '\n') {
+        line[last] = '\0';
+    }
+
+    char *del = strchr(line, ':');
+    if (!del) {
+        return NULL;
+    }
+
+    del ++;
+    while (*del == ' ' && *del != '\0') {
+        del ++;
+    }
+
+    // handle ~
+    char path[PATH_MAX];
+    if (strbeg(del, "~")) {
+        snprintf(path, sizeof(path), "%s/%s", getenv("HOME"), del + 1);
+        return realpath(path, NULL);
+    }
+
+    return realpath(del, NULL);
+}
+
+void sbox_load_profile(char *profile)
+{
+    FILE *fp = fopen(profile, "r");
+    if (!fp) {
+        err(1, "open %s", profile);
+    }
+
+    size_t len = 0;
+    char *line = NULL;
+
+#define SEC_NONE    0
+#define SEC_FILE    1
+#define SEC_NETWORK 2
+
+    int section = SEC_NONE;
+
+    while (getline(&line, &len, fp) != -1) {
+        // ignore empty line
+        if (len <= 0) {
+            continue;
+        }
+        // ignore comment lines
+        if (line[0] == '#') {
+            continue;
+        }
+        // set current section
+        if (line[0] == '[') {
+            if (strbeg(line, "[fs]")) {
+                section = SEC_FILE;
+            } else if (strbeg(line, "[network]")) {
+                section = SEC_NETWORK;
+            } else {
+                errx(1, "Not supported yet: %s", line);
+            }
+            continue;
+        }
+        
+        // handle each section line
+        switch (section) {
+        case SEC_NETWORK: break;
+        case SEC_FILE:
+            if (strstr(line, "hide:")) {
+                char *path =  __parse_path_line(line);
+                dbg(profile, "hide-> %s", path);
+                __sbox_delete_file(path);
+                if (path) {
+                    free(path);
+                }
+            } else if (strstr(line, "allow:")) {
+                char *path = __parse_path_line(line);
+                dbg(profile, "allow-> %s", path);
+                __sbox_allow_path(path);
+
+                // allowed, so sync in sboxfs
+                char sboxpath[PATH_MAX];
+                snprintf(sboxpath, sizeof(sboxpath), "%s/%s", opt_root, path);
+                mkdirp(sboxpath, 0755);
+                
+                if (path) {
+                    free(path);
+                }
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+#undef SEC_NONE
+#undef SEC_FILE
+#undef SEC_NETWORK
+
+    fclose(fp);
 }

@@ -573,6 +573,7 @@ extern int copyfile(char *src, char *dst);
 extern int exists_parent_dir(char *path);
 extern char kbhit(void);
 extern int normalize_path(char *name);
+extern int strbeg(const char *str, const char *prefix);
 
 extern const char *signame(int);
 extern int is_restart_error(struct tcb *);

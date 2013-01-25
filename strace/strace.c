@@ -103,6 +103,7 @@ bool opt_seccomp     = 0;
 bool opt_interactive = 1;
 bool opt_no_nw       = 0;
 bool opt_fakeroot    = 0;
+char *opt_profile    = NULL;
 
 /*
  * daemonized_tracer supports -D option.
@@ -222,6 +223,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -c      : count time, calls, and errors for each syscall and report summary\n\
         -d      : enable syscall trace to stderr\n\
         -D      : enable debug\n\
+        -p file : load profile (see. NOTE.profile)\n\
         -t      : run as unit tester (check pre/post condition, see tests-sbox/NOTE)\n\
         -n      : disable network accesses\n\
         -S      : enable nested seccomp\n\
@@ -708,11 +710,11 @@ droptcb(struct tcb *tcp)
         log->pid = tcp->pid;
         log->next = systemlog;
         log->logs = tcp->logs;
-        
+
         // bump
         systemlog = log;
     }
-    
+
     memset(tcp, 0, sizeof(*tcp));
 }
 
@@ -1332,7 +1334,7 @@ init(int argc, char *argv[])
     bool opt_test_flag = 0;
     while ((c = getopt(argc, argv,
         "+bcdDhqvVxyzistnR"
-        "e:o:O:S:E:I:C:r:")) != EOF) {
+        "e:o:O:S:E:I:C:r:p:")) != EOF) {
         switch (c) {
         case 'b':
             detach_on_execve = 1;
@@ -1414,6 +1416,9 @@ init(int argc, char *argv[])
             break;
         case 'R':
             opt_fakeroot = 1;
+            break;
+        case 'p':
+            opt_profile = strdup(optarg);
             break;
         default:
             usage(stderr, 1);
@@ -1498,7 +1503,7 @@ init(int argc, char *argv[])
     // init sbox routines
     dbg(welcome, "Root %s", opt_root);
     sbox_init();
-    
+
     if (opt_test_flag) {
         opt_test = strdup(argv[0]);
         dbg(welcome, "Test %s", opt_test);
@@ -1507,6 +1512,10 @@ init(int argc, char *argv[])
 
     opt_root_len = strlen(opt_root);
 
+    if (opt_profile) {
+        sbox_load_profile(opt_profile);
+    }
+    
     /* STARTUP_CHILD must be called before the signal handlers get
        installed below as they are inherited into the spawned process.
        Also we do not need to be protected by them as during interruption

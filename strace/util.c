@@ -1763,3 +1763,7 @@ normalize_path(char *name)
     *head = '\0';
     return 0;
 }
+
+int strbeg(const char *str, const char *prefix) {
+    return strncmp(str, prefix, strlen(prefix)) == 0;
+}

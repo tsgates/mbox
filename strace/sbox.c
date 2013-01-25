@@ -205,7 +205,7 @@ void sbox_check_test_cond(const char *pn, const char *key)
             char *cmd = strchr(line, ':');
             cmd ++;
             cmd[strlen(cmd)-1] = '\0';
-            dbg(testcond, "Check %s: %s", key, cmd);
+            dbg(info, "Check %s: %s", key, cmd);
             if (system(cmd) != 0) {
                 dbg(info, "Failed to check %s condition: %s", key, cmd);
                 exit(1);

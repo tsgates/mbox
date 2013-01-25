@@ -4,7 +4,7 @@ for f in tests-sbox/*.sh; do
   OUT=$(mktemp /tmp/`basename $f`-out-XXXXX)
   ERR=$(mktemp /tmp/`basename $f`-err-XXXXX)
   printf "Testing %-35s ... " "$f"
-  (./strace "$@" -t $f 1>$OUT 2>$ERR) || {
+  (./strace -n "$@" -t $f 1>$OUT 2>$ERR) || {
     echo "ERR"
     echo ">> stdout:"
     cat $OUT

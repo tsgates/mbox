@@ -32,6 +32,7 @@
  */
 
 #include "defs.h"
+#include "dbg.h"
 #include <sys/user.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -1572,6 +1573,18 @@ mkdirp(char *pn, mode_t mode)
 }
 
 int
+touch(char *dst, int mode) 
+{
+    int fd = open(dst, O_CREAT|O_WRONLY|O_TRUNC, mode);
+    if (fd < 0) {
+        perror("touch:");
+        return 0;
+    }
+    close(fd);
+    return 1;
+}
+
+int
 copyfile(char *src, char *dst)
 {
     char buf[PAGE_SIZE];
@@ -1592,7 +1605,12 @@ copyfile(char *src, char *dst)
     
     int src_fd = open(src, O_RDONLY);
     if (src_fd < 0) {
-        perror("open src:");
+        if (opt_fakeroot) {
+            dbg(fakeroot, "touch %s (src is root only access)", dst);
+            touch(dst, src_stat.st_mode);
+        } else {
+            dbg(info, "open src: %s (%s)", src, strerr(errno));
+        }
         return 0;
     }
 

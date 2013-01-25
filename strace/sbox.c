@@ -301,7 +301,9 @@ int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int le
         pn[0] = '\0';
         return -1;
     }
-
+    if (pn[0] == '\0') {
+        return -1;
+    }
     // fprintf(stderr, "XXX: %s\n", pn);
 
     // abspath

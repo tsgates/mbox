@@ -1597,6 +1597,7 @@ trace_syscall_entering(struct tcb *tcp)
         else
             res = (*sysent[tcp->scno].sys_func)(tcp);
 
+        tprintf("%s\n", "");
         if (fflush(tcp->outf) == EOF)
             return -1;
     }

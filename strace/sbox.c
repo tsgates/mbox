@@ -302,7 +302,7 @@ int get_hpn_from_fd_and_arg(struct tcb *tcp, int fd, int arg, char *path, int le
     }
 
     // fprintf(stderr, "XXX: %s\n", pn);
-    
+
     // abspath
     if (pn[0] == '/') {
         strncpy(path, pn, len);
@@ -734,10 +734,10 @@ int sbox_unlinkat(struct tcb *tcp)
 }
 
 int sbox_access_general(struct tcb *tcp, int fd, int arg)
-{ 
+{
     char hpn[PATH_MAX];
     char spn[PATH_MAX];
-   
+
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, fd, arg, READWRITE_READ);
     } else {
@@ -745,7 +745,7 @@ int sbox_access_general(struct tcb *tcp, int fd, int arg)
         if (opt_fakeroot && tcp->regs.rax != 0) {
             get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
             get_spn_from_hpn(hpn, spn, PATH_MAX);
-            
+
             // if exists in host fs, return ok
             if (path_exists(hpn)) {
                 dbg(fakeroot, "allow access(%s) = 0", hpn);
@@ -923,7 +923,19 @@ int sbox_getcwd(struct tcb *tcp)
 
 int sbox_rename(struct tcb *tcp)
 {
+
     if (entering(tcp)) {
+        char hpn[PATH_MAX];
+        char spn[PATH_MAX];
+
+        get_hpn_from_fd_and_arg(tcp, AT_FDCWD, 0, hpn, PATH_MAX);
+        get_spn_from_hpn(hpn, spn, PATH_MAX);
+
+        if (!path_exists(hpn) && !path_exists(spn)) {
+            dbg(xxx, "XXXXXXXXXXX:%d", 0);
+            return 0;
+        }
+
         sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_READ);
         sbox_rewrite_path(tcp, AT_FDCWD, 1, READWRITE_WRITE);
     }
@@ -967,8 +979,24 @@ int sbox_symlink(struct tcb *tcp)
     // now, but we can to resolve the 'path2' argument of symlink().
     // for example, if relative -> just use
     //              if absolute -> resolve the path
+    char old_hpn[PATH_MAX];
+    // char old_spn[PATH_MAX];
+    char new_hpn[PATH_MAX];
+    char new_spn[PATH_MAX];
+
     if (entering(tcp)) {
-        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_WRITE);
+        if (umovestr(tcp, tcp->u_arg[0], PATH_MAX, old_hpn) <= 0) {
+            sbox_stop(tcp, "failed to copy from symlink");
+        }
+
+        get_hpn_from_fd_and_arg(tcp, AT_FDCWD, 1, new_hpn, PATH_MAX);
+        get_spn_from_hpn(new_hpn, new_spn, PATH_MAX);
+
+        // XXX. check if new_spn/../old_hpn
+        if (strncmp(old_hpn, "..", 2) != 0) {
+            sbox_stop(tcp, "XXX");
+        }
+        
         sbox_rewrite_path(tcp, AT_FDCWD, 1, READWRITE_FORCE);
     }
     return 0;
@@ -1076,7 +1104,7 @@ int sbox_getroot(struct tcb *tcp)
 }
 
 int sbox_chown_general(struct tcb *tcp, int fd, int arg)
-{ 
+{
     if (entering(tcp)) {
         sbox_rewrite_path(tcp, fd, arg, READWRITE_WRITE);
     } else {
@@ -1089,22 +1117,22 @@ int sbox_chown_general(struct tcb *tcp, int fd, int arg)
     return 0;
 }
 
-int sbox_chown(struct tcb *tcp) 
+int sbox_chown(struct tcb *tcp)
 {
     return sbox_chown_general(tcp, AT_FDCWD, 0);
 }
 
-int sbox_lchown(struct tcb *tcp) 
+int sbox_lchown(struct tcb *tcp)
 {
     return sbox_chown_general(tcp, AT_FDCWD, 0);
 }
 
-int sbox_fchownat(struct tcb *tcp) 
+int sbox_fchownat(struct tcb *tcp)
 {
     return sbox_chown_general(tcp, tcp->u_arg[0], 1);
 }
 
-int sbox_fchown(struct tcb *tcp) 
+int sbox_fchown(struct tcb *tcp)
 {
     // exiting and fakeroot enabled
     if (opt_fakeroot && exiting(tcp) && tcp->regs.rax == -EPERM) {

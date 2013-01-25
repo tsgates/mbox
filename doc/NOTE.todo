@@ -1,6 +1,7 @@
 # TODO
  - symlink: fix symlinkat (like symlink) and check new/../old escape the sandbox
  - make rename robust (handle EDEV)
+ - rewrite rename, check error on get_fd_arg()
  - UI: display deleted files & files in sandboxfs together with N/D flag?
  
 # DONE

@@ -12,10 +12,12 @@
 #include <sys/uio.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <linux/seccomp.h>
 
 struct linux_dirent {
     long           d_ino;
@@ -1142,6 +1144,20 @@ int sbox_fchown(struct tcb *tcp)
     // exiting and fakeroot enabled
     if (opt_fakeroot && exiting(tcp) && tcp->regs.rax == -EPERM) {
         dbg(fakeroot, "fchown(%ld) = 0", tcp->u_arg[0]);
+        sbox_rewrite_ret(tcp, 0);
+    }
+    return 0;
+}
+
+int sbox_prctl(struct tcb *tcp)
+{
+    // support nested seccomp
+    if (opt_seccomp \
+        && exiting(tcp) \
+        && tcp->u_arg[0] == PR_SET_SECCOMP \
+        && tcp->u_arg[1] == SECCOMP_MODE_STRICT \
+        && tcp->regs.rax != 0) {
+        dbg(seccomp, "prctl(SECCOMP, MODE_STRICT) = 0");
         sbox_rewrite_ret(tcp, 0);
     }
     return 0;

@@ -431,9 +431,11 @@ int sbox_llistxattr();
 int sbox_socket();
 int sbox_bind();
 int sbox_connect();
-// to support fake root
+// support fake root
 int sbox_getuid();
 int sbox_getgid();
 int sbox_geteuid();
 int sbox_getegid();
 int sbox_fchown();
+// support nested seccomp
+int sbox_prctl();

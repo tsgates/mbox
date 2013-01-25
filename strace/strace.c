@@ -101,7 +101,7 @@ int opt_root_len = 0;
 char *opt_test = NULL;
 bool opt_seccomp     = 0;
 bool opt_interactive = 1;
-bool opt_no_nw       = 1;
+bool opt_no_nw       = 0;
 bool opt_fakeroot    = 0;
 
 /*
@@ -223,8 +223,9 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -d      : enable syscall trace to stderr\n\
         -D      : enable debug\n\
         -t      : run as unit tester (check pre/post condition, see tests-sbox/NOTE)\n\
-        -n      : enable network accesses\n\
-        -i      : no interactive session at the end\n\
+        -n      : disable network accesses\n\
+        -S      : enable nested seccomp\n\
+        -i      : disable interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
         -R      : fakeroot\n\
         -C path : change directory\n\
@@ -1409,7 +1410,7 @@ init(int argc, char *argv[])
             opt_interactive = 0;
             break;
         case 'n':
-            opt_no_nw = 0;
+            opt_no_nw = 1;
             break;
         case 'R':
             opt_fakeroot = 1;

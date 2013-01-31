@@ -1,0 +1,67 @@
+Run: bench/../strace -i -c -- tar jxf /tmp/linux-3.7.tar.bz2 -C /tmp/linux-3.7 (see /tmp/untar-XFPDR)
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 53.76    0.013270           0    123169           read
+ 22.54    0.005564           0    207327           write
+ 11.91    0.002941           0     40907           openat
+  3.34    0.000825           0     43575           utimensat
+  2.86    0.000707           0     40923           fstat
+  2.53    0.000624           0     40934           close
+  2.09    0.000517           0     40905           dup2
+  0.41    0.000101           0      2669           mkdirat
+  0.29    0.000072          72         1           wait4
+  0.26    0.000063           0      2682           newfstatat
+  0.00    0.000000           0        21         6 open
+  0.00    0.000000           0         1           stat
+  0.00    0.000000           0        34           mmap
+  0.00    0.000000           0        14           mprotect
+  0.00    0.000000           0         9           munmap
+  0.00    0.000000           0         6           brk
+  0.00    0.000000           0         6           rt_sigaction
+  0.00    0.000000           0         1           rt_sigprocmask
+  0.00    0.000000           0         1         1 ioctl
+  0.00    0.000000           0         2         2 access
+  0.00    0.000000           0         1           pipe
+  0.00    0.000000           0         2           dup
+  0.00    0.000000           0         4           socket
+  0.00    0.000000           0         4         4 connect
+  0.00    0.000000           0         1           clone
+  0.00    0.000000           0         7         5 execve
+  0.00    0.000000           0         3           fcntl
+  0.00    0.000000           0         2           umask
+  0.00    0.000000           0         1           getrlimit
+  0.00    0.000000           0         1           geteuid
+  0.00    0.000000           0         2           arch_prctl
+  0.00    0.000000           0         1           set_tid_address
+  0.00    0.000000           0         1           unlinkat
+  0.00    0.000000           0         1           symlinkat
+  0.00    0.000000           0         2           set_robust_list
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.024684                543220        18 total
+
+real    0m23.309s
+user    0m20.885s
+sys     0m11.196s
+--------
+Run: bench/../strace -i -c -s -- tar jxf /tmp/linux-3.7.tar.bz2 -C /tmp/linux-3.7 (see /tmp/untar-sbJrW)
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 66.93    0.001030           0     40907           openat
+ 26.90    0.000414           0     43575           utimensat
+  3.96    0.000061           0      2682           newfstatat
+  2.21    0.000034           0      2669           mkdirat
+  0.00    0.000000           0        21         6 open
+  0.00    0.000000           0         1           stat
+  0.00    0.000000           0         2         2 access
+  0.00    0.000000           0         4           socket
+  0.00    0.000000           0         4         4 connect
+  0.00    0.000000           0         7         5 execve
+  0.00    0.000000           0         1           geteuid
+  0.00    0.000000           0         1           unlinkat
+  0.00    0.000000           0         1           symlinkat
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.001539                 89875        17 total
+
+real    0m13.632s
+user    0m13.622s
+sys     0m3.010s

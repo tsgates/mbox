@@ -3,6 +3,10 @@
  - make rename robust (handle EDEV)
  - rewrite rename, check error on get_fd_arg()
  - UI: display deleted files & files in sandboxfs together with N/D flag?
+ - check if dump core is enabled, ans warn
+ - support chroot in the fakeroot?
+ - also need to rewrite paths to the hostfs?
+ - LT: support x86 32, and others
  
 # DONE
  - write arguments to the readonly memory

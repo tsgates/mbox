@@ -1,7 +1,78 @@
 # Mbox
 
-NOTE: documents, paper, and arch/deb packages will be ready to download soon.
+Mbox is a lightweight sandboxing mechanism that any user can use without special
+privileges in commodity operating systems. 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
 $ git clone git://g.csail.mit.edu/magicbox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## TL;DR
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+$ mbox -- wget google.com
+...
+Network Summary:
+ > [11279] -> 173.194.43.51:80
+ > [11279] Create socket(PF_INET,...)
+ > [11279] -> a00::2607:f8b0:4006:803:0
+ ...
+Sandbox Root:
+ > /tmp/sandbox-11275
+ >  N:/tmp/index.html
+[c]ommit, [i]gnore, [d]iff, [l]ist, [s]hell, [q]uit ?> 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## What is Mbox?
+
+Mbox introduces a novel sandbox usage model; when executing a program in the
+sandbox, Mbox prevents programs from modifying the host filesystem while giving
+them the impression that they are in fact making those modifications. Mbox
+achieves this by providing a *layered sandbox filesystem* and by *interposing on
+system calls* with ptrace and seccomp/BPF. At the end of program execution, the
+user can examine changes in the sandbox filesystem, and selectively commit them
+back to the host filesystem.
+
+## What Mbox can provide to you?
+
+### Usage 1: Installing packages without root
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+ $ mbox -R -- apt-get install git
+  (-R: emulate a fakeroot environment)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Usage 2: Running unknown binary safely
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+ $ mbox -n -- wget google.com
+  (-n: disable remote network accesses)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Usage 3: Checkpointing filesystem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+ $ mbox -i -- sh
+  (-i: enable interactive commit-mode)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Usage 4: Build/development environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+ $ mbox -r outdir -- make
+  (-r dir: specify a sandbox filesystem)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### Usage 5: Profile-based sandbox
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+ $ mbox -p build.prof -- ./configure
+  (-p prof: enable profile-based policy)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.yaml}
+## build.prof
+[fs]
+    allow: .
+    hide: ~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## NOTE.
+
+documents, paper, and arch/deb packages will be ready to download soon.

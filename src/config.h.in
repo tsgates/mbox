@@ -3,24 +3,6 @@
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
 
-/* Define for the Alpha architecture. */
-#undef ALPHA
-
-/* Define for the ARM architecture. */
-#undef ARM
-
-/* Define for the AVR32 architecture. */
-#undef AVR32
-
-/* Define for the Blackfin architecture. */
-#undef BFIN
-
-/* Define for the CRISv10 architecture. */
-#undef CRISV10
-
-/* Define for the CRISv32 architecture. */
-#undef CRISV32
-
 /* Define to the type of elements in the array set by `getgroups'. Usually
    this is either `int' or `gid_t'. */
 #undef GETGROUPS_T
@@ -369,18 +351,6 @@
 /* Define to 1 if you have the `_sys_siglist' function. */
 #undef HAVE__SYS_SIGLIST
 
-/* Define for the HPPA architecture. */
-#undef HPPA
-
-/* Define for the i386 architecture. */
-#undef I386
-
-/* Define for the IA64 architecture. */
-#undef IA64
-
-/* Define for the m68k architecture. */
-#undef M68K
-
 /* Define to 1 if `major', `minor', and `makedev' are declared in <mkdev.h>.
    */
 #undef MAJOR_IN_MKDEV
@@ -388,12 +358,6 @@
 /* Define to 1 if `major', `minor', and `makedev' are declared in
    <sysmacros.h>. */
 #undef MAJOR_IN_SYSMACROS
-
-/* Define for the MicroBlaze architecture. */
-#undef MICROBLAZE
-
-/* Define for the MIPS architecture. */
-#undef MIPS
 
 /* Name of package */
 #undef PACKAGE
@@ -416,26 +380,8 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define for the PowerPC architecture. */
-#undef POWERPC
-
-/* Define for the PowerPC64 architecture. */
-#undef POWERPC64
-
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
-
-/* Define for the S390 architecture. */
-#undef S390
-
-/* Define for the S390x architecture. */
-#undef S390X
-
-/* Define for the SH architecture. */
-#undef SH
-
-/* Define for the SH64 architecture. */
-#undef SH64
 
 /* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
@@ -443,20 +389,11 @@
 /* The size of `rlim_t', as computed by sizeof. */
 #undef SIZEOF_RLIM_T
 
-/* Define for the SPARC architecture. */
-#undef SPARC
-
-/* Define for the SPARC64 architecture. */
-#undef SPARC64
-
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
 #undef STAT_MACROS_BROKEN
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Define for the Tile architecture */
-#undef TILE
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
@@ -494,9 +431,6 @@
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
-
-/* Define for the 32bit AMD x86-64 architecture. */
-#undef X32
 
 /* Define for the 64bit AMD x86-64 architecture. */
 #undef X86_64

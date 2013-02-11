@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to create configure.  Use autoreconf.
 AC_PREREQ(2.57)
-AC_INIT([strace],[4.7])
-AC_CONFIG_SRCDIR([strace.c])
+AC_INIT([mbox],[4.7])
+AC_CONFIG_SRCDIR([mbox.c])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign check-news dist-xz no-dist-gzip silent-rules])
@@ -13,73 +13,6 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_MSG_CHECKING([for supported architecture])
 case "$host_cpu" in
-bfin)
-	arch=bfin
-	AC_DEFINE([BFIN], 1, [Define for the Blackfin architecture.])
-	;;
-i[[3456]]86|pentium)
-	arch=i386
-	AC_DEFINE([I386], 1, [Define for the i386 architecture.])
-	;;
-ia64)
-	arch=ia64
-	AC_DEFINE([IA64], 1, [Define for the IA64 architecture.])
-	;;
-m68k)
-	arch=m68k
-	AC_DEFINE([M68K], 1, [Define for the m68k architecture.])
-	;;
-sparc64*)
-	arch=sparc64
-	AC_DEFINE([SPARC64], 1, [Define for the SPARC64 architecture.])
-	;;
-sparc*)
-	arch=sparc
-	AC_DEFINE([SPARC], 1, [Define for the SPARC architecture.])
-	;;
-mips*)
-	arch=mips
-	AC_DEFINE([MIPS], 1, [Define for the MIPS architecture.])
-	;;
-alpha*)
-	arch=alpha
-	AC_DEFINE([ALPHA], 1, [Define for the Alpha architecture.])
-	;;
-powerpc*)
-	arch=powerpc
-	AC_DEFINE([POWERPC], 1, [Define for the PowerPC architecture.])
-	if test $host_cpu = powerpc64; then
-		AC_DEFINE([POWERPC64], 1, [Define for the PowerPC64 architecture.])
-	fi
-	;;
-arm*)
-	arch=arm
-	AC_DEFINE([ARM], 1, [Define for the ARM architecture.])
-	;;
-avr32*)
-	arch=avr32
-	AC_DEFINE([AVR32], 1, [Define for the AVR32 architecture.])
-	;;
-s390)
-	arch=s390
-	AC_DEFINE([S390], 1, [Define for the S390 architecture.])
-	;;
-s390x)
-	arch=s390x
-	AC_DEFINE([S390X], 1, [Define for the S390x architecture.])
-	;;
-hppa*|parisc*)
-	arch=hppa
-	AC_DEFINE([HPPA], 1, [Define for the HPPA architecture.])
-	;;
-sh64*)
-	arch=sh64
-	AC_DEFINE([SH64], 1, [Define for the SH64 architecture.])
-	;;
-sh*)
-	arch=sh
-	AC_DEFINE([SH], 1, [Define for the SH architecture.])
-	;;
 x86?64*)
 	AC_TRY_COMPILE(
 [#ifndef __ILP32__
@@ -88,37 +21,18 @@ x86?64*)
 	if test "$arch" = "x86_64"; then
 		AC_DEFINE([X86_64], 1, [Define for the 64bit AMD x86-64 architecture.])
 	else
-		AC_DEFINE([X32], 1, [Define for the 32bit AMD x86-64 architecture.])
+    	AC_MSG_RESULT([NO!])
+        AC_MSG_ERROR([I am finding someone interested in working on x32 arch])
 	fi
-	;;
-cris|crisv10)
-	arch=crisv10
-	AC_DEFINE([CRISV10], 1, [Define for the CRISv10 architecture.])
-	;;
-crisv32)
-	arch=crisv32
-	AC_DEFINE([CRISV32], 1, [Define for the CRISv32 architecture.])
-	;;
-tile*)
-	arch=tile
-	AC_DEFINE([TILE], 1, [Define for the Tile architecture])
-	;;
-microblaze*)
-	arch=microblaze
-	AC_DEFINE([MICROBLAZE], 1, [Define for the MicroBlaze architecture.])
 	;;
 *)
 	AC_MSG_RESULT([NO!])
-	AC_MSG_ERROR([architecture $host_cpu is not supported by strace])
+	AC_MSG_ERROR([architecture $host_cpu is not supported by mbox])
 	;;
 esac
 AC_MSG_RESULT($arch)
 
 AC_SUBST(arch)
-
-AM_CONDITIONAL([I386], [test x$arch = xi386])
-AM_CONDITIONAL([X86_64], [test x$arch = xx86_64])
-AM_CONDITIONAL([X32], [test x$arch = xx32])
 
 AC_INCLUDEDIR
 
@@ -273,5 +187,5 @@ AC_CHECK_SIZEOF([rlim_t],,[#include <sys/resource.h>])
 
 AC_PATH_PROG([PERL], [perl])
 
-AC_CONFIG_FILES([Makefile tests/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

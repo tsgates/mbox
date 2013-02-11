@@ -1,9 +1,6 @@
 # Automake input for strace.
 
-SUBDIRS = tests
-
-bin_PROGRAMS = strace
-man_MANS = strace.1
+bin_PROGRAMS = mbox
 bin_SCRIPTS = strace-graph strace-log-merge
 
 OS		= linux
@@ -15,7 +12,7 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS = $(WARN_CFLAGS)
 AM_CPPFLAGS = -I$(srcdir)/$(OS)/$(ARCH) -I$(srcdir)/$(OS) -I$(builddir)/$(OS) -lcrypto
 
-strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c sbox.c ipc.c \
+mbox_SOURCES = mbox.c syscall.c count.c util.c desc.c file.c sbox.c ipc.c \
 		 io.c ioctl.c mem.c net.c process.c bjm.c quota.c \
 		 resource.c signal.c sock.c system.c term.c time.c \
 		 scsi.c stream.c block.c pathtrace.c mtd.c vsprintf.c \

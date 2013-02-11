@@ -5,7 +5,7 @@
 /config.status
 /linux/ioctlent.h
 /stamp-h1
-/strace
+/mbox
 /tests/Makefile
 /autom4te.cache/
 /configsbox.h

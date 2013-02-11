@@ -517,6 +517,7 @@ extern bool opt_seccomp;
 extern bool opt_interactive;
 extern bool opt_no_nw;
 extern bool opt_fakeroot;
+extern bool opt_md5;
 
 extern void kill_all(struct tcb *tcp);
 
@@ -566,10 +567,17 @@ extern long getrval2(struct tcb *);
  * instead we change fork/vfork/clone into clone(CLONE_PTRACE).
  * On newer kernels, we use PTRACE_O_TRACECLONE/TRACE[V]FORK instead.
  */
+
+extern void MD5Init ();
+extern void MD5Update ();
+extern void MD5Final ();
+
+typedef unsigned char byte;
+
 extern int setbpt(struct tcb *);
 extern int clearbpt(struct tcb *);
 extern int mkdirp(char *pn, mode_t mode);
-extern int copyfile(char *src, char *dst);
+extern int copyfile(char *src, char *dst, byte *md5);
 extern int exists_parent_dir(char *path);
 extern char kbhit(void);
 extern int normalize_path(char *name);

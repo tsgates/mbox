@@ -2,6 +2,7 @@
 #include "sbox.h"
 #include "dbg.h"
 #include "fsmap.h"
+#include "md5map.h"
 
 #include <err.h>
 #include <dirent.h>
@@ -30,6 +31,7 @@ struct linux_dirent {
 
 /* os global structure */
 static struct fsmap* os_deleted_fs = NULL; /* deleted fs map */
+static struct md5map* os_md5map    = NULL; /* keep md5sums of original files */
 
 int sbox_is_deleted(char *path)
 {
@@ -81,7 +83,8 @@ char *__sbox_meta_file(void)
 }
 
 
-void sbox_flush_meta(void)
+static
+void _sbox_flush_deleted_files(void)
 {
     // only if we have something to flush
     if (!os_deleted_fs) {
@@ -99,10 +102,47 @@ void sbox_flush_meta(void)
     fprintf(stderr, "Deleted Files:\n");
     HASH_ITER(hh, os_deleted_fs, s, tmp) {
         fprintf(stderr, " > %s (%x)\n", s->key, s->val);
-        fprintf(fp, "%s:%d\n", s->key, s->val);
+        fprintf(fp, "D:%s:%d\n", s->key, s->val);
     }
 
     fclose(fp);
+}
+
+static
+void _sbox_flush_md5sums(void)
+{
+    // only if we have something to flush
+    if (!os_md5map || !opt_md5) {
+        return;
+    }
+
+    FILE *fp = fopen(__sbox_meta_file(), "a+");
+    if (!fp) {
+        err(1, "fopen");
+    }
+
+    struct md5map *s;
+    struct md5map *tmp;
+
+    fprintf(stderr, "MD5 Sums of original files:\n");
+    HASH_ITER(hh, os_md5map, s, tmp) {
+        int i;
+        char md5str[MD5_DIGEST_LENGTH*2+1];
+        for (i = 0; i < MD5_DIGEST_LENGTH; i ++) {
+            snprintf(md5str+i*2, 3, "%02x", (unsigned int)s->val[i]);
+        }
+
+        fprintf(stderr, " > %s (%s)\n", s->key, md5str);
+        fprintf(fp, "M:%s:%s\n", s->key, md5str);
+    }
+
+    fclose(fp);
+}
+
+void sbox_flush_meta(void)
+{
+    _sbox_flush_deleted_files();
+    _sbox_flush_md5sums();
 }
 
 void sbox_load_meta(void)
@@ -116,17 +156,40 @@ void sbox_load_meta(void)
     size_t len = 0;
     char *line = NULL;
     while (getline(&line, &len, fp) != -1) {
-        char *del = strstr(line, ":");
-        if (!del) {
+        if (len < 2 || line[1] != ':') {
             errx(1, "Malformed %s file", __sbox_meta_file());
         }
 
-        *del = '\0';
-        del ++;
+        char *key = line+2;
+        char *val = strstr(key, ":");
+        if (!val) {
+            errx(1, "Malformed %s file", __sbox_meta_file());
+        }
 
-        int val;
-        sscanf(del, "%d", &val);
-        add_path_to_fsmap(&os_deleted_fs, line, val);
+        *val = '\0';
+        val ++;
+
+        switch (line[0]) {
+        case 'D': {
+            int flag;
+            sscanf(val, "%d", &flag);
+            add_path_to_fsmap(&os_deleted_fs, key, flag);
+            break;
+        }
+        case 'M': {
+            int i;
+            byte md5sum[MD5_DIGEST_LENGTH];
+            for (i = 0; i < MD5_DIGEST_LENGTH; i ++) {
+                unsigned int hex;
+                sscanf(val+i*2, "%02x", &hex);
+                md5sum[i] = (unsigned int) hex;
+            }
+            add_md5_to_map(&os_md5map, key, md5sum);
+            break;
+        }
+        default:
+            errx(1, "Unknown meta data: %c (%s)", line[0], line);
+        }
     }
 
     fclose(fp);
@@ -555,7 +618,10 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
 
         // writing intent (not force)
         if (flag == READWRITE_WRITE) {
-            copyfile(hpn, spn);
+            byte md5[MD5_DIGEST_LENGTH];
+            if (copyfile(hpn, spn, md5)) {
+                add_md5_to_map(&os_md5map, hpn, md5);
+            }
         }
 
         // finally hijack path (arg)
@@ -622,9 +688,12 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
 
     // write or read/write
     if (accmode == O_RDWR || accmode == O_RDWR) {
+        byte md5[MD5_DIGEST_LENGTH];
         dbg(open, "open(%s, RW)", spn);
         sbox_sync_parent_dirs(hpn, spn);
-        copyfile(hpn, spn);
+        if (copyfile(hpn, spn, md5)) {
+            add_md5_to_map(&os_md5map, hpn, md5);
+        }
         sbox_hijack_str(tcp, arg, spn);
     }
 }
@@ -1267,7 +1336,7 @@ static
 int _sh_commit(char *spn, char *hpn)
 {
     printf("  > Commiting %s\n", hpn);
-    copyfile(spn, hpn);
+    copyfile(spn, hpn, NULL);
     return 0;
 }
 
@@ -1498,7 +1567,7 @@ void sbox_load_profile(char *profile)
             }
             continue;
         }
-        
+
         // handle each section line
         switch (section) {
         case SEC_NETWORK: break;
@@ -1519,7 +1588,7 @@ void sbox_load_profile(char *profile)
                 char sboxpath[PATH_MAX];
                 snprintf(sboxpath, sizeof(sboxpath), "%s/%s", opt_root, path);
                 mkdirp(sboxpath, 0755);
-                
+
                 if (path) {
                     free(path);
                 }

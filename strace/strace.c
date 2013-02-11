@@ -103,6 +103,7 @@ bool opt_seccomp     = 0;
 bool opt_interactive = 1;
 bool opt_no_nw       = 0;
 bool opt_fakeroot    = 0;
+bool opt_md5         = 0;
 char *opt_profile    = NULL;
 
 /*
@@ -220,6 +221,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -S sort : sort syscall counts by: time, calls, name, nothing (default %s)\n\
         -E var  : put var=val in the environment for command\n\
 \n\
+        -m      : keep md5 of original files\n\
         -c      : count time, calls, and errors for each syscall and report summary\n\
         -d      : enable syscall trace to stderr\n\
         -D      : enable debug\n\
@@ -1333,7 +1335,7 @@ init(int argc, char *argv[])
 
     bool opt_test_flag = 0;
     while ((c = getopt(argc, argv,
-        "+bcdDhqvVxyzistnR"
+        "+bcdDhqvVxyzistnRm"
         "e:o:O:S:E:I:C:r:p:")) != EOF) {
         switch (c) {
         case 'b':
@@ -1416,6 +1418,9 @@ init(int argc, char *argv[])
             break;
         case 'R':
             opt_fakeroot = 1;
+            break;
+        case 'm':
+            opt_md5 = 1;
             break;
         case 'p':
             opt_profile = strdup(optarg);

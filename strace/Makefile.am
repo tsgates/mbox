@@ -10,9 +10,10 @@ OS		= linux
 # ARCH is `i386', `m68k', `sparc', etc.
 ARCH		= @arch@
 
+LIBS = -lcrypto
 ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS = $(WARN_CFLAGS)
-AM_CPPFLAGS = -I$(srcdir)/$(OS)/$(ARCH) -I$(srcdir)/$(OS) -I$(builddir)/$(OS)
+AM_CPPFLAGS = -I$(srcdir)/$(OS)/$(ARCH) -I$(srcdir)/$(OS) -I$(builddir)/$(OS) -lcrypto
 
 strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c sbox.c ipc.c \
 		 io.c ioctl.c mem.c net.c process.c bjm.c quota.c \

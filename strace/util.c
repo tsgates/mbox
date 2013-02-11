@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <openssl/md5.h>
 
 #if HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -1585,10 +1586,8 @@ touch(char *dst, int mode)
 }
 
 int
-copyfile(char *src, char *dst)
+copyfile(char *src, char *dst, byte *md5)
 {
-    char buf[PAGE_SIZE];
-
     struct stat src_stat;
     if (stat(src, &src_stat) < 0) {
         // fine if not exist
@@ -1621,6 +1620,13 @@ copyfile(char *src, char *dst)
         return 0;
     }
 
+    MD5_CTX ctx;
+    if (md5) {
+        MD5_Init(&ctx);
+    }
+    
+    char buf[PAGE_SIZE];
+    
     int bytes;
     int ret = 1;
     while ((bytes = read(src_fd, buf, sizeof(buf))) > 0) {
@@ -1629,11 +1635,18 @@ copyfile(char *src, char *dst)
             ret = 0;
             break;
         }
+        if (md5) {
+            MD5_Update(&ctx, buf, bytes);
+        }
     }
 
     close(src_fd);
     close(dst_fd);
 
+    if (md5) {
+        MD5_Final(md5, &ctx);
+    }
+    
     return ret;
 }
 

@@ -1,8 +1,8 @@
 # NOTE
 
- - tests-sbox/test-*.sh should be initiated in the fixed path
+ - tests/test-*.sh should be initiated in the fixed path
 
-    $ ./strace -t tests-sbox/test-vim.sh
+    $ ./mbox -t tests/test-vim.sh
 
  - check pre/post conditions for the script (if -t is provided to sandbox.py)
 

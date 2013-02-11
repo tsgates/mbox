@@ -1,1 +1,11 @@
-/libseccomp.so
+/.deps/
+/Makefile
+/config.h
+/config.log
+/config.status
+/linux/ioctlent.h
+/stamp-h1
+/strace
+/tests/Makefile
+/autom4te.cache/
+/configsbox.h

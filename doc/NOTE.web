@@ -1,7 +1,7 @@
 # Mbox
 
-Mbox is a lightweight sandboxing mechanism that any user can use without special
-privileges in commodity operating systems. 
+Mbox is a lightweight *sandboxing* mechanism that any user can use *without special
+privileges* in commodity operating systems. 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
 $ git clone git://g.csail.mit.edu/magicbox
@@ -23,7 +23,7 @@ Sandbox Root:
 [c]ommit, [i]gnore, [d]iff, [l]ist, [s]hell, [q]uit ?> 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-## What is Mbox?
+## What 'sandbox' are you talking about?
 
 Mbox introduces a novel sandbox usage model; when executing a program in the
 sandbox, Mbox prevents programs from modifying the host filesystem while giving
@@ -33,7 +33,7 @@ system calls* with ptrace and seccomp/BPF. At the end of program execution, the
 user can examine changes in the sandbox filesystem, and selectively commit them
 back to the host filesystem.
 
-## What Mbox can provide to you?
+## Under what circumstances can Mbox help?
 
 ### Usage 1: Installing packages without root
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
@@ -75,4 +75,4 @@ back to the host filesystem.
 
 ## NOTE.
 
-documents, paper, and arch/deb packages will be ready to download soon.
+documents, paper, and arch/deb packages will be ready to download soon!

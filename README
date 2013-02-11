@@ -1,8 +1,7 @@
-
 Getting started
 ===============
 
-    $ cd strace
+    $ cd src
     $ autoconf
     $ make
 
@@ -11,26 +10,13 @@ Getting started
           /strace.c        : main
 
     $ ./strace -h          : help
-    $ ./strace ls          : run ls with ptrace
-    $ ./strace -s ls       : run ls with seccomp/bpf
-    $ ./strace -i sh       : run sh (interactive mode after you kill the sh)
+    $ ./strace ls          : give it a shot
     $ ./testall.sh         : test all unit tests
+    
+    $ ./strace -s ls       : run ls with seccomp/bpf (if supported)
 
-    # examples
+Use cases
+=========
+
     $ ./strace -i -- wget google.com      : a simple use
     $ ./strace -n -i -- wget google.com   : no network
-    
-NOTE. Python: the orignal PoC
------------------------------
-
-    $ cd src
-    $ make libseccomp.so
-
-     - src/sandbox.py      : main ptrace wrapper
-          /spec.py         : definition of syscalls
-          /{util,dbg}.py   : helper functions
-          /tests/test-*    : test codes
-
-    $ src/sandbox.py [opts] -- prog [args]
-    $ src/sandbox.py -h
-    $ src/sandbox.py -q -- python2 -i

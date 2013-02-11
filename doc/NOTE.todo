@@ -1,4 +1,7 @@
 # TODO
+ - BUG: duplicated entries in hash tables?
+ - packaging deb / pacman
+ 
  - symlink: fix symlinkat (like symlink) and check new/../old escape the sandbox
  - make rename robust (handle EDEV)
  - rewrite rename, check error on get_fd_arg()
@@ -6,6 +9,7 @@
  - check if dump core is enabled, ans warn
  - support chroot in the fakeroot?
  - also need to rewrite paths to the hostfs?
+ 
  - LT: support x86 32, and others
  
 # DONE

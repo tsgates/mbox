@@ -11,3 +11,5 @@
  * r11  eflags for syscall/sysret, temporary for C
  * r12-r15,rbp,rbx saved by C code, not touched.
 
+# kill on exit
+ - PTRACE_O_EXITKILL (http://kernelnewbies.org/LinuxChanges)

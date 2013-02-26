@@ -80,6 +80,22 @@ back to the host filesystem.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
 $ wget http://pdos.csail.mit.edu/mbox/mbox-latest-1-x86_64.pkg.tar.xz
 $ pacman -U mbox-latest-1-x86_64.pkg.tar.xz
+$ mbox -h
+usage: sandbox [-r root] [-s] [PROG]
+        ...
+        -m      : keep md5 of original files
+        -c      : count time, calls, and errors for each syscall and report summary
+        -d      : enable syscall trace to stderr
+        -D      : enable debug
+        -p file : load profile (see. NOTE.profile)
+        -t      : run as unit tester (check pre/post condition, see tests-sbox/NOTE)
+        -n      : disable network accesses
+        -S      : enable nested seccomp
+        -i      : disable interactive session at the end
+        -s      : use seccomp instead of ptrace
+        -R      : fakeroot
+        -C path : change directory
+        -r path : sandbox root (default:/tmp/sandbox-)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## NOTE.

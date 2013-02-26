@@ -59,9 +59,8 @@ bin_PROGRAMS = mbox$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
-	$(srcdir)/config.h.in depcomp $(noinst_HEADERS) AUTHORS \
-	ChangeLog INSTALL NEWS README config.guess config.sub \
-	install-sh missing
+	$(srcdir)/config.h.in depcomp $(noinst_HEADERS) INSTALL NEWS \
+	config.guess config.sub install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/includedir.m4 \
 	$(top_srcdir)/m4/long_long.m4 $(top_srcdir)/m4/stat.m4 \
@@ -290,7 +289,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-bin_SCRIPTS = strace-graph strace-log-merge
+bin_SCRIPTS = 
 OS = linux
 # ARCH is `i386', `m68k', `sparc', etc.
 ARCH = @arch@

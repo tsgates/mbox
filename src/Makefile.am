@@ -1,7 +1,7 @@
 # Automake input for strace.
 
 bin_PROGRAMS = mbox
-bin_SCRIPTS = strace-graph strace-log-merge
+bin_SCRIPTS =
 
 OS		= linux
 # ARCH is `i386', `m68k', `sparc', etc.

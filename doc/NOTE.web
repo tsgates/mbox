@@ -73,6 +73,15 @@ back to the host filesystem.
     hide: ~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## Packages
+
+### Arch
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+$ wget http://pdos.csail.mit.edu/mbox/mbox-latest-1-x86_64.pkg.tar.xz
+$ pacman -U mbox-latest-1-x86_64.pkg.tar.xz
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ## NOTE.
 
-documents, paper, and arch/deb packages will be ready to download soon!
+documents, paper, and more packages will be ready to download soon!

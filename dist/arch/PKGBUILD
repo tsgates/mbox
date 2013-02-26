@@ -1,0 +1,36 @@
+pkgname=mbox
+pkgver=20130226
+pkgrel=1
+pkgdesc="A sandbox for non-root users"
+arch=('x86_64')
+url="http://pdos.csail.mit.edu/mbox"
+license=('MIT')
+depends=('glibc')
+makedepends=('git')
+_gitroot="git://g.csail.mit.edu/magicbox"
+_gitname="mbox"
+
+build() {
+  cd "$srcdir"
+  msg "Connecting to GIT server..."
+  if [ -d "$_gitname" ] ; then
+    cd "$_gitname" && git pull origin
+    cd "$srcdir"
+    msg "The local files are updated."
+  else
+    git clone --depth=1 "$_gitroot" "$_gitname"
+  fi
+  msg "GIT checkout done or server timeout"
+
+  cd "$srcdir/$_gitname/src"
+  cp {.,}configsbox.h
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd "$srcdir/$_gitname/src"
+
+  make DESTDIR="${pkgdir}/" install
+  install -Dm644 COPYRIGHT "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

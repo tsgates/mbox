@@ -2,7 +2,8 @@ Getting started
 ===============
 
     $ cd src
-    $ autoconf
+    $ cp {.,}configsbox.h
+    $ ./configure
     $ make
 
      - src/tests-sbox      : test codes

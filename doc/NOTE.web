@@ -89,7 +89,7 @@ $ wget http://pdos.csail.mit.edu/mbox/mbox-latest.amd64.deb
 $ sudo dpkg -i mbox-latest.amd64.deb
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is a list of mbox's options.
+Here is a list of available options.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
 $ mbox -h

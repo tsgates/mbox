@@ -1,11 +1,19 @@
 SHELL=/bin/bash
 DEST=/disk/am0/httpd/htdocs/mbox
 
-dist:
+arch:
 	(cd dist/arch && {                                     \
 		makepkg -cs -f;                                    \
 		scp mbox-$(shell date +%Y%m%d)-1-x86_64.pkg.tar.xz \
-		  am:${DEST}/mbox-latest-1-x86_64.pkg.tar.xz;      \
+		  am:${DEST}/mbox-latest-x86_64.pkg.tar.xz;        \
+	})
+
+debian:
+	(cd dist && {                                          \
+		./debian/rules build;                              \
+		./debian/rules binary-arch;                        \
+		scp ../mbox_0.1_amd64.deb                          \
+		  am:${DEST}/mbox-latest-amd64.deb;                \
 	})
 
 pub:
@@ -16,4 +24,4 @@ pub:
 	  --email-obfuscation=javascript doc/NOTE.web  \
 	 | ssh am "cat > ${DEST}/index.html"
 
-.PHONY: dist pub
+.PHONY: pub arch debian

@@ -78,8 +78,20 @@ back to the host filesystem.
 ### Arch
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
-$ wget http://pdos.csail.mit.edu/mbox/mbox-latest-1-x86_64.pkg.tar.xz
-$ pacman -U mbox-latest-1-x86_64.pkg.tar.xz
+$ wget http://pdos.csail.mit.edu/mbox/mbox-latest-x86_64.pkg.tar.xz
+$ sudo pacman -U mbox-latest-x86_64.pkg.tar.xz
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Debian
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+$ wget http://pdos.csail.mit.edu/mbox/mbox-latest.amd64.deb
+$ sudo dpkg -i mbox-latest.amd64.deb
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here is a list of mbox's options.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
 $ mbox -h
 usage: sandbox [-r root] [-s] [PROG]
         ...

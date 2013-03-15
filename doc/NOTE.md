@@ -1,3 +1,7 @@
+# note
+ - clean/better possible design might use
+   overlayfs (plan to introduce @3.10 cycle)
+
 # use cases (in high level)
  - run unknown binary
    - download "convert" on the internet, saying epub -> mobi converter

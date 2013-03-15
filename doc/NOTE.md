@@ -1,6 +1,10 @@
 # note
- - clean/better possible design might use
-   overlayfs (plan to introduce @3.10 cycle)
+ - ptrace exit flag to kill all child when exiting (plan to introduce @3.8)
+ - namespace for non-root users (plan to introduce @3.8)
+ - overlayfs (plan to introduce @3.10 cycle)
+   - whiteout prefix seems better than maintaining 'deleted' map
+   - they also cover readdir() issues (see overlayfs.txt)
+   - copy_up() also covers symlink() issues
 
 # use cases (in high level)
  - run unknown binary

@@ -5,7 +5,8 @@
    - whiteout prefix seems better than maintaining 'deleted' map
    - they also cover readdir() issues (see overlayfs.txt)
    - copy_up() also covers symlink() issues
-
+ - docker: http://docker.io/
+ 
 # use cases (in high level)
  - run unknown binary
    - download "convert" on the internet, saying epub -> mobi converter

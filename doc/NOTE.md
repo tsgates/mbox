@@ -6,6 +6,7 @@
    - they also cover readdir() issues (see overlayfs.txt)
    - copy_up() also covers symlink() issues
  - docker: http://docker.io/
+   - released March 26th
  
 # use cases (in high level)
  - run unknown binary

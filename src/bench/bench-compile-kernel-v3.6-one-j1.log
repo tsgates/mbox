@@ -1,0 +1,80 @@
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-Sv47z)
+
+real	0m45.194s
+user	0m38.174s
+sys	0m2.726s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-PSR3k)
+
+real	0m49.125s
+user	0m39.811s
+sys	0m6.763s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-IEX2r)
+
+real	0m43.508s
+user	0m38.011s
+sys	0m2.766s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-drYtL)
+
+real	0m49.061s
+user	0m39.691s
+sys	0m6.803s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-y5V3M)
+
+real	0m43.427s
+user	0m37.921s
+sys	0m2.803s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-aXRTj)
+
+real	0m49.065s
+user	0m39.747s
+sys	0m6.766s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-JnW39)
+
+real	0m45.077s
+user	0m38.148s
+sys	0m2.673s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-u4xh4)
+
+real	0m48.976s
+user	0m39.747s
+sys	0m6.643s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-ZD8KX)
+
+real	0m43.447s
+user	0m38.128s
+sys	0m2.576s
+--------
+CPU: 0
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j1 kernel (see /tmp/bench-kernel-qA3L2)
+
+real	0m49.363s
+user	0m39.744s
+sys	0m6.696s
+--------

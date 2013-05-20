@@ -1,60 +1,80 @@
-Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-o8LKr)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-7GlAa)
 
-real	0m28.817s
-user	1m36.620s
-sys	0m7.899s
+real	0m21.089s
+user	1m9.549s
+sys	0m5.063s
 --------
-Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-W8Nn2)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-khLFT)
 
-real	0m40.673s
-user	1m34.780s
-sys	0m18.815s
+real	0m30.930s
+user	1m7.876s
+sys	0m14.219s
 --------
-Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-xChTj)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-s24cL)
 
-real	0m28.902s
-user	1m36.064s
-sys	0m8.249s
+real	0m20.759s
+user	1m9.842s
+sys	0m5.076s
 --------
-Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-cuSz0)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-qnCGP)
 
-real	0m40.321s
-user	1m34.690s
-sys	0m18.952s
+real	0m31.919s
+user	1m8.659s
+sys	0m14.232s
 --------
-Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-Mn9Tr)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-vjIHw)
 
-real	0m28.743s
-user	1m36.597s
-sys	0m7.973s
+real	0m21.009s
+user	1m9.502s
+sys	0m5.486s
 --------
-Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-VfpP3)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-z9VNh)
 
-real	0m38.922s
-user	1m34.627s
-sys	0m18.719s
+real	0m30.812s
+user	1m7.796s
+sys	0m14.269s
 --------
-Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-YjbcX)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-VDcPu)
 
-real	0m28.786s
-user	1m36.780s
-sys	0m7.769s
+real	0m20.907s
+user	1m9.849s
+sys	0m5.106s
 --------
-Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-5S30j)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-eioLD)
 
-real	0m40.518s
-user	1m35.350s
-sys	0m18.752s
+real	0m31.196s
+user	1m7.639s
+sys	0m14.146s
 --------
-Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-PLCxQ)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-2645q)
 
-real	0m28.783s
-user	1m36.444s
-sys	0m8.116s
+real	0m20.314s
+user	1m9.659s
+sys	0m5.053s
 --------
-Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-d919Z)
+CPU: 0-3
+KER: Linux zl 3.6.11-1-ARCH #1 SMP PREEMPT Tue Dec 18 08:57:15 CET 2012 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-ngKuR)
 
-real	0m40.645s
-user	1m35.364s
-sys	0m19.242s
+real	0m28.705s
+user	1m7.446s
+sys	0m13.569s
 --------

@@ -1,21 +1,27 @@
-Run: tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-OzItR)
+CPU: 0
+KER: Linux zl 3.8.10-1-ARCH #1 SMP PREEMPT Sat Apr 27 12:36:59 CEST 2013 x86_64 GNU/Linux
+Run: tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-DMcN4)
 tar: Removing leading `/' from member names
 
-real	0m57.175s
-user	0m56.283s
-sys	0m2.410s
+real	0m15.836s
+user	0m15.183s
+sys	0m0.463s
 --------
-Run: ./bench/../strace -- tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-jQitp)
+CPU: 0
+KER: Linux zl 3.8.10-1-ARCH #1 SMP PREEMPT Sat Apr 27 12:36:59 CEST 2013 x86_64 GNU/Linux
+Run: ./../mbox -i -- tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-alAPx)
 tar: Removing leading `/' from member names
 
-real	1m5.452s
-user	1m4.429s
-sys	0m12.429s
+real	0m19.341s
+user	0m15.937s
+sys	0m3.173s
 --------
-Run: ./bench/../strace -s -- tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-i46ie)
+CPU: 0
+KER: Linux zl 3.8.10-1-ARCH #1 SMP PREEMPT Sat Apr 27 12:36:59 CEST 2013 x86_64 GNU/Linux
+Run: ./../mbox -i -s -- tar zcf out.tar.gz /tmp/linux-git (see /tmp/bench-gzip-y2W6V)
 tar: Removing leading `/' from member names
 
-real	0m58.287s
-user	0m57.570s
-sys	0m5.640s
+real	0m17.233s
+user	0m15.267s
+sys	0m1.737s
 --------

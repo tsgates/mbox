@@ -10,10 +10,12 @@ if [ ! -e $KER ]; then
 fi
 
 run() {
-  (cd $KER; make clean &>/dev/null)
   rm -f $ZIP
 
   OUT=$(mktemp /tmp/bench-gzip-XXXXX)
+  CPU=$(cat /sys/devices/system/cpu/online)
+  echo "CPU: $CPU"
+  echo "KER: $(uname -a)"
   echo "Run: $@ (see $OUT)"
   time "$@" >$OUT || {
     echo ">> stdout: (see. $OUT)"
@@ -24,5 +26,5 @@ run() {
 }
 
 run tar zcf $ZIP $KER
-run $DIR/strace -- tar zcf $ZIP $KER
-run $DIR/strace -s -- tar zcf $ZIP $KER
+run $DIR/mbox -i -- tar zcf $ZIP $KER
+run $DIR/mbox -i -s -- tar zcf $ZIP $KER

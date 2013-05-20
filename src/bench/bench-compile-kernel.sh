@@ -1,5 +1,6 @@
 #!/bin/bash
 
+JOB=${JOB:--j1}
 DIR=$(dirname "$0")/..
 KER=${KER:-/tmp/linux-git}
 
@@ -12,6 +13,9 @@ run() {
   (cd $KER; make clean &>/dev/null)
 
   OUT=$(mktemp /tmp/bench-kernel-XXXXX)
+  CPU=$(cat /sys/devices/system/cpu/online)
+  echo "CPU: $CPU"
+  echo "KER: $(uname -a)"
   echo "Run: $@ (see $OUT)"
   time "$@" >$OUT || {
     echo ">> stdout: (see. $OUT)"
@@ -22,6 +26,6 @@ run() {
 }
 
 for i in `seq 1 5`; do
-  run make -C $KER -j4 kernel
-  run $DIR/mbox -i -s -- make -C $KER -j4 kernel
+  run make -C $KER $JOB kernel
+  run $DIR/mbox -i -s -- make -C $KER $JOB kernel
 done

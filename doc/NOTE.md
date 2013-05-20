@@ -1,5 +1,5 @@
 # note
- - ptrace exit flag to kill all child when exiting (plan to introduce @3.8)
+ - PTRACE_O_EXITKILL: kill all child when exiting (plan to introduce @3.8)
  - namespace for non-root users (plan to introduce @3.8)
  - overlayfs (plan to introduce @3.10 cycle)
    - whiteout prefix seems better than maintaining 'deleted' map

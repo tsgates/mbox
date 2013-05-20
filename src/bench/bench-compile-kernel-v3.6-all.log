@@ -1,0 +1,60 @@
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-o8LKr)
+
+real	0m28.817s
+user	1m36.620s
+sys	0m7.899s
+--------
+Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-W8Nn2)
+
+real	0m40.673s
+user	1m34.780s
+sys	0m18.815s
+--------
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-xChTj)
+
+real	0m28.902s
+user	1m36.064s
+sys	0m8.249s
+--------
+Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-cuSz0)
+
+real	0m40.321s
+user	1m34.690s
+sys	0m18.952s
+--------
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-Mn9Tr)
+
+real	0m28.743s
+user	1m36.597s
+sys	0m7.973s
+--------
+Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-VfpP3)
+
+real	0m38.922s
+user	1m34.627s
+sys	0m18.719s
+--------
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-YjbcX)
+
+real	0m28.786s
+user	1m36.780s
+sys	0m7.769s
+--------
+Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-5S30j)
+
+real	0m40.518s
+user	1m35.350s
+sys	0m18.752s
+--------
+Run: make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-PLCxQ)
+
+real	0m28.783s
+user	1m36.444s
+sys	0m8.116s
+--------
+Run: ./../strace -s -- make -C /tmp/linux-git -j4 kernel (see /tmp/bench-kernel-d919Z)
+
+real	0m40.645s
+user	1m35.364s
+sys	0m19.242s
+--------

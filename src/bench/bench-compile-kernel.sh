@@ -23,5 +23,5 @@ run() {
 
 for i in `seq 1 5`; do
   run make -C $KER -j4 kernel
-  run $DIR/strace -s -- make -C $KER -j4 kernel
+  run $DIR/mbox -i -s -- make -C $KER -j4 kernel
 done

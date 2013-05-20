@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIR=$(dirname "$0")/..
-KER=${KER:-/tmp/linux-git}
+KER=${KER:-/tmp/linux-3.8}
 ZIP=${ZIP:-out.tar.gz}
 
 if [ ! -e $KER ]; then

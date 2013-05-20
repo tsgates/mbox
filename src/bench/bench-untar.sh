@@ -1,12 +1,12 @@
 #!/bin/bash
 
 DIR=$(dirname "$0")/..
-KER=${KER:-/tmp/linux-3.7.tar.bz2}
-DST=${DST:-/tmp/linux-3.7}
+KER=${KER:-/tmp/linux-3.8.tar.bz2}
+DST=${DST:-/tmp/linux-3.8}
 
 if [ ! -e $KER ]; then
   echo "Downloading $KER"
-  wget http://www.kernel.org/pub/linux/kernel/v3.0/linux-3.7.tar.bz2 -O $KER
+  wget http://www.kernel.org/pub/linux/kernel/v3.0/linux-3.8.tar.bz2 -O $KER
 fi
 
 run() {
@@ -23,6 +23,6 @@ run() {
   echo "--------"
 }
 
-#run tar jxf $KER -C $DST
-run $DIR/strace $@ -- tar jxf $KER -C $DST
-run $DIR/strace $@ -s -- tar jxf $KER -C $DST
+run tar jxf $KER -C $DST
+run $DIR/mbox -i $@ -- tar jxf $KER -C $DST
+run $DIR/mbox -i $@ -s -- tar jxf $KER -C $DST

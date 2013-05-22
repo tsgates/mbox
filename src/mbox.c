@@ -2062,6 +2062,20 @@ void kill_all(struct tcb *me)
     }
 }
 
+int has_any_entering_proc(struct tcb *current)
+{
+    int i;
+    for (i = 0; i < tcbtabsize; i++) {
+        struct tcb *t = tcbtab[i];
+        if ((t->flags & TCB_INUSE) && (t != current)) {
+            if (entering(t)) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 int
 main(int argc, char *argv[])
 {

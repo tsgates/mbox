@@ -16,6 +16,7 @@
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
+#include <sys/mman.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <linux/seccomp.h>
@@ -1604,4 +1605,16 @@ void sbox_load_profile(char *profile)
 #undef SEC_NETWORK
 
     fclose(fp);
+}
+
+int sbox_mprotect(struct tcb *tcp)
+{
+    // for mprotect(WRITE)
+    if (entering(tcp) && (tcp->u_arg[2] & PROT_WRITE)) {
+        // make sure if others in the 'entry' state
+        if (has_any_entering_proc(tcp)) {
+            sbox_stop(tcp, "Should wait until other syscalls to be done");
+        }
+    }
+    return 0;
 }

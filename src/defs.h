@@ -520,6 +520,7 @@ extern bool opt_fakeroot;
 extern bool opt_md5;
 
 extern void kill_all(struct tcb *tcp);
+extern int has_any_entering_proc(struct tcb *current);
 
 enum bitness_t { BITNESS_CURRENT = 0, BITNESS_32 };
 

@@ -439,3 +439,5 @@ int sbox_getegid();
 int sbox_fchown();
 // support nested seccomp
 int sbox_prctl();
+// mprotect
+int sbox_mprotect();

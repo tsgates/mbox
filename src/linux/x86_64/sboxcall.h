@@ -8,7 +8,7 @@
 { 3,    TD,     sys_poll,                   NULL,	"poll"                           },  /* 7 */
 { 3,    TD,     sys_lseek,                  NULL,	"lseek"                          },  /* 8 */
 { 6,    TD,     sys_mmap,                   NULL,	"mmap"                           },  /* 9 */
-{ 3,    0,      sys_mprotect,               NULL,	"mprotect"                       },  /* 10 */
+{ 3,    0,      sys_mprotect,               sbox_mprotect,      "mprotect"           },  /* 10 */
 { 2,    0,      sys_munmap,                 NULL,	"munmap"                         },  /* 11 */
 { 1,    0,      sys_brk,                    NULL,	"brk"                            },  /* 12 */
 { 4,    TS,     sys_rt_sigaction,           NULL,	"rt_sigaction"                   },  /* 13 */

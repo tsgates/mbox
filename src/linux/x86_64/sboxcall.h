@@ -7,10 +7,10 @@
 { 2,    TF,     sys_lstat,                  sbox_stat,          "lstat"              },  /* 6 */
 { 3,    TD,     sys_poll,                   NULL,	"poll"                           },  /* 7 */
 { 3,    TD,     sys_lseek,                  NULL,	"lseek"                          },  /* 8 */
-{ 6,    TD,     sys_mmap,                   NULL,	"mmap"                           },  /* 9 */
+{ 6,    TD,     sys_mmap,                   sbox_mmap,          "mmap"               },  /* 9 */
 { 3,    0,      sys_mprotect,               sbox_mprotect,      "mprotect"           },  /* 10 */
 { 2,    0,      sys_munmap,                 NULL,	"munmap"                         },  /* 11 */
-{ 1,    0,      sys_brk,                    NULL,	"brk"                            },  /* 12 */
+{ 1,    0,      sys_brk,                    sbox_brk,           "brk"                },  /* 12 */
 { 4,    TS,     sys_rt_sigaction,           NULL,	"rt_sigaction"                   },  /* 13 */
 { 4,    TS,     sys_rt_sigprocmask,         NULL,	"rt_sigprocmask"                 },  /* 14 */
 { 0,    TS,     sys_rt_sigreturn,           NULL,	"rt_sigreturn"                   },  /* 15 */
@@ -23,7 +23,7 @@
 { 1,    TD,     sys_pipe,                   NULL,	"pipe"                           },  /* 22 */
 { 5,    TD,     sys_select,                 NULL,	"select"                         },  /* 23 */
 { 0,    0,      sys_sched_yield,            NULL,	"sched_yield"                    },  /* 24 */
-{ 5,    0,      sys_mremap,                 NULL,	"mremap"                         },  /* 25 */
+{ 5,    0,      sys_mremap,                 sbox_mremap,        "mremap"             },  /* 25 */
 { 3,    0,      sys_msync,                  NULL,	"msync"                          },  /* 26 */
 { 3,    0,      sys_mincore,                NULL,	"mincore"                        },  /* 27 */
 { 3,    0,      sys_madvise,                NULL,	"madvise"                        },  /* 28 */

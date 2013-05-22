@@ -60,5 +60,8 @@ static struct sock_filter filter[] = {
     TRACE_SYSCALL(fchown),
     TRACE_SYSCALL(prctl),
     TRACE_SYSCALL(mprotect),
+    TRACE_SYSCALL(mmap),
+    TRACE_SYSCALL(mremap),
+    TRACE_SYSCALL(brk),
     ALLOWED,
 };

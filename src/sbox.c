@@ -1618,3 +1618,57 @@ int sbox_mprotect(struct tcb *tcp)
     }
     return 0;
 }
+
+/* specifically the first argument for address, sencod argument for the size */
+static
+void _check_memory_region(struct tcb *tcp)
+{
+    unsigned long beg = tcp->u_arg[0];
+    unsigned long end = beg + tcp->u_arg[1];
+    unsigned long ptr = (unsigned long) tcp->readonly_ptr;
+
+    if (tcp->readonly_ptr != -1
+        && beg < end
+        && beg < ptr
+        && ptr < end) {
+        
+        char *sname = "";
+        if (SCNO_IN_RANGE(tcp->scno)) {
+            sname = sysent[tcp->scno].sys_name;
+        }
+        sbox_stop(tcp, "It's not allowed to call %s on %p",
+                  sname, (void *)ptr);
+    }
+}
+
+int sbox_mmap(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        _check_memory_region(tcp);
+    }
+    return 0;
+}
+
+int sbox_mremap(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        _check_memory_region(tcp);
+    }
+    return 0;
+}
+
+int sbox_brk(struct tcb *tcp)
+{
+    if (exiting(tcp)) {
+        unsigned long arg = tcp->u_arg[0];
+        unsigned long new = tcp->u_rval;
+        unsigned long ptr = (unsigned long)tcp->readonly_ptr;
+
+        if (arg != 0
+            && tcp->readonly_ptr != -1
+            && new < ptr) {
+            sbox_stop(tcp, "brk() is not allowed if targetting the arg ptr");
+        }
+    }
+    return 0;
+}

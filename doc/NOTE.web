@@ -112,5 +112,5 @@ usage: sandbox [-r root] [-s] [PROG]
 
 ## NOTE.
 
-- Paper: [http://pdos.csail.mit.edu/~taesoo/pubs/2013/mbox/mbox.pdf]
-- Slides: [http://pdos.csail.mit.edu/~taesoo/pubs/2013/mbox/mbox-slides.pdf]
+- [Paper](http://pdos.csail.mit.edu/~taesoo/pubs/2013/mbox/mbox.pdf)
+- [Slides](http://pdos.csail.mit.edu/~taesoo/pubs/2013/mbox/mbox-slides.pdf)

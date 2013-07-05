@@ -4,7 +4,7 @@ Mbox is a lightweight *sandboxing* mechanism that any user can use *without spec
 privileges* in commodity operating systems. 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
-$ git clone git://g.csail.mit.edu/magicbox
+$ git clone https://github.com/tsgates/mbox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## TL;DR
@@ -112,4 +112,5 @@ usage: sandbox [-r root] [-s] [PROG]
 
 ## NOTE.
 
-documents, paper, and more packages will be ready to download soon!
+- Paper: [http://pdos.csail.mit.edu/~taesoo/pubs/2013/mbox/mbox.pdf]
+- Slides: [http://pdos.csail.mit.edu/~taesoo/pubs/2013/mbox/mbox-slides.pdf]

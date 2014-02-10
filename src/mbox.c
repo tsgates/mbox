@@ -1492,7 +1492,7 @@ init(int argc, char *argv[])
      */
     if (!opt_root) {
         asprintf(&opt_root, DEFAULT_ROOT "%d", getpid());
-        mkdir(opt_root, 0755);
+        mkdir(opt_root, 0700);
     } else {
         /* force opt_root not starting with a slash */
         int last = strlen(opt_root) - 1;

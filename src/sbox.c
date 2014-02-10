@@ -1588,7 +1588,7 @@ void sbox_load_profile(char *profile)
                 // allowed, so sync in sboxfs
                 char sboxpath[PATH_MAX];
                 snprintf(sboxpath, sizeof(sboxpath), "%s/%s", opt_root, path);
-                mkdirp(sboxpath, 0755);
+                mkdirp(sboxpath, 0700);
 
                 if (path) {
                     free(path);

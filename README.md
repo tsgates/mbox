@@ -1,9 +1,7 @@
 Mbox
 ====
 
-Mbox is a lightweight *sandboxing* mechanism that any user can use *without special
-privileges* in commodity operating systems. For more details, see doc/NOTE.web or
-visit (website)[http://pdos.csail.mit.edu/mbox/].
+Mbox is a lightweight *sandboxing* mechanism that any user can use *without special privileges* in commodity operating systems. For more details, see doc/NOTE.web or visit [the website](http://pdos.csail.mit.edu/mbox/).
 
 Getting started
 ===============

@@ -9,3 +9,4 @@
 /tests/Makefile
 /autom4te.cache/
 /configsbox.h
+/*.o

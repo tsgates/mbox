@@ -1263,6 +1263,7 @@ static unsigned
 get_os_release(void)
 {
     unsigned rel;
+    unsigned rel_debian;
     const char *p;
     struct utsname u;
     if (uname(&u) < 0)
@@ -1279,6 +1280,15 @@ get_os_release(void)
             break;
         while (*p >= '0' && *p <= '9')
             p++;
+        if (*p == '-') {
+            /* On debian systems, u.release is 3.2-8-arch, where 8 is debian's
+               patchlevel. This can also be non-numeric (as in "-trunk").
+               Try to parse it once. */
+            rel_debian = (rel << 8) | atoi(p+1);
+            if (rel_debian >= KERNEL_VERSION(1,0,0))
+                rel = rel_debian;
+                break;
+        }
         if (*p != '.')
             error_msg_and_die("Bad OS release string: '%s'", u.release);
         p++;

@@ -1628,6 +1628,7 @@ void _check_memory_region(struct tcb *tcp)
     unsigned long ptr = (unsigned long) tcp->readonly_ptr;
 
     if (tcp->readonly_ptr != -1
+        && beg != 0
         && beg < end
         && beg < ptr
         && ptr < end) {

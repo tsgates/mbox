@@ -880,7 +880,7 @@ int sbox_getdents(struct tcb *tcp)
             }
 
             // check if calling to sandboxfs
-            if (strncmp(spn, opt_root, opt_root_len) != 0) {
+            if (strncmp(spn, opt_root, opt_root_len) >= 0) {
 
                 // XXX. meanwhile, it can modify the same dir in sboxfs, so
                 // the getdents(hostfs) might be even wrong. we can handle
@@ -1060,7 +1060,7 @@ int sbox_linkat(struct tcb *tcp)
 int sbox_symlink(struct tcb *tcp)
 {
     // TODO. we don't support relative symlink (.. or any) for
-    // now, but we can to resolve the 'path2' argument of symlink().
+    // now, but we can resolve the 'path2' argument of symlink().
     // for example, if relative -> just use
     //              if absolute -> resolve the path
     char old_hpn[PATH_MAX];
@@ -1076,9 +1076,9 @@ int sbox_symlink(struct tcb *tcp)
         get_hpn_from_fd_and_arg(tcp, AT_FDCWD, 1, new_hpn, PATH_MAX);
         get_spn_from_hpn(new_hpn, new_spn, PATH_MAX);
 
-        // XXX. check if new_spn/../old_hpn
-        if (strncmp(old_hpn, "..", 2) != 0) {
-            sbox_stop(tcp, "XXX");
+        // XXX. check if old_hpn contains ".."
+        if (strstr(old_hpn, "..") != NULL) {
+            sbox_stop(tcp, "old_hpn: %s", old_hpn);
         }
 
         sbox_rewrite_path(tcp, AT_FDCWD, 1, READWRITE_FORCE);

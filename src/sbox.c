@@ -1632,8 +1632,8 @@ void _check_memory_region(struct tcb *tcp)
         && beg < end
         && beg < ptr
         && ptr < end) {
-        
-        char *sname = "";
+
+        const char *sname = "";
         if (SCNO_IN_RANGE(tcp->scno)) {
             sname = sysent[tcp->scno].sys_name;
         }

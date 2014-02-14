@@ -290,7 +290,7 @@ extern long ptrace(int, int, char *, long);
 # define PTRACE_O_TRACESECCOMP 0x00000080
 #endif
 #if !HAVE_DECL_PTRACE_O_EXITKILL
-# define PTRACE_O_EXITKILL 0x0
+# define PTRACE_O_EXITKILL 0x00100000
 #endif
 
 #if !HAVE_DECL_PTRACE_EVENT_FORK

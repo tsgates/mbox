@@ -2,7 +2,7 @@ Source: mbox
 Maintainer: Taesoo Kim <taesoo@mit.edu>
 Section: utils
 Priority: optional
-Build-Depends: libc6-dev (>= 2.2.2) [!alpha !ia64], libc6.1-dev (>= 2.2.2) [alpha ia64], gcc-multilib [i386 powerpc s390 sparc], debhelper (>= 7.0.0)
+Build-Depends: libc6-dev (>= 2.2.2) [!alpha !ia64], libc6.1-dev (>= 2.2.2) [alpha ia64], gcc-multilib [i386 powerpc s390 sparc], debhelper (>= 7.0.0), libssl-dev (>= 1.0.0), fakeroot (>= 1.0)
 Standards-Version: 0.1
 Homepage: http://pdos.csail.mit.edu/mbox/
 
@@ -11,4 +11,4 @@ Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: A sandbox for non-root users
  Mbox is a lightweight sandboxing mechanism that any user can use without
- special privileges in commodity operating systems. 
+ special privileges in commodity operating systems.

@@ -1127,8 +1127,9 @@ test_ptrace_setoptions_followfork(void)
 static void
 test_ptrace_setoptions_for_all(void)
 {
-    const unsigned int test_options = PTRACE_O_TRACESYSGOOD |
-                      PTRACE_O_TRACEEXEC;
+    const unsigned int test_options = \
+        PTRACE_O_TRACESYSGOOD |
+        PTRACE_O_TRACEEXEC | PTRACE_O_EXITKILL;
     int pid;
     int it_worked = 0;
 

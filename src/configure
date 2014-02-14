@@ -6461,6 +6461,17 @@ fi
 cat >>confdefs.h <<_ACEOF
 #define HAVE_DECL_PTRACE_O_TRACEVFORK $ac_have_decl
 _ACEOF
+ac_fn_c_check_decl "$LINENO" "PTRACE_O_EXITKILL" "ac_cv_have_decl_PTRACE_O_EXITKILL" "#include <sys/ptrace.h>
+"
+if test "x$ac_cv_have_decl_PTRACE_O_EXITKILL" = xyes; then :
+  ac_have_decl=1
+else
+  ac_have_decl=0
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_DECL_PTRACE_O_EXITKILL $ac_have_decl
+_ACEOF
 ac_fn_c_check_decl "$LINENO" "PTRACE_SETOPTIONS" "ac_cv_have_decl_PTRACE_SETOPTIONS" "#include <sys/ptrace.h>
 "
 if test "x$ac_cv_have_decl_PTRACE_SETOPTIONS" = xyes; then :

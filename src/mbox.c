@@ -228,7 +228,6 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -p file : load profile (see. NOTE.profile)\n\
         -t      : run as unit tester (check pre/post condition, see tests-sbox/NOTE)\n\
         -n      : disable network accesses\n\
-        -S      : enable nested seccomp\n\
         -i      : disable interactive session at the end\n\
         -s      : use seccomp instead of ptrace\n\
         -R      : fakeroot\n\

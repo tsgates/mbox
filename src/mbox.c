@@ -202,7 +202,7 @@ static void
 usage(FILE *ofp, int exitval)
 {
     fprintf(ofp, "\
-usage: sandbox [-r root] [-s] [PROG]\n\
+usage: %s [-r root] [-s] [PROG]\n\
 \n\
         -v      : verbose mode: print unabbreviated argv, stat, termios, etc. args\n\
         -x      : print non-ascii strings in hex, -xx -- print all strings in hex\n\
@@ -233,7 +233,7 @@ usage: sandbox [-r root] [-s] [PROG]\n\
         -R      : fakeroot\n\
         -C path : change directory\n\
         -r path : sandbox root (default:%s)\n",
-        DEFAULT_SORTBY, DEFAULT_ROOT);
+        progname, DEFAULT_SORTBY, DEFAULT_ROOT);
         exit(exitval);
 }
 

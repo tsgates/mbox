@@ -93,7 +93,7 @@ Here is a list of available options.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
 $ mbox -h
-usage: sandbox [-r root] [-s] [PROG]
+usage: mbox [-r root] [-s] [PROG]
         ...
         -m      : keep md5 of original files
         -c      : count time, calls, and errors for each syscall and report summary

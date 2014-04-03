@@ -75,7 +75,16 @@ back to the host filesystem.
 
 ## Packages
 
+I highly recommend you to use the latest version of mbox, but here are
+some easy ways to try mbox.
+
 ### Arch
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
+$ sudo aurget -S mbox-git
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+or
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
 $ wget http://pdos.csail.mit.edu/mbox/mbox-latest-x86_64.pkg.tar.xz
@@ -85,8 +94,8 @@ $ sudo pacman -U mbox-latest-x86_64.pkg.tar.xz
 ### Debian
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
-$ wget http://pdos.csail.mit.edu/mbox/mbox-latest.amd64.deb
-$ sudo dpkg -i mbox-latest.amd64.deb
+$ wget http://pdos.csail.mit.edu/mbox/mbox-latest-amd64.deb
+$ sudo dpkg -i mbox-latest-amd64.deb
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here is a list of available options.

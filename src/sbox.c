@@ -1166,7 +1166,7 @@ int sbox_socket(struct tcb *tcp)
     if (entering(tcp)) {
         long pf = tcp->u_arg[0];
         if (opt_no_nw && pf != PF_LOCAL) {
-            sbox_stop(tcp, "Access to the netowrk (socket:%s)", __pf_domain(pf));
+            sbox_stop(tcp, "Access to the network (socket:%s)", __pf_domain(pf));
         }
         if (pf == PF_INET     \
             || pf == PF_INET6 \

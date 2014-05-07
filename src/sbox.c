@@ -201,17 +201,17 @@ void sbox_init(void)
     sbox_load_meta();
 }
 
-void sbox_cleanup(void)
+void sbox_cleanup(FILE *outf)
 {
     // dump system-wide logs
     if (systemlog) {
-        fprintf(stderr, "Network Summary:\n");
+        fprintf(outf, "Network Summary:\n");
         // per each process
         struct systemlog *logs;
         for (logs = systemlog; logs != NULL; logs = logs->next) {
             struct auditlog *iter;
             for (iter = logs->logs; iter != NULL; iter = iter->prev) {
-                fprintf(stderr, " > [%d] %s\n", logs->pid, iter->log);
+                fprintf(outf, " > [%d] %s\n", logs->pid, iter->log);
             }
         }
     }
@@ -1427,7 +1427,7 @@ void sbox_stop(struct tcb *tcp, const char *fmt, ...)
     kill_all(tcp);
 
     // clean up & info to user
-    sbox_cleanup();
+    sbox_cleanup(tcp->outf);
     if (opt_interactive) {
         sbox_interactive();
     }

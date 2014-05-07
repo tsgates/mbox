@@ -1623,7 +1623,7 @@ cleanup(void)
     }
     if (cflag)
         call_summary(shared_log);
-    sbox_cleanup();
+    sbox_cleanup(shared_log);
 }
 
 static void

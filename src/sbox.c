@@ -31,19 +31,19 @@ struct linux_dirent {
 #define min(a, b) ((a) < (b)? (a): (b))
 
 /* os global structure */
-static struct fsmap* os_deleted_fs = NULL; /* deleted fs map */
+static struct fsmap* os_fsmap = NULL; /* deleted fs map */
 static struct md5map* os_md5map    = NULL; /* keep md5sums of original files */
 
 int sbox_is_deleted(char *path)
 {
-    int s = path_status(os_deleted_fs, path);
+    int s = path_status(os_fsmap, path);
     return s & PATH_DELETED;
 }
 
 static inline
 int __sbox_delete_file(char *path)
 {
-    add_path_to_fsmap(&os_deleted_fs, path, PATH_DELETED);
+    add_path_to_fsmap(&os_fsmap, path, PATH_DELETED);
     return 1;
 }
 
@@ -54,22 +54,22 @@ int __sbox_delete_dir(char *path)
     struct fsmap *s;
     struct fsmap *tmp;
 
-    HASH_ITER(hh, os_deleted_fs, s, tmp) {
+    HASH_ITER(hh, os_fsmap, s, tmp) {
         if (strncmp(s->key, path, path_len) == 0) {
             dbg(fsmap, "merging deleted file: %s", s->key);
-            HASH_DEL(os_deleted_fs, s);
+            HASH_DEL(os_fsmap, s);
             free(s);
         }
     }
 
-    add_path_to_fsmap(&os_deleted_fs, path, PATH_DELETED);
+    add_path_to_fsmap(&os_fsmap, path, PATH_DELETED);
     return 1;
 }
 
 static
 int __sbox_allow_path(char *path)
 {
-    add_path_to_fsmap(&os_deleted_fs, path, PATH_ALLOWED);
+    add_path_to_fsmap(&os_fsmap, path, PATH_ALLOWED);
     return 1;
 }
 
@@ -89,7 +89,7 @@ static
 void _sbox_flush_deleted_files(void)
 {
     // only if we have something to flush
-    if (!os_deleted_fs) {
+    if (!os_fsmap) {
         return;
     }
 
@@ -102,7 +102,7 @@ void _sbox_flush_deleted_files(void)
     struct fsmap *tmp;
 
     fprintf(stderr, "Deleted Files:\n");
-    HASH_ITER(hh, os_deleted_fs, s, tmp) {
+    HASH_ITER(hh, os_fsmap, s, tmp) {
         fprintf(stderr, " > %s (%x)\n", s->key, s->val);
         fprintf(fp, "D:%s:%d\n", s->key, s->val);
     }
@@ -175,7 +175,7 @@ void sbox_load_meta(void)
         case 'D': {
             int flag;
             sscanf(val, "%d", &flag);
-            add_path_to_fsmap(&os_deleted_fs, key, flag);
+            add_path_to_fsmap(&os_fsmap, key, flag);
             break;
         }
         case 'M': {
@@ -221,7 +221,7 @@ void sbox_cleanup(FILE *outf)
     sbox_flush_meta();
 
     // NOTE. we are going to die anyway.
-    // free_fsmap(os_deleted_fs);
+    // free_fsmap(os_fsmap);
     // free_systemlog(systemlog);
 }
 

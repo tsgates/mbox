@@ -16,4 +16,4 @@ void add_path_to_fsmap(struct fsmap **map, char *key, int val);
 struct fsmap* get_path_from_fsmap(struct fsmap *map, char *key);
 int is_in_fsmap(struct fsmap *map, char *key);
 void free_fsmap(struct fsmap *map);
-int is_deleted(struct fsmap *map, char *path);
+int path_status(struct fsmap *map, char *path);

@@ -39,7 +39,7 @@ void free_fsmap(struct fsmap *map)
     }
 }
 
-int is_deleted(struct fsmap *map, char *path)
+int path_status(struct fsmap *map, char *path)
 {
     if (!map) {
         return 0;
@@ -53,14 +53,8 @@ int is_deleted(struct fsmap *map, char *path)
     do {
         dbg(fsmapv, "path: %s", buf);
         s = get_path_from_fsmap(map, buf);
-        if (s) {
-            switch (s->val) {
-            case PATH_DELETED:
-                return 1;
-            case PATH_ALLOWED:
-                return 0;
-            }
-        }
+        if (s)
+            return s->val;
 
         while (end != buf && *end != '/') {
             end --;

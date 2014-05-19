@@ -36,7 +36,8 @@ static struct md5map* os_md5map    = NULL; /* keep md5sums of original files */
 
 int sbox_is_deleted(char *path)
 {
-    return is_deleted(os_deleted_fs, path);
+    int s = path_status(os_deleted_fs, path);
+    return s & PATH_DELETED;
 }
 
 static inline

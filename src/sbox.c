@@ -1479,7 +1479,7 @@ void sbox_get_readonly_ptr(struct tcb *tcp)
         int dummy = 0xdeadbeef;
         sbox_remote_write(tcp, ptr, (char *)&dummy, 4);
 
-        long read = ptrace(PTRACE_PEEKDATA, tcp->pid, (char *)ptr, 0);
+        int read = ptrace(PTRACE_PEEKDATA, tcp->pid, (char *)ptr, 0);
         if (read != dummy) {
             dbg(info, "0x%lx is not writable", ptr);
         }

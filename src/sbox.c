@@ -458,7 +458,8 @@ void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
         for (i = off; i < 8 - off; i ++) {
             *((char *)&read + i) = buf[i - off];
         }
-        ptrace(PTRACE_POKEDATA, tcp->pid, ptr - off, read, 0);
+        if (ptrace(PTRACE_POKEDATA, tcp->pid, ptr - off, read, 0) < 0)
+            sbox_stop(tcp, "Error writting to %ld", ptr);
 
         len -= 8 - off;
         ptr += 8 - off;
@@ -466,7 +467,8 @@ void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
     }
 
     for (; len > 0; len -= 8, buf += 8, ptr += 8) {
-        ptrace(PTRACE_POKEDATA, tcp->pid, ptr, *(long *)(buf), 0);
+        if (ptrace(PTRACE_POKEDATA, tcp->pid, ptr, *(long *)(buf), 0) < 0)
+            sbox_stop(tcp, "Error writting to %ld", ptr);
     }
 
     if (len > 0) {
@@ -475,7 +477,8 @@ void sbox_remote_write(struct tcb *tcp, long ptr, char *buf, int len)
         for (i = 0; i < len; i ++) {
             *((char *)&read + i) = buf[i];
         }
-        ptrace(PTRACE_POKEDATA, tcp->pid, ptr, read, 0);
+        if (ptrace(PTRACE_POKEDATA, tcp->pid, ptr, read, 0) < 0)
+            sbox_stop(tcp, "Error writting to %ld", ptr);
     }
 }
 #endif

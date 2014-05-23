@@ -40,6 +40,12 @@ int sbox_is_deleted(char *path)
     return s & PATH_DELETED;
 }
 
+int sbox_is_direct(char *path)
+{
+    int s = path_status(os_fsmap, path);
+    return s & PATH_DIRECT;
+}
+
 static inline
 int __sbox_delete_file(char *path)
 {
@@ -70,6 +76,13 @@ static
 int __sbox_allow_path(char *path)
 {
     add_path_to_fsmap(&os_fsmap, path, PATH_ALLOWED);
+    return 1;
+}
+
+static
+int __sbox_direct_path(char *path)
+{
+    add_path_to_fsmap(&os_fsmap, path, PATH_DIRECT);
     return 1;
 }
 
@@ -611,6 +624,11 @@ int sbox_rewrite_path(struct tcb *tcp, int fd, int arg, int flag)
     }
     get_spn_from_hpn(hpn, spn, PATH_MAX);
 
+    if (sbox_is_direct(hpn)) {
+        sbox_hijack_str(tcp, arg, hpn);
+        return 1;
+    }
+
     // satisfying one of rewrite conditions
     if (flag != READWRITE_READ  \
         || sbox_is_deleted(hpn) \
@@ -653,6 +671,11 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
     //   /proc: need to emulate /proc/pid/fd/*
     //   /dev : need to verify what is correct to do
     if (strncmp(hpn, "/dev/", 5) == 0 || strncmp(hpn, "/proc/", 6) == 0) {
+        sbox_hijack_str(tcp, arg, hpn);
+        return;
+    }
+
+    if (sbox_is_direct(hpn)) {
         sbox_hijack_str(tcp, arg, hpn);
         return;
     }
@@ -790,6 +813,9 @@ int sbox_unlink_general(struct tcb *tcp, int fd, int arg, int flag)
         // get hpn/spn
         get_hpn_from_fd_and_arg(tcp, fd, arg, hpn, PATH_MAX);
         get_spn_from_hpn(hpn, spn, PATH_MAX);
+
+        if (sbox_is_direct(hpn))
+            return 0;
 
         // failed on sandbox
         if ((long)tcp->regs.rax < 0) {
@@ -1591,6 +1617,13 @@ void sbox_load_profile(char *profile)
                 char *path =  __parse_path_line(line);
                 dbg(profile, "hide-> %s", path);
                 __sbox_delete_file(path);
+                if (path) {
+                    free(path);
+                }
+            } else if (strstr(line, "direct:")) {
+                char *path = __parse_path_line(line);
+                dbg(profile, "direct-> %s", path);
+                __sbox_direct_path(path);
                 if (path) {
                     free(path);
                 }

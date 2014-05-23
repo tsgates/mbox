@@ -10,6 +10,8 @@
     # allow precedes hidden options
     allow: ~/.vimrc
     allow: ~/download/build
+    # don't sandbox files in /var/data
+    direct: /var/data
 
 [network]
     block: all

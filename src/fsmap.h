@@ -4,6 +4,7 @@
 
 #define PATH_DELETED (1<<0)
 #define PATH_ALLOWED (1<<1)
+#define PATH_DIRECT  (1<<2)
 
 struct fsmap {
     char key[PATH_MAX];

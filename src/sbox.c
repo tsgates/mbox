@@ -1243,6 +1243,16 @@ int sbox_prctl(struct tcb *tcp)
     return 0;
 }
 
+int sbox_execve(struct tcb *tcp)
+{
+    if (entering(tcp)) {
+        sbox_rewrite_path(tcp, AT_FDCWD, 0, READWRITE_READ);
+    } else {
+        sbox_get_readonly_ptr(tcp);
+    }
+    return 0;
+}
+
 DEF_SBOX_SC_PATH_AT(utimensat , 0, 1, WRITE);
 DEF_SBOX_SC_PATH_AT(readlinkat, 0, 1, READ );
 DEF_SBOX_SC_PATH_AT(fchmodat  , 0, 1, WRITE);
@@ -1262,7 +1272,6 @@ DEF_SBOX_SC_PATH(uselib       , 0 , READ );
 DEF_SBOX_SC_PATH(utimes       , 0 , WRITE);
 DEF_SBOX_SC_PATH(utime        , 0 , WRITE);
 DEF_SBOX_SC_PATH(chmod        , 0 , WRITE);
-DEF_SBOX_SC_PATH(execve       , 0 , READ );
 DEF_SBOX_SC_PATH(truncate     , 0 , FORCE);
 DEF_SBOX_SC_PATH(readlink     , 0 , READ );
 DEF_SBOX_SC_PATH(mknod        , 0 , WRITE);

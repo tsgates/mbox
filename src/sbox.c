@@ -2,6 +2,7 @@
 #include "sbox.h"
 #include "dbg.h"
 #include "fsmap.h"
+#include "netmap.h"
 #include "md5map.h"
 
 #include <err.h>
@@ -33,6 +34,7 @@ struct linux_dirent {
 /* os global structure */
 static struct fsmap* os_fsmap = NULL; /* deleted fs map */
 static struct md5map* os_md5map    = NULL; /* keep md5sums of original files */
+static struct netmap* os_netmap = NULL;
 
 int sbox_is_deleted(char *path)
 {
@@ -516,7 +518,7 @@ void sbox_rewrite_ret(struct tcb *tcp, long long ret)
     sbox_rewrite_arg(tcp, ARG_RET, ret);
 }
 
-void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
+void sbox_hijack_mem(struct tcb *tcp, int arg, void *new, int len)
 {
     struct user_regs_struct *regs = &tcp->regs;
 
@@ -539,10 +541,14 @@ void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
         new_ptr = tcp->readonly_ptr + 256 * arg;
     }
 
-    sbox_remote_write(tcp, new_ptr, new, strlen(new)+1);
+    sbox_remote_write(tcp, new_ptr, new, len);
     sbox_rewrite_arg(tcp, arg, new_ptr);
 }
 
+void sbox_hijack_str(struct tcb *tcp, int arg, char *new)
+{
+    sbox_hijack_mem(tcp, arg, new, strlen(new)+1);
+}
 
 void sbox_hijack_arg(struct tcb *tcp, int arg, long new)
 {
@@ -1173,10 +1179,43 @@ int sbox_connect(struct tcb *tcp)
         // interpret af_inet
         switch (sa->sa_family) {
         case AF_INET: {
-            struct sockaddr_in *addr = (struct sockaddr_in *)sa;
-            sbox_add_log(tcp, "-> %s:%d",
-                         inet_ntoa(addr->sin_addr),
-                         ntohs(addr->sin_port));
+            struct netmap *n = get_net_from_netmap(os_netmap, sa);
+            int v = n ? n->val : NET_LOG;
+            switch (v) {
+                case NET_LOG:
+                    {
+                        struct sockaddr_in *addr = (struct sockaddr_in *)sa;
+                        sbox_add_log(tcp, "-> %s:%d",
+                                inet_ntoa(addr->sin_addr),
+                                ntohs(addr->sin_port));
+                        sbox_hijack_mem(tcp, 1, addr, sizeof(struct sockaddr_in));
+                        break;
+                    }
+                case NET_KILL:
+                    {
+                        struct sockaddr_in *addr = (struct sockaddr_in *)sa;
+                        sbox_stop(tcp, "Connect to %s port %d",
+                                inet_ntoa(addr->sin_addr),
+                                ntohs(addr->sin_port));
+                        break;
+                    }
+                case NET_BLOCK:
+                    {
+                        struct sockaddr_in *addr = (struct sockaddr_in *)
+                            malloc(sizeof(struct sockaddr_in));
+                        addr->sin_family = AF_INET;
+                        inet_aton("127.0.0.1", &addr->sin_addr);
+                        addr->sin_port = htons(1);
+                        sbox_hijack_mem(tcp, 1, addr, sizeof(struct sockaddr_in));
+                        free(addr);
+                        break;
+                    }
+                case NET_ALLOW:
+                    {
+                        sbox_hijack_mem(tcp, 1, sa, sizeof(struct sockaddr_in));
+                        break;
+                    }
+            }
             break;
         }
 
@@ -1547,7 +1586,7 @@ void sbox_add_log(struct tcb *tcp, const char *fmt, ...)
 
 /* load profile */
 static
-char *__parse_path_line(char *line)
+char *__parse_val(char *line)
 {
     int last = strlen(line) - 1;
     if (last > 0 && line[last] == '\n') {
@@ -1563,19 +1602,56 @@ char *__parse_path_line(char *line)
     while (*del == ' ') {
         del ++;
     }
+    return del;
+}
+
+static
+char *__parse_path_line(char *line)
+{
+    char *val = __parse_val(line);
+    if (!val) {
+        return NULL;
+    }
 
     // handle ~
     char path[PATH_MAX];
-    if (strbeg(del, "~")) {
-        snprintf(path, sizeof(path), "%s/%s", getenv("HOME"), del + 1);
+    if (strbeg(val, "~")) {
+        snprintf(path, sizeof(path), "%s/%s", getenv("HOME"), val + 1);
         return realpath(path, NULL);
     }
 
-    return realpath(del, NULL);
+    return realpath(val, NULL);
+}
+
+static
+struct sockaddr *__parse_addr_line(char *line)
+{
+    struct sockaddr_in *res;
+    char *val = __parse_val(line);
+    if (!val) {
+        return NULL;
+    }
+    res = malloc(sizeof(struct sockaddr_in));
+    res->sin_family = AF_INET;
+    char *port = strchr(val, ':');
+    if (port) {
+        *port = '\0';
+        port++;
+        res->sin_port = htons(atoi(port));
+    } else {
+        res->sin_port = 0;
+    }
+    if (inet_pton(AF_INET, val, &res->sin_addr) != 1) {
+        free(res);
+        return NULL;
+    }
+    return (struct sockaddr *)res;
 }
 
 void sbox_load_profile(char *profile)
 {
+    int netflag;
+    struct sockaddr *addr;
     FILE *fp = fopen(profile, "r");
     if (!fp) {
         err(1, "open %s", profile);
@@ -1619,7 +1695,22 @@ void sbox_load_profile(char *profile)
 
         // handle each section line
         switch (section) {
-        case SEC_NETWORK: break;
+        case SEC_NETWORK:
+            if (strbeg(line, "block:"))
+                netflag = NET_BLOCK;
+            else if (strbeg(line, "kill:"))
+                netflag = NET_KILL;
+            else if (strbeg(line, "log:"))
+                netflag = NET_LOG;
+            else if (strbeg(line, "allow:"))
+                netflag = NET_ALLOW;
+            else
+                errx(1, "Unknown option: %s", line);
+            addr = __parse_addr_line(line);
+            if (!addr)
+                errx(1, "Error reading net address: %s", line);
+            add_addr_to_netmap(&os_netmap, addr, netflag);
+            break;
         case SEC_FILE:
             if (strbeg(line, "hide:")) {
                 char *path =  __parse_path_line(line);

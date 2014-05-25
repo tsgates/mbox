@@ -652,6 +652,7 @@ void sbox_open_enter(struct tcb *tcp, int fd, int arg, int oflag)
     //   /proc: need to emulate /proc/pid/fd/*
     //   /dev : need to verify what is correct to do
     if (strncmp(hpn, "/dev/", 5) == 0 || strncmp(hpn, "/proc/", 6) == 0) {
+        sbox_hijack_str(tcp, arg, hpn);
         return;
     }
 

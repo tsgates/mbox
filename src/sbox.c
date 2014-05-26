@@ -1591,8 +1591,12 @@ void sbox_load_profile(char *profile)
 
     while (getline(&line, &len, fp) != -1) {
         line_n++;
+        while (*line == ' ' || *line == '\t' || *line == '\v'
+                || *line == '\f' || *line == '\r') {
+            line++;
+        }
         // ignore empty line
-        if (len <= 0) {
+        if (line[0] == '\n' || line[0] == '\0') {
             continue;
         }
         // ignore comment lines

@@ -59,6 +59,10 @@
    you don't. */
 #undef HAVE_DECL_PTRACE_GETSIGINFO
 
+/* Define to 1 if you have the declaration of `PTRACE_O_EXITKILL', and to 0 if
+   you don't. */
+#undef HAVE_DECL_PTRACE_O_EXITKILL
+
 /* Define to 1 if you have the declaration of `PTRACE_O_TRACECLONE', and to 0
    if you don't. */
 #undef HAVE_DECL_PTRACE_O_TRACECLONE

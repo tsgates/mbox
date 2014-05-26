@@ -62,5 +62,6 @@ int path_status(struct fsmap *map, char *path)
         *end = '\0';
     } while (end != buf);
 
-    return 0;
+    s = get_path_from_fsmap(map, "/");
+    return s ? s->val : 0;
 }

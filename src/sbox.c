@@ -1558,7 +1558,7 @@ char *__parse_path_line(char *line)
     }
 
     del ++;
-    while (*del == ' ' && *del != '\0') {
+    while (*del == ' ') {
         del ++;
     }
 

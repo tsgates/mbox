@@ -116,8 +116,10 @@ void _sbox_flush_deleted_files(void)
 
     fprintf(stderr, "Deleted Files:\n");
     HASH_ITER(hh, os_fsmap, s, tmp) {
-        fprintf(stderr, " > %s (%x)\n", s->key, s->val);
-        fprintf(fp, "D:%s:%d\n", s->key, s->val);
+        if (s->val == PATH_DELETED) {
+            fprintf(stderr, " > %s (%x)\n", s->key, s->val);
+            fprintf(fp, "D:%s:%d\n", s->key, s->val);
+        }
     }
 
     fclose(fp);

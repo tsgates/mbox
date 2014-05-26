@@ -1619,21 +1619,21 @@ void sbox_load_profile(char *profile)
         switch (section) {
         case SEC_NETWORK: break;
         case SEC_FILE:
-            if (strstr(line, "hide:")) {
+            if (strbeg(line, "hide:")) {
                 char *path =  __parse_path_line(line);
                 if (!path)
                     errx(1, "Incorrect path in profile file at line %d", line_n);
                 dbg(profile, "hide-> %s", path);
                 __sbox_delete_file(path);
                 free(path);
-            } else if (strstr(line, "direct:")) {
+            } else if (strbeg(line, "direct:")) {
                 char *path = __parse_path_line(line);
                 if (!path)
                     errx(1, "Incorrect path in profile file at line %d", line_n);
                 dbg(profile, "direct-> %s", path);
                 __sbox_direct_path(path);
                 free(path);
-            } else if (strstr(line, "allow:")) {
+            } else if (strbeg(line, "allow:")) {
                 char *path = __parse_path_line(line);
                 if (!path)
                     errx(1, "Incorrect path in profile file at line %d", line_n);

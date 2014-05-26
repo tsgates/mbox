@@ -1581,6 +1581,7 @@ void sbox_load_profile(char *profile)
 
     size_t len = 0;
     char *line = NULL;
+    int line_n = 0;
 
 #define SEC_NONE    0
 #define SEC_FILE    1
@@ -1589,6 +1590,7 @@ void sbox_load_profile(char *profile)
     int section = SEC_NONE;
 
     while (getline(&line, &len, fp) != -1) {
+        line_n++;
         // ignore empty line
         if (len <= 0) {
             continue;
@@ -1615,20 +1617,22 @@ void sbox_load_profile(char *profile)
         case SEC_FILE:
             if (strstr(line, "hide:")) {
                 char *path =  __parse_path_line(line);
+                if (!path)
+                    errx(1, "Incorrect path in profile file at line %d", line_n);
                 dbg(profile, "hide-> %s", path);
                 __sbox_delete_file(path);
-                if (path) {
-                    free(path);
-                }
+                free(path);
             } else if (strstr(line, "direct:")) {
                 char *path = __parse_path_line(line);
+                if (!path)
+                    errx(1, "Incorrect path in profile file at line %d", line_n);
                 dbg(profile, "direct-> %s", path);
                 __sbox_direct_path(path);
-                if (path) {
-                    free(path);
-                }
+                free(path);
             } else if (strstr(line, "allow:")) {
                 char *path = __parse_path_line(line);
+                if (!path)
+                    errx(1, "Incorrect path in profile file at line %d", line_n);
                 dbg(profile, "allow-> %s", path);
                 __sbox_allow_path(path);
 
@@ -1636,10 +1640,7 @@ void sbox_load_profile(char *profile)
                 char sboxpath[PATH_MAX];
                 snprintf(sboxpath, sizeof(sboxpath), "%s/%s", opt_root, path);
                 mkdirp(sboxpath, 0700);
-
-                if (path) {
-                    free(path);
-                }
+                free(path);
             }
             break;
         default:
